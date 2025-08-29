@@ -1,0 +1,5 @@
+.brand{font-weight:700;font-size:18px;padding:16px}
+.nav{display:flex;flex-direction:column;padding:0 8px}
+.nav a{padding:8px 12px;border-radius:6px;color:#333;text-decoration:none;margin:2px 6px}
+.nav a.active{background:#1677ff;color:#fff}
+.header{background:#fff}
