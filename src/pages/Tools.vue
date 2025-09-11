@@ -1,6 +1,20 @@
 <template>
   <a-card :title="t('tools.title')">
-    <a-list :data-source="items" :renderItem="renderItem" />
+    <a-list :data-source="items">
+      <template #renderItem="{ item }">
+        <a-list-item>
+          <template #actions>
+          </template>
+          <a-card class="tool-item" hoverable :bordered="false">
+            <div class="title">
+              <strong>{{ item.name }}</strong>
+              <a-tag color="blue" style="margin-left: 8px">{{ item.category || 'general' }}</a-tag>
+            </div>
+            <div class="desc" style="margin-top: 8px">{{ item.description || '' }}</div>
+          </a-card>
+        </a-list-item>
+      </template>
+    </a-list>
 
     <a-divider />
     <a-space direction="vertical" style="width:100%">
@@ -41,14 +55,6 @@ onMounted(async () => {
   }
 })
 
-function renderItem(item: ToolItem) {
-  return h('div', { class: 'tool-item' }, [
-    h('div', { class: 'title' }, item.name),
-    h('div', { class: 'desc' }, item.description),
-    h('div', { class: 'cat' }, item.category || 'general')
-  ])
-}
-
 async function onExecute(){
   if(!exec.value.toolName){ resultText.value = t('tools.noToolSelected'); resultOpen.value = true; return }
   let args: any = {}
@@ -73,8 +79,18 @@ function onReset(){
 </script>
 
 <style scoped>
-.tool-item{padding:8px 0;border-bottom:1px solid #f0f0f0}
-.title{font-weight:600}
-.desc{color:#666}
-.cat{color:#1677ff}
+.tool-item {
+  margin-bottom: 16px;
+}
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.desc {
+  color: #666;
+  font-size: 14px;
+}
+.cat {
+  color: #1677ff;
+}
 </style>

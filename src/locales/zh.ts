@@ -10,6 +10,7 @@ export default {
         dashboard: '仪表盘'
     },
     menu: {
+        chat: 'AI对话',
         dashboard: '仪表盘',
         tools: '工具',
         agents: '代理',

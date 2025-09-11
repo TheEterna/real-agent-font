@@ -13,13 +13,15 @@
         </a-select>
       </div>
       <a-menu mode="inline" :selectedKeys="[route.path]">
-        <a-menu-item key="/"><router-link to="/">{{ t('menu.dashboard') }}</router-link></a-menu-item>
+        <a-menu-item key="/chat"><router-link to="/chat">{{ t('menu.chat') }}</router-link></a-menu-item>
+        <a-menu-item key="/dashboard"><router-link to="/dashboard">{{ t('menu.dashboard') }}</router-link></a-menu-item>
         <a-menu-item key="/tools"><router-link to="/tools">{{ t('menu.tools') }}</router-link></a-menu-item>
         <a-menu-item key="/agents"><router-link to="/agents">{{ t('menu.agents') }}</router-link></a-menu-item>
         <a-menu-item key="/workflows"><router-link to="/workflows">{{ t('menu.workflows') }}</router-link></a-menu-item>
         <a-menu-item key="/config"><router-link to="/config">{{ t('menu.config') }}</router-link></a-menu-item>
         <a-menu-item key="/logs"><router-link to="/logs">{{ t('menu.logs') }}</router-link></a-menu-item>
         <a-menu-item key="/playground"><router-link to="/playground">{{ t('menu.playground') }}</router-link></a-menu-item>
+        <a-menu-item key="/SseTest"><router-link to="/SseTest">{{ t('menu.playground') }}</router-link></a-menu-item>
       </a-menu>
     </a-layout-sider>
     <a-layout>
@@ -49,7 +51,7 @@ const changeLanguage = (lang: string) => {
 
 const getCurrentMenu = () => {
   const path = route.path
-  if (path === '/') return 'dashboard'
+  if (path === '/') return 'chat'
   return path.substring(1)
 }
 </script>

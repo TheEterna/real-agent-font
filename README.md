@@ -11,3 +11,12 @@
 
 ## 环境变量
 - `VITE_API_BASE_URL` 由 `vite.config.ts` 代理 `/api`
+
+## 后端服务
+本项目需要后端服务支持，特别是 `/api/agent/chat/react/stream` 接口。
+请确保后端服务运行在 `http://localhost:8080` 或通过 `.env` 文件中的 `VITE_API_BASE_URL` 指定的地址。
+
+启动后端服务后再启动前端开发服务器:
+```bash
+npm run dev
+```

@@ -10,6 +10,7 @@ export default {
         dashboard: 'Dashboard'
     },
     menu: {
+        chat: 'AI Chat',
         dashboard: 'Dashboard',
         tools: 'Tools',
         agents: 'Agents',
