@@ -1,4 +1,4 @@
-# Kit Agent Console (Front-end)
+# Real Agent Console (Front-end)
 
 - Vite + React + TypeScript + Ant Design
 - 开发: `npm i` `npm run dev`

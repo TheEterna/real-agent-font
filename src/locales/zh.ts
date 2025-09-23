@@ -21,6 +21,7 @@ export default {
     },
     tools: {
         title: '工具',
+        search: '搜索工具…',
         selectTool: '选择工具',
         toolArgs: '工具参数',
         execute: '执行',
@@ -28,7 +29,37 @@ export default {
         result: '执行结果',
         noToolSelected: '请选择一个工具',
         invalidJson: '无效的JSON格式',
-        execError: '执行错误'
+        execError: '执行错误',
+        resultViewer: '结果查看'
+    },
+    approval: {
+        title: '工具审批',
+        toolName: '工具名称',
+        args: '参数',
+        approve: '批准并执行',
+        reject: '拒绝',
+        openInTools: '在工具页打开',
+        executing: '正在执行…',
+        done: '执行完成',
+        failed: '执行失败',
+        rejected: '已拒绝',
+        noToolName: '缺少工具名称'
+    },
+    'tools.result': {
+        title: '执行结果',
+        summary: '摘要',
+        status: '状态',
+        toolName: '工具',
+        duration: '耗时',
+        message: '消息',
+        args: '参数',
+        result: '结果',
+        logs: '日志',
+        metrics: '指标',
+        raw: '原始数据',
+        running: '执行中',
+        success: '成功',
+        failed: '失败'
     },
     dashboard: {
         tools: '工具',

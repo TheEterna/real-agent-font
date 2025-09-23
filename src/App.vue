@@ -1,7 +1,7 @@
 <template>
   <a-layout style="min-height: 100vh">
     <a-layout-sider theme="light" :width="220">
-      <div class="brand">Kit Agent</div>
+      <div class="brand">Real Agent</div>
       <div style="padding: 0 16px 16px;">
         <a-select
             v-model:value="currentLocale"

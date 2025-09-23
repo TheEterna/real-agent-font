@@ -1,0 +1,5 @@
+.theme-coding .message { background: #f5f7ff; }
+.theme-coding .message.system { border-left: 4px solid #5c6bc0; }
+.theme-coding .message.error { border-left: 4px solid #e53935; background: #ffebee; }
+.theme-coding .tool-box { background: #eef2ff; border-color: #c7d2fe; }
+.theme-coding .tool-box-header { background: #e0e7ff; border-bottom-color: #c7d2fe; }

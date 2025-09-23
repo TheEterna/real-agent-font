@@ -1,0 +1,6 @@
+.theme-react .message.thinking { background: #fff3e0; border-left-color: #ff9800; }
+.theme-react .message.action { background: #e8f5e8; border-left-color: #4caf50; }
+.theme-react .message.observing { background: #f3e5f5; border-left-color: #9c27b0; }
+.theme-react .message.tool { background: #e3f2fd; border-left-color: #42a5f5; }
+.theme-react .tool-box { background: #f7fbff; border-color: #cfe8ff; }
+.theme-react .tool-box-header { background: #e8f3ff; border-bottom-color: #cfe8ff; }
