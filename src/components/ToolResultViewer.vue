@@ -20,7 +20,7 @@
           <pre class="code">{{ pretty(norm.result.value) }}</pre>
         </template>
         <template v-else-if="norm.result?.type==='text'">
-          <MarkdownViewer :content="String(norm.result.value ?? '')" />
+          <MarkdownViewer :message="String(norm.result.value ?? '')" />
         </template>
         <template v-else>
           <pre class="code">{{ pretty(norm.rawData) }}</pre>

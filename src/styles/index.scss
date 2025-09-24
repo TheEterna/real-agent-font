@@ -1,0 +1,27 @@
+@use "./_variables.scss" as *;
+@use "./_mixins.scss" as mixins;
+
+/* Global base styles (optional) */
+:root {
+  /* bridge SCSS tokens to CSS custom props if needed later */
+  --border-color: #{$border-color};
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  color: $text-color;
+}
+
+/* Utilities */
+.u-scroll {
+  overflow: auto;
+}
+
+/* Example of section mixin usage (reference only)
+.section-fixed-360 {
+  @include mixins.section-fixed(360px);
+}
+*/

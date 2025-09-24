@@ -6,7 +6,7 @@ import MarkdownIt from 'markdown-it'
 // @ts-ignore
 import DOMPurify from 'dompurify'
 
-const props = defineProps<{ content: string }>()
+const props = defineProps<{ message: string }>()
 
 const md = new MarkdownIt({
   html: false,
@@ -14,18 +14,18 @@ const md = new MarkdownIt({
   typographer: true,
 })
 
-const renderMarkdown = (content: string) => {
-  const unsafe = md.render(content || '')
+const renderMarkdown = (message: string) => {
+  const unsafe = md.render(message || '')
   return DOMPurify.sanitize(unsafe)
 }
 </script>
 
 <template>
-  <div class="markdown-content" v-html="renderMarkdown(props.content)"></div>
+  <div class="markdown-message" v-html="renderMarkdown(props.message)"></div>
 </template>
 
 <style scoped>
-.markdown-content :deep(pre) {
+.markdown-message :deep(pre) {
   background: #f8f9fa;
   padding: 1rem;
   border-radius: 4px;

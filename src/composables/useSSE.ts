@@ -1,16 +1,19 @@
 import { ref, nextTick } from 'vue'
-import { BaseEventItem, UIMessage, EventType, SSEEvent } from '../types/events'
+import { UIMessage, EventType, SSEEvent } from '../types/events'
 import { MessageType } from '@/types/events'
-import { SenderLabel, MessageTypeMap } from '../constants/ui'
+import { MessageTypeMap } from '../constants/ui'
+import { ConnectionStatus, TaskStatus, ProgressInfo } from '@/models/status'
 
-// Use BaseEventItem from strong types instead of redefining a loose type
+// Use SSEEvent as strong type alias for incoming SSE events
 export type EventItem = SSEEvent
 
-export function useSSE(options?: { onScrollToBottom?: () => void }) {
+export function useSSE(options?: { onScrollToBottom?: () => void, onDoneNotice?: (p: { text: string; timestamp: Date; title: string; nodeId?: string }) => void }) {
   const messages = ref<UIMessage[]>([])
   const nodeIndex = ref<Record<string, number>>({})
-  const connectionStatus = ref<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected')
-  const taskStatus = ref<'idle' | 'running' | 'completed' | 'error'>('idle')
+  const connectionStatus = ref(new ConnectionStatus('disconnected'))
+  const taskStatus = ref(new TaskStatus('idle'))
+  const progress = ref<ProgressInfo | null>(null)
+  const currentTaskTitle = ref<string>("")
 
   const closeSource = (source: any) => {
     try {
@@ -24,7 +27,7 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
     messages.value.push({
       type: MessageType.System,
       sender: 'Coding Agent',
-      content: `Coding Agent 尚未接入后端，收到指令：${text}`,
+      message: `Coding Agent 尚未接入后端，收到指令：${text}`,
       timestamp: new Date(),
     })
     await scrollToBottom()
@@ -82,8 +85,10 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
     options?.onScrollToBottom?.()
   }
 
-  const getSenderByEventType = (eventType: string): string => {
-    return SenderLabel[eventType] || 'Agent'
+  const getSenderByEventType = (event: EventItem): string => {
+    // return SenderLabel[eventType] || 'Agent'
+
+    return event.agentId || 'Agent'
   }
 
   const handleEvent = (event: EventItem) => {
@@ -92,6 +97,27 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
     const messageType = MessageTypeMap[eventType] || MessageTypeMap[EventType.STARTED]
     let message = (event.message || '').toString()
     const timestamp = new Date(event.timestamp || Date.now())
+
+    // 全局唯一进度：不进入消息列表，直接更新全局进度状态
+    if (eventType === EventType.PROGRESS) {
+      progress.value = new ProgressInfo(message, timestamp, event.agentId as any)
+      return
+    }
+
+    // 结束/异常类事件：清理全局进度，并通过回调投递完成通知
+    if (eventType === EventType.DONE || eventType === EventType.DONEWITHWARNING || eventType === EventType.ERROR) {
+      progress.value = null
+      if (eventType === EventType.DONE || eventType === EventType.DONEWITHWARNING) {
+        options?.onDoneNotice?.({
+          text: message,
+          timestamp,
+          title: currentTaskTitle.value || '',
+          nodeId: (event.nodeId as string) || undefined
+        })
+        // DONE/DONEWITHWARNING 不写入消息列表
+        return
+      }
+    }
 
     // TOOL 事件：将 message 作为工具框标题显示；尝试解析结构化数据
     let toolTitle: string | undefined = undefined
@@ -104,7 +130,6 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
       if (!toolData) {
         toolData = parseToolPayload(message)
       }
-      console.log(toolData)
     }
 
     const index = nodeIndex.value[nodeId]
@@ -117,16 +142,16 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
           sessionId: event.sessionId,
           type: MessageTypeMap[EventType.TOOL],
           eventType: eventType,
-          sender: getSenderByEventType(eventType),
+          sender: getSenderByEventType(event),
           timestamp: timestamp,
-          message: toolTitle,
+          message: toolTitle || "",
           data: toolData as any,
         }
         messages.value.push(toolMsg)
       } else if (eventType === EventType.TOOL_APPROVAL) {
         node.type = MessageTypeMap[EventType.TOOL_APPROVAL]
         node.eventType = eventType
-        node.sender = getSenderByEventType(eventType)
+        node.sender = getSenderByEventType(event)
         node.approval = event.data
         node.timestamp = timestamp
         node.events?.push?.(event)
@@ -149,10 +174,9 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
           sessionId: event.sessionId,
           type: MessageTypeMap[EventType.TOOL],
           eventType: eventType,
-          sender: getSenderByEventType(eventType),
-          content: '',
+          sender: getSenderByEventType(event),
           timestamp: timestamp,
-          message: toolTitle,
+          message: String(toolTitle),
           data: toolData as any,
         }
         messages.value.push(toolMsg)
@@ -163,7 +187,7 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
           sessionId: event.sessionId,
           type: messageType,
           eventType: eventType,
-          sender: getSenderByEventType(eventType),
+          sender: getSenderByEventType(event),
           message: message,
           timestamp: timestamp,
           events: [event],
@@ -183,6 +207,9 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
       // 动态 import，避免在 SSR 或测试环境报错
       import('sse.js')
         .then(({ SSE }) => {
+          currentTaskTitle.value = text || ''
+          // 启动新任务时清理进度（不清理已完成通知列表）
+          progress.value = null
           const source = new SSE('/api/agent/chat/react/stream', {
             method: 'POST',
             headers: {
@@ -204,8 +231,8 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
           }
 
           source.addEventListener('open', () => {
-            connectionStatus.value = 'connected'
-            taskStatus.value = 'running'
+            connectionStatus.value.set('connected')
+            taskStatus.value.set('running')
             scrollToBottom()
 
           })
@@ -216,10 +243,10 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
               const data = JSON.parse(event.data) as EventItem
               handleEvent(data)
               if (data.type === EventType.DONE || data.type === EventType.DONEWITHWARNING) {
-                taskStatus.value = 'completed'
+                taskStatus.value.set('completed')
                 setTimeout(closeAndResolve, 100)
               } else if (data.type === EventType.ERROR) {
-                taskStatus.value = 'error'
+                taskStatus.value.set('error')
                 setTimeout(closeAndResolve, 100)
               }
             } catch (e) {
@@ -229,13 +256,13 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
           })
 
           source.addEventListener('error', (err: any) => {
-            connectionStatus.value = 'error'
-            taskStatus.value = 'error'
+            connectionStatus.value.set('error')
+            taskStatus.value.set('error')
             closeSource(source)
             messages.value.push({
               type: MessageType.Error,
               sender: 'System Error',
-              messgae: '❌ 连接失败，请检查后端服务是否正常运行。' + (err?.message || err?.type || ''),
+              message: '❌ 连接失败，请检查后端服务是否正常运行。' + (err?.message || err?.type || ''),
               timestamp: new Date(),
             })
             scrollToBottom()
@@ -259,6 +286,7 @@ export function useSSE(options?: { onScrollToBottom?: () => void }) {
     nodeIndex,
     connectionStatus,
     taskStatus,
+    progress,
     executeReAct,
     executeCoding,
     handleEvent,

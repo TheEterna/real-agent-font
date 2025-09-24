@@ -54,7 +54,7 @@ export interface UIMessage {
   sender: string
 
   // text payload
-  message?: string
+  message: string
   data?: object | string
 
   // time
@@ -66,8 +66,6 @@ export interface UIMessage {
   isCompletion?: boolean
 
   // tool/approval specific (optional, used by MessageItem/ToolBox)
-  toolTitle?: string
-  toolData?: object | string
   approval?: unknown
   events?: BaseEventItem[]
 }

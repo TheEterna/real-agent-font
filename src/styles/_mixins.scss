@@ -1,0 +1,15 @@
+@use "./_variables.scss" as *;
+
+@mixin section-fixed($h) {
+  .section-body { height: $h; overflow: hidden; }
+  .col { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  .list { height: 100%; overflow: auto; padding-right: $space-sm; @include pretty-scrollbar; }
+}
+
+@mixin card-list-item {
+  .tool-item {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+  }
+}

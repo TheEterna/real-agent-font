@@ -3,20 +3,20 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   title: string
-  content?: unknown
+  message?: unknown
 }>()
 
-// 将 content 解析/美化为 JSON 字符串（当可行时）
+// 将 message 解析/美化为 JSON 字符串（当可行时）
 const jsonPretty = computed<string | null>(() => {
   try {
-    if (props.content == null) return null
+    if (props.message == null) return null
     // 对象/数组：直接序列化
-    if (typeof props.content === 'object') {
-      return JSON.stringify(props.content, null, 2)
+    if (typeof props.message === 'object') {
+      return JSON.stringify(props.message, null, 2)
     }
     // 字符串：尝试判断并解析 JSON
-    if (typeof props.content === 'string') {
-      const trimmed = props.content.trim()
+    if (typeof props.message === 'string') {
+      const trimmed = props.message.trim()
       if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
         const obj = JSON.parse(trimmed)
         return JSON.stringify(obj, null, 2)
@@ -30,7 +30,7 @@ const jsonPretty = computed<string | null>(() => {
 
 // 非 JSON 的纯文本内容
 const plainText = computed<string>(() => {
-  if (typeof props.content === 'string') return props.content
+  if (typeof props.message === 'string') return props.message
   return ''
 })
 </script>
@@ -44,9 +44,9 @@ const plainText = computed<string>(() => {
           <span class="tool-title">{{ props.title || '工具调用' }}</span>
         </div>
         <!-- JSON 优先渲染：当内容为合法 JSON 时进行缩进美化 -->
-        <pre v-if="jsonPretty && props.content !== props.title" class="tool-content"><code class="language-json">{{ jsonPretty }}</code></pre>
+        <pre v-if="jsonPretty && props.message !== props.title" class="tool-message"><code class="language-json">{{ jsonPretty }}</code></pre>
         <!-- 非 JSON 情况下回退到原有的纯文本展示 -->
-        <pre v-else-if="plainText && props.content !== props.title" class="tool-content">{{ plainText }}</pre>
+        <pre v-else-if="plainText && props.message !== props.title" class="tool-message">{{ plainText }}</pre>
       </div>
     </div>
   </div>
@@ -59,5 +59,5 @@ const plainText = computed<string>(() => {
 .tool-box { background: #f7fbff; border: 1px solid #cfe8ff; border-radius: 8px; overflow: hidden; }
 .tool-box-header { background: #e8f3ff; border-bottom: 1px solid #cfe8ff; padding: 6px 10px; }
 .tool-title { font-size: 0.9rem; color: #1565c0; font-weight: 600; }
-.tool-content { margin: 0; padding: 10px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.9rem; white-space: pre-wrap; word-break: break-word; }
+.tool-message { margin: 0; padding: 10px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.9rem; white-space: pre-wrap; word-break: break-word; }
 </style>

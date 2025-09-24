@@ -1,0 +1,23 @@
+// Global SCSS design tokens
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 12px;
+$space-lg: 16px;
+$space-xl: 24px;
+
+$border-color: #e5e7eb;
+$text-color: #1f2937;
+$muted-color: #666;
+
+// Section fixed heights (can be tuned per layout)
+$section-height-mcp: 360px;
+$section-height-system: 360px;
+
+// Scrollbar (optional)
+@mixin pretty-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c5cbd3 transparent;
+  &::-webkit-scrollbar { width: 8px; height: 8px; }
+  &::-webkit-scrollbar-thumb { background: #c5cbd3; border-radius: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
