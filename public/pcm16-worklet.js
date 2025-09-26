@@ -5,6 +5,10 @@ class Pcm16Processor extends AudioWorkletProcessor {
     this.targetSampleRate = opts.targetSampleRate || 16000;
     this._resampleBuffer = [];
     this._lastSample = 0;
+    // 调整为1024字节 = 512样本 = 32ms，减少数据量
+    this._chunkSamples = 512;  // 32ms chunks = 512 samples = 1024 bytes
+    // cache Int16 samples between process() calls
+    this._pending = [];
   }
 
   static get parameterDescriptors() { return []; }
@@ -44,8 +48,23 @@ class Pcm16Processor extends AudioWorkletProcessor {
 
     const inSr = sampleRate; // AudioWorklet global
     const int16 = this.downsampleFloat32ToInt16(ch0, inSr, this.targetSampleRate);
-    // send transferable ArrayBuffer to main thread
-    this.port.postMessage(int16.buffer, [int16.buffer]);
+    // accumulate and flush in 20ms (320 samples) chunks
+    for (let i = 0; i < int16.length; i++) {
+      this._pending.push(int16[i]);
+      if (this._pending.length >= this._chunkSamples) {
+        const chunk = new Int16Array(this._chunkSamples);
+        for (let j = 0; j < this._chunkSamples; j++) chunk[j] = this._pending[j];
+        
+        // send transferable ArrayBuffer to main thread
+        this.port.postMessage(chunk.buffer, [chunk.buffer]);
+        // keep remainder in pending
+        if (this._pending.length > this._chunkSamples) {
+          this._pending = this._pending.slice(this._chunkSamples);
+        } else {
+          this._pending.length = 0;
+        }
+      }
+    }
     return true;
   }
 }

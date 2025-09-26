@@ -27,26 +27,13 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ArrowLeftOutlined } from '@ant-design/icons-vue'
+import { useRoleStore, type Role } from '@/stores/roleStore'
 
 const router = useRouter()
 const goBack = () => router.push('/playground')
 
-interface Role { id: string; name: string; avatar: string; desc: string }
-
-const roles: Role[] = [
-  {
-    id: 'conan',
-    name: '柯南',
-    desc: '真相只有一个！冷静缜密的推理型角色',
-    avatar: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect rx="16" ry="16" width="96" height="96" fill="%23f5f7ff"/><g transform="translate(12,12)"><circle cx="36" cy="24" r="12" fill="%231677ff"/><rect x="18" y="42" width="48" height="24" rx="12" fill="%231677ff"/></g></svg>'
-  },
-  {
-    id: 'detective',
-    name: '福尔摩斯',
-    desc: '观察入微、逻辑严密的侦探角色',
-    avatar: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect rx="16" ry="16" width="96" height="96" fill="%23fff5f0"/><g transform="translate(12,12)"><circle cx="36" cy="24" r="12" fill="%23ff7a45"/><rect x="18" y="42" width="48" height="24" rx="12" fill="%23ff7a45"/></g></svg>'
-  },
-]
+const roleStore = useRoleStore()
+const roles = roleStore.roles
 
 function enter(role: Role) {
   router.push(`/playground/role-play-agent/${role.id}`)

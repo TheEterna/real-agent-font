@@ -46,3 +46,19 @@ const store = {
     }
   }
 }
+
+/**
+ * Append a message into a session and touch its updated time.
+ * Exported for convenience of simple views/components.
+ */
+export function appendMessage(id: string, msg: UIMessage) {
+  const arr = messagesBySession.value[id] ?? []
+  messagesBySession.value[id] = [...arr, msg]
+  const idx = sessions.value.findIndex(s => s.id === id)
+  if (idx >= 0) {
+    sessions.value[idx] = { ...sessions.value[idx], updatedAt: new Date() }
+  } else {
+    // if session not exists, create a lightweight entry
+    sessions.value.unshift({ id, title: '新对话', updatedAt: new Date() })
+  }
+}
