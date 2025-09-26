@@ -1,7 +1,11 @@
 <template>
   <div class="datalab">
     <div class="topbar">
-      <a-button type="default" size="small" @click="goBack">← 返回 Playground</a-button>
+      <a-button type="default" shape="circle" @click="goBack" :title="'返回 Playground'">
+        <template #icon>
+          <ArrowLeftOutlined />
+        </template>
+      </a-button>
     </div>
     <a-card :bordered="false" class="content">
       <a-typography-title :level="4" style="margin-top:0">Data Lab（示例应用）</a-typography-title>
@@ -14,6 +18,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 const router = useRouter()
 const goBack = () => router.push('/playground')
 </script>

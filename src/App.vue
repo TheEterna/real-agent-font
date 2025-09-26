@@ -121,7 +121,7 @@
       </div>
     </div>
     <a-layout>
-      <a-layout-header class="header">
+      <a-layout-header class="header" v-if="showHeader">
         {{ t(`menu.${getCurrentMenu()}`) }}
       </a-layout-header>
       <a-layout-content style="position: relative; overflow: auto;padding: 16px; display: flex;">
@@ -174,6 +174,7 @@ const getCurrentMenu = () => {
 }
 
 const isStandalone = computed(() => Boolean(route.meta && (route.meta as any).standalone))
+const showHeader = computed(() => !(route.meta && (route.meta as any).hideHeader))
 // 悬停自动展开：折叠状态下鼠标移入暂时展开
 const effectiveCollapsed = computed(() => collapsed.value && !isHovering.value)
 

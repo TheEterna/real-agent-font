@@ -9,8 +9,10 @@ const routes: RouteRecordRaw[] = [
   { path: '/workflows', component: () => import('@/pages/Workflows.vue') },
   { path: '/config', component: () => import('@/pages/Config.vue') },
   { path: '/logs', component: () => import('@/pages/Logs.vue') },
-  { path: '/playground', component: () => import('@/pages/Playground.vue') },
-  { path: '/playground/data-lab', component: () => import('@/pages/playground/DataLab.vue'), meta: { standalone: true } },
+  { path: '/playground', component: () => import('@/pages/playground/Playground.vue') },
+  { path: '/playground/data-lab', component: () => import('@/pages/playground/DataLab.vue'), meta: { hideHeader: true }  },
+  { path: '/playground/role-play-agent', component: () => import('@/pages/playground/role-play-agent/RoleSelect.vue'), meta: { hideHeader: true }  },
+  { path: '/playground/role-play-agent/:roleId', component: () => import('@/pages/playground/role-play-agent/Index.vue'), meta: { hideHeader: true }  },
   { path: '/SseTest', component: () => import('@/pages/SseTest.vue') },
 ]
 

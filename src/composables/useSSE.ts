@@ -28,7 +28,7 @@ export function useSSE(options?: { onScrollToBottom?: () => void, onDoneNotice?:
       type: MessageType.System,
       sender: 'Coding Agent',
       message: `Coding Agent 尚未接入后端，收到指令：${text}`,
-      timestamp: new Date(),
+      timestamp: new Date()
     })
     await scrollToBottom()
   }
