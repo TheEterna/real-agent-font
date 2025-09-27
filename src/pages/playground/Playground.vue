@@ -8,7 +8,11 @@
               <img :src="item.img" alt="cover" style="width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid #eef2f7;" />
               <div>
                 <div style="font-weight:600;">{{ item.title }}</div>
-                <div style="color:#666;margin-top:4px;">{{ item.description }}</div>
+                <div style="color:#666;margin-top:4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;;">{{ item.description }}</div>
               </div>
             </div>
           </a-card>

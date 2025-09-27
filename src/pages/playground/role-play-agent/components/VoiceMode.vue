@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick, getCurrentInstance } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick, getCurrentInstance, reactive } from 'vue'
 import { appendMessage, useChatStore } from '@/stores/chatStore'
 import { MessageType } from '@/types/events'
 import { PauseOutlined, CloseOutlined, AudioMutedOutlined, AudioTwoTone } from '@ant-design/icons-vue'
@@ -22,7 +22,6 @@ const circleSize = props.circleSize ?? 200
 const primaryColor = props.primaryColor ?? '#f0c'
 const secondaryColor = props.secondaryColor ?? '#9cf'
 const animationSpeed = props.animationSpeed ?? 1
-const volumeSensitivity = props.volumeSensitivity ?? 3
 const emit = defineEmits(['exit'])
 
 // Chat store for message history
@@ -46,6 +45,10 @@ const tips = ref('你可以开始说话')
 const dot = ref(1)
 let dotTimer: number | null = null
 
+const persistenceSignal = reactive({
+  lastTurnAt: ''
+})
+
 const recording = ref(false)
 const assistantResponding = ref(false)
 const turning = ref(false)
@@ -54,15 +57,12 @@ const playing = ref(false)
 const asrText = ref('')
 const llmText = ref('')
 
-// Realtime streaming resources
 let currentStream: MediaStream | null = null
 let audioCtx: AudioContext | null = null
 let workletNode: AudioWorkletNode | null = null // mic encoder (16k)
 let playerNode: AudioWorkletNode | null = null // pcm24k player
 let playerGain: GainNode | null = null
 let ws: WebSocket | null = null
-
-const audioRef = ref<HTMLAudioElement | null>(null)
 const muted = ref(false)
 
 
@@ -76,13 +76,21 @@ setInterval(() => {
 }, 50)
 
 const circleScale = computed(() => {
+  if (muted.value) return 1.0
   const breathingScale = 1 + Math.sin(breathingPhase.value) * 0.02 // subtle breathing
-  const base = (playing.value ? 1.06 : 1.0) * breathingScale
+  const base = ((recording.value || playing.value) ? 1.06 : 1.0) * breathingScale
   const s = base + vuLevel.value * 0.25
   return Number.isFinite(s) ? s : 1.0
 })
 
 const circleShadow = computed(() => {
+  if (muted.value) {
+    const color = primaryColor.replace('#', '')
+    const r = parseInt(color.substr(0,2), 16)
+    const g = parseInt(color.substr(2,2), 16)
+    const b = parseInt(color.substr(4,2), 16)
+    return `0 0 12px rgba(${r}, ${g}, ${b}, 0.2)`
+  }
   const breathingGlow = 0.1 + Math.sin(breathingPhase.value * 0.8) * 0.05
   const blur = Math.round(20 + vuLevel.value * 40 + breathingGlow * 10)
   const alpha = Math.min(0.7, 0.2 + vuLevel.value * 0.5 + breathingGlow).toFixed(2)
@@ -103,10 +111,11 @@ const circleStyle = computed(() => ({
   height: `${circleSize}px`,
   background: circleGradient.value,
   transform: `scale(${circleScale.value})`,
-  boxShadow: circleShadow.value
+  boxShadow: circleShadow.value,
+  flexShrink: '0',
+  aspectRatio: '1 / 1'
 }))
 
-// 路线B：实时流，依赖服务端 VAD；本地不再做静音判定
 
 onMounted(() => {
   dotTimer = window.setInterval(() => {
@@ -134,29 +143,27 @@ async function startRecord() {
   // 开始实时推流（AudioWorklet → PCM16k → WebSocket）并订阅后端 SSE
   try {
     await startRealtime()
+    // 确保AudioContext被激活（现代浏览器需要用户交互）
+    if (audioCtx && audioCtx.state === 'suspended') {
+      await audioCtx.resume()
+      console.log('[VoiceMode] AudioContext resumed')
+    }
     recording.value = true
-    tips.value = '你可以开始说话'
+    if (!muted.value) {
+      tips.value = '你可以开始说话'
+    } else {
+      tips.value = '已静音'
+    }
   } catch (e: any) {
     tips.value = '无法访问麦克风：' + (e?.message || e)
   }
 }
 
-function stopRecord() {
-  // 停止实时推流，关闭连接
-  try { ws?.send('close') } catch {}
-  cleanupRealtime()
-  recording.value = false
-}
 
 function exitVoice() {
   // 彻底停止本轮，退出语音
   try { ws?.send('close') } catch {}
   cleanupRealtime()
-  if (audioRef.value) {
-    try { audioRef.value.pause() } catch {}
-    try { audioRef.value.currentTime = 0 } catch {}
-    try { audioRef.value.src = '' ; audioRef.value.load() } catch {}
-  }
   playing.value = false
   turning.value = false
   recording.value = false
@@ -165,17 +172,17 @@ function exitVoice() {
 
 function onStateButtonClick() {
   if (playing.value) {
-    // 打断当前对话（停止播放 + 终止会话）
-    try { ws?.send('close') } catch {}
-    if (audioRef.value) { try { audioRef.value.pause() } catch {} }
-    // 停止播放器
+    // 暂停AI播放（只停止播放，不关闭会话）
     try { playerNode?.port.postMessage({ type: 'stop' }) } catch {}
     playing.value = false
     turning.value = false
     assistantResponding.value = false
-    tips.value = '已打断'
-    // 回到聆听
-    setTimeout(() => startRecord().catch(() => {}), 200)
+    tips.value = '已暂停AI播放'
+    console.log('[VoiceMode] AI playback paused by user')
+    // 回到聆听状态，但不重新开始录音（保持当前状态）
+    if (!recording.value && !muted.value) {
+      setTimeout(() => startRecord().catch(() => {}), 200)
+    }
   } else {
     // 正在听：手动触发提交
     try { ws?.send('commit') } catch {}
@@ -184,24 +191,28 @@ function onStateButtonClick() {
 }
 
 function toggleMute() {
-  muted.value = !muted.value
-  if (playerGain) playerGain.gain.value = muted.value ? 0 : 1
-  // 静音状态提示，但不影响正常的对话流程提示
-  const muteStatus = muted.value ? '已静音' : '取消静音'
-  console.log('[VoiceMode] Mute status:', muteStatus)
-  // 只在非对话状态时显示静音提示
-  if (!recording.value && !playing.value && !assistantResponding.value) {
-    tips.value = muteStatus
-    setTimeout(() => {
-      if (!recording.value && !playing.value && !assistantResponding.value) {
-        tips.value = '你可以开始说话'
-      }
-    }, 1500)
+  const nextMuted = !muted.value
+  muted.value = nextMuted
+
+  if (nextMuted) {
+    // 静音时：只停止用户音频数据传输，不影响AI播放
+    vuLevel.value = 0 // 立即停止圆圈律动
+    if (!playing.value && !assistantResponding.value) {
+      tips.value = '已静音'
+    }
+    console.log('[VoiceMode] Muted - user audio transmission stopped')
+  } else {
+    // 取消静音时：恢复用户音频数据传输
+    if (!playing.value && !assistantResponding.value) {
+      tips.value = '你可以开始说话'
+    }
+    console.log('[VoiceMode] Unmuted - user audio transmission resumed')
   }
 }
 
 
 async function startRealtime() {
+
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
   currentStream = stream
   audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -215,10 +226,32 @@ async function startRealtime() {
 
   // Player worklet for streaming 24k PCM base64 from server
   playerNode = new AudioWorkletNode(audioCtx, 'pcm24k-player')
+  // 根据阿里云官方文档，音频采样率为24kHz
   try { playerNode.port.postMessage({ type: 'setSrcRate', value: 24000 }) } catch {}
+  console.log('[VoiceMode] Set player sample rate to 24000Hz (official Aliyun spec)')
   playerGain = audioCtx.createGain()
-  playerGain.gain.value = muted.value ? 0 : 1
+  playerGain.gain.value = 1 // 始终保持AI音量为1，静音只影响用户麦克风
   playerNode.connect(playerGain).connect(audioCtx.destination)
+
+  // 调试信息
+  console.log('[VoiceMode] Audio setup:', {
+    audioCtxState: audioCtx.state,
+    audioCtxSampleRate: audioCtx.sampleRate,
+    playerGainValue: playerGain.gain.value,
+    muted: muted.value,
+    playerNodeConnected: !!playerNode,
+    destinationConnected: !!audioCtx.destination
+  })
+
+  // 测试音频播放 - 播放一个简单的测试音调
+  const testOscillator = audioCtx.createOscillator()
+  const testGain = audioCtx.createGain()
+  testOscillator.connect(testGain).connect(audioCtx.destination)
+  testOscillator.frequency.setValueAtTime(440, audioCtx.currentTime) // A4音调
+  testGain.gain.setValueAtTime(0.1, audioCtx.currentTime) // 低音量
+  testOscillator.start(audioCtx.currentTime)
+  testOscillator.stop(audioCtx.currentTime + 0.2) // 播放0.2秒
+  console.log('[VoiceMode] Test tone played - if you hear a beep, audio output works')
 
   // Open SSE first to ensure we receive events (only once)
   // Open WebSocket for PCM frames (reopen if closed)
@@ -227,6 +260,10 @@ async function startRealtime() {
 
   // Forward PCM Int16 buffers from worklet to WS
   workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
+    if (muted.value) {
+      vuLevel.value = 0
+      return
+    }
     // update UI vu meter from the same 20ms chunk (320 samples @16k)
     try {
       const view = new Int16Array(e.data)
@@ -245,6 +282,7 @@ async function startRealtime() {
     // forward to backend (阿里云VAD会自动处理打断)
     try {
       if (ws && ws.readyState === WebSocket.OPEN) {
+        if (muted.value) return
         console.log('[VoiceMode] sending audio data:', e.data.byteLength, 'bytes')
         ws.send(e.data)
       } else {
@@ -301,24 +339,36 @@ function openWs() {
           break
         }
         case 'audio_delta': {
-          console.log("语音")
-          try {
-            if (!playerNode) {
-              console.warn('[WS] audio_delta - playerNode not ready')
-              return
-            }
-            const ab = base64ToArrayBuffer(String(payload))
-            console.log('[WS] audio_delta - payload length:', String(payload).length, 'decoded bytes:', ab.byteLength)
-            if (ab && ab.byteLength) {
-              playerNode.port.postMessage({ type: 'push', pcm16: ab }, [ab])
-              if (!playing.value) { playing.value = true; tips.value = '播放中' }
-              console.log('[WS] audio_delta - sent to player, playing:', playing.value)
-            } else {
-              console.warn('[WS] audio_delta - empty or invalid audio data')
-            }
-          } catch (e) {
-            console.error('[WS] audio_delta error:', e)
+
+          if (!playerNode) {
+            console.warn('[WS] audio_delta - playerNode not ready')
+            return
           }
+          if (!playerGain) {
+            console.warn('[WS] audio_delta - playerGain not ready')
+            return
+          }
+          const ab = base64ToArrayBuffer(String(payload))
+          console.log('[WS] audio_delta - Debug info:', {
+            payloadLength: String(payload).length,
+            decodedBytes: ab.byteLength,
+            playerGainValue: playerGain.gain.value,
+            audioCtxState: audioCtx?.state,
+            playing: playing.value
+          })
+
+          if (ab && ab.byteLength) {
+            // 检查PCM数据的前几个字节
+            const view = new Int16Array(ab.slice(0, Math.min(ab.byteLength, 20)))
+            console.log('[WS] audio_delta - PCM sample data (first 10 samples):', Array.from(view))
+
+            playerNode.port.postMessage({ type: 'push', pcm16: ab }, [ab])
+            if (!playing.value) { playing.value = true; tips.value = '播放中' }
+            console.log('[WS] audio_delta - sent to player, playing:', playing.value)
+          } else {
+            console.warn('[WS] audio_delta - empty or invalid audio data')
+          }
+
           break
         }
         case 'llm_final':
@@ -336,11 +386,16 @@ function openWs() {
           llmText.value = ''
           asrText.value = ''
           assistantResponding.value = false
+          persistenceSignal.lastTurnAt = new Date().toLocaleTimeString()
           // 自动开始下一轮录音
           if (!recording.value) {
             setTimeout(() => {
               startRecord().then(() => {
-                tips.value = '你可以开始说话'
+                if (!muted.value) {
+                  tips.value = '你可以开始说话'
+                } else {
+                  tips.value = '已静音'
+                }
               }).catch(() => {
                 tips.value = '录音启动失败'
               })
@@ -352,11 +407,13 @@ function openWs() {
           // 阿里云VAD检测到用户开始说话，打断AI播放
           console.log('[WS] User interruption detected by Aliyun VAD')
           if (playing.value) {
-            try { ws?.send('close') } catch {}
-            if (audioRef.value) { try { audioRef.value.pause() } catch {} }
             try { playerNode?.port.postMessage({ type: 'stop' }) } catch {}
             playing.value = false
             assistantResponding.value = false
+            turning.value = false
+            if (!muted.value) {
+              tips.value = '你可以继续说话'
+            }
             // 被打断时不显示tip，只记录日志
             console.log('[WS] AI playback interrupted by user speech')
           }
@@ -405,100 +462,211 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
   }
 }
 
-function audioUrlOf(p: any): string | null {
-  if (typeof p === 'string') {
-    const s = p.trim()
-    if (!s) return null
-    if (s.startsWith('data:audio')) return s
-    if (s.startsWith('http') || s.startsWith('/')) return s
-    // likely base64 without prefix
-    if (/^[A-Za-z0-9+/=\r\n]+$/.test(s)) {
-      return `data:audio/wav;base64,${s.replace(/\r?\n/g, '')}`
-    }
-    return null
-  }
-  if (!p || typeof p !== 'object') return null
-  if (p.audio_url) return p.audio_url
-  if (p.url) return p.url
-  if (p.audioBase64) return `data:audio/wav;base64,${String(p.audioBase64)}`
-  if (p.base64) return `data:audio/wav;base64,${String(p.base64)}`
-  return null
-}
 
-// 旧的一次性上传与手动解析 SSE 已移除，现由 EventSource 直连后端 /api/voice/stream
+
 </script>
 
 <template>
   <div class="voice-mode">
-    <!-- 语音交互区域 -->
-    <div class="voice-interaction">
-      <div class="circle" :class="{ speaking: recording || playing }" :style="circleStyle"></div>
-      <div class="tips">{{ tips }}</div>
+    <section class="voice-chat">
+      <header class="chat-header">
+        <div class="chat-title">语音对话记录</div>
+        <div class="chat-subtitle">与 AI 的每一句交流都会同步在这里</div>
+      </header>
 
-      <!-- AI说话时显示暂停按钮，否则显示律动点 -->
-      <PauseOutlined v-if="playing" class="big-icon pause-btn" @click="onStateButtonClick" title="暂停AI说话"/>
-      <div v-else class="dots" :class="{ dancing: recording || assistantResponding }">
-        <span v-for="i in 3" :key="i" :class="{ on: i === dot }"></span>
-      </div>
-      <div class="current-conversation">
-        <div class="line asr" v-if="asrText">用户: {{ asrText }}</div>
-        <div class="line llm" v-if="llmText">助手: {{ llmText }}</div>
-      </div>
-    </div>
-
-    <!-- 聊天记录区域 -->
-    <div class="chat-history" v-if="messages.length > 0">
-      <div class="history-title">对话记录</div>
       <div class="message-list" ref="messageListRef">
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          class="message-item"
-          :class="{ 'user': msg.type === MessageType.User, 'assistant': msg.type === MessageType.Assistant }"
-        >
-          <div class="message-sender">{{ msg.type === MessageType.User ? '你' : 'AI' }}</div>
-          <div class="message-content">{{ msg.message }}</div>
+        <div v-if="!messages.length" class="chat-empty">
+          <a-empty description="暂无语音对话，点击开始说话吧" />
         </div>
+        <template v-else>
+          <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            class="message-item"
+            :class="{ 'user': msg.type === MessageType.User, 'assistant': msg.type === MessageType.Assistant }"
+          >
+            <div class="bubble" :class="msg.type === MessageType.User ? 'user' : 'ai'">
+              <div class="bubble-label">{{ msg.type === MessageType.User ? '你' : 'AI' }}</div>
+              <div class="bubble-text">{{ msg.message }}</div>
+            </div>
+          </div>
+        </template>
       </div>
-    </div>
+    </section>
 
+    <aside class="voice-side">
+      <a-card class="voice-control-card" bordered="false">
 
-    <!-- 操作按钮 -->
-    <div class="actions">
-      <a-space :size=20>
-        <!-- 静音切换 -->
-        <AudioMutedOutlined v-if="muted" class="big-icon" @click="toggleMute" />
-        <AudioTwoTone v-else class="big-icon" @click="toggleMute" />
+        <div class="voice-visual">
+          <div class="circle-shell">
+            <div class="circle" :class="{ speaking: recording || playing }" :style="circleStyle"></div>
+            <div class="pulse-ring" :class="{ active: recording || playing }"></div>
+          </div>
+        </div>
 
-        <!-- 关闭语音聊天 -->
-        <CloseOutlined style="color: #d94c4f" class="big-icon" @click="exitVoice" />
-      </a-space>
-    </div>
+        <div class="status-panel">
+          <div class="status-line">
+            <span class="status-dot" :class="{ active: recording || playing }"></span>
+            <span class="status-text">{{ muted ? '当前静音' : tips }}</span>
+          </div>
+          <div class="status-meta">
+            <div class="meta-pill" :class="{ playing: playing }">{{ playing ? 'AI 播放中' : (recording ? '聆听中' : '等待开始') }}</div>
+            <div v-if="persistenceSignal.lastTurnAt" class="meta-pill ghost">快照 {{ persistenceSignal.lastTurnAt }}</div>
+          </div>
+        </div>
 
-    <audio ref="audioRef"></audio>
+        <div class="live-captions" v-if="asrText || llmText">
+          <div class="caption-block" v-if="asrText">
+            <div class="caption-label">你正在说</div>
+            <div class="caption-text">{{ asrText }}</div>
+          </div>
+          <div class="caption-block" v-if="llmText">
+            <div class="caption-label">AI 正在回复</div>
+            <div class="caption-text">{{ llmText }}</div>
+          </div>
+        </div>
+
+        <div class="interaction-control">
+          <PauseOutlined v-if="playing" class="action-icon pause" @click="onStateButtonClick" title="暂停AI说话"/>
+          <div v-else class="dots" :class="{ dancing: recording || assistantResponding }">
+            <span v-for="i in 3" :key="i" :class="{ on: i === dot }"></span>
+          </div>
+        </div>
+
+        <div class="voice-actions">
+          <a-space :size="16">
+            <AudioMutedOutlined v-if="muted" class="action-icon" @click="toggleMute" />
+            <AudioTwoTone v-else class="action-icon" @click="toggleMute" />
+            <CloseOutlined class="action-icon danger" @click="exitVoice" />
+          </a-space>
+        </div>
+      </a-card>
+    </aside>
   </div>
 </template>
 
 
 <style scoped lang="scss">
 .voice-mode {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
   width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  color: #1f2558;
+  align-items: stretch;
 }
 
-// 语音交互区域
-.voice-interaction {
+.voice-chat {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  box-shadow: 0 24px 40px rgba(30, 63, 155, 0.12);
+  padding: 24px;
+}
+
+.chat-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1b2359;
+}
+
+.chat-subtitle {
+  font-size: 13px;
+  color: #6b78a9;
+}
+
+.message-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin-top: 24px;
-  min-height: 300px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.chat-empty {
+  padding: 80px 0;
+}
+
+.message-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.message-item.user {
+  align-items: flex-end;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  max-width: 80%;
+  line-height: 1.55;
+  font-size: 14px;
+  box-shadow: 0 18px 34px rgba(33, 58, 140, 0.1);
+  border: 1px solid rgba(142, 160, 215, 0.24);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.bubble.user {
+  background: linear-gradient(135deg, rgba(129, 211, 255, 0.28), rgba(99, 162, 255, 0.26));
+  color: #124b73;
+  border-color: rgba(99, 162, 255, 0.34);
+}
+
+.bubble.ai {
+  background: linear-gradient(135deg, rgba(142, 233, 208, 0.24), rgba(97, 204, 169, 0.22));
+  color: #0b5d4d;
+  border-color: rgba(97, 204, 169, 0.28);
+}
+
+.bubble-label {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.bubble-text {
+  word-break: break-word;
+}
+
+.voice-side {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-control-card {
+  border-radius: 22px;
+  box-shadow: 0 24px 46px rgba(24, 52, 133, 0.16);
+  background: linear-gradient(165deg, rgba(104, 143, 255, 0.12), rgba(221, 229, 255, 0.32));
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+.voice-visual {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 40px;
 }
 
 .circle {
@@ -507,9 +675,120 @@ function audioUrlOf(p: any): string | null {
   transition: transform .08s linear, box-shadow .12s ease;
 }
 
-.tips {
-  color: #666;
+.circle-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: calc(100% + 36px);
+  height: calc(100% + 36px);
+  border-radius: 50%;
+  border: 1px dashed rgba(103, 137, 255, 0.45);
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.3s ease, transform 0.4s ease;
+}
+
+.pulse-ring.active {
+  opacity: 1;
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
+  color: #4c5baa;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(91, 115, 255, 0.35);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-dot.active {
+  background: rgba(91, 115, 255, 0.9);
+  box-shadow: 0 0 0 6px rgba(91, 115, 255, 0.18);
+}
+
+.status-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.meta-pill {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: rgba(93, 118, 255, 0.18);
+  color: #3948a4;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.meta-pill.playing {
+  background: rgba(62, 202, 173, 0.18);
+  color: #0f8b72;
+}
+
+.meta-pill.ghost {
+  background: rgba(150, 163, 214, 0.16);
+  color: #516196;
+  font-weight: 500;
+}
+
+.live-captions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.32);
+  border: 1px solid rgba(174, 191, 242, 0.28);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.caption-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.caption-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4450a1;
+  letter-spacing: .2px;
+}
+
+.caption-text {
+  font-size: 13px;
+  color: #21305f;
+  line-height: 1.5;
+}
+
+.interaction-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
 }
 
 .dots {
@@ -539,120 +818,52 @@ function audioUrlOf(p: any): string | null {
 .dots.dancing span:nth-child(2) { animation-delay: .18s }
 .dots.dancing span:nth-child(3) { animation-delay: .36s }
 
-.current-conversation {
-  min-height: 60px;
-  width: 100%;
-  text-align: center;
-  padding: 0 20px;
-}
-
-.line {
-  font-size: 14px;
-  margin: 4px 0;
-}
-
-.line.asr {
-  color: #444;
-}
-
-.line.llm {
-  color: #222;
-  font-weight: 600;
-}
-
-// 聊天记录区域
-.chat-history {
-  width: 100%;
-  max-width: 600px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 20px;
-}
-
-.history-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-  text-align: center;
-}
-
-.message-list {
-  max-height: 300px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.message-item {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 12px;
-  border-radius: 8px;
-
-  &.user {
-    background: #e3f2fd;
-    align-self: flex-end;
-    max-width: 80%;
-
-    .message-sender {
-      color: #1976d2;
-    }
-  }
-
-  &.assistant {
-    background: #f1f8e9;
-    align-self: flex-start;
-    max-width: 80%;
-
-    .message-sender {
-      color: #388e3c;
-    }
-  }
-}
-
-.message-sender {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.message-content {
-  font-size: 14px;
-  line-height: 1.4;
-  color: #333;
-}
-
-// 操作按钮
-.actions {
+.voice-actions {
   display: flex;
   justify-content: center;
-  margin-top: 16px;
+  width: 100%;
 }
 
-.big-icon {
+.action-icon {
   cursor: pointer;
-  font-size: 32px;
-  padding: 12px;
-  background: rgba(210, 224, 238, 0.7);
-  border-radius: 50%;
-  margin: 10px;
-  transition: background-color 0.2s;
+  font-size: 30px;
+  padding: 10px;
+  background: rgba(223, 232, 255, 0.9);
+  border-radius: 14px;
+  color: #3851c9;
+  transition: all 0.25s ease;
 
   &:hover {
-    background: rgba(210, 224, 238, 0.9);
+    background: rgba(203, 216, 255, 1);
+    transform: translateY(-2px);
+  }
+}
+
+.action-icon.pause {
+  background: rgba(188, 212, 255, 0.9);
+  color: #1f3fad;
+}
+
+.action-icon.danger {
+  background: rgba(255, 215, 220, 0.85);
+  color: #c4414a;
+}
+
+.action-icon.danger:hover {
+  background: rgba(255, 197, 203, 1);
+}
+
+.action-icon.pause:hover {
+  background: rgba(165, 195, 255, 0.95);
+}
+
+@media (max-width: 1200px) {
+  .voice-mode {
+    grid-template-columns: 1fr;
   }
 
-  &.pause-btn {
-    background: rgba(255, 193, 7, 0.8);
-    color: #856404;
-    animation: pulse-pause 1.5s infinite ease-in-out;
-
-    &:hover {
-      background: rgba(255, 193, 7, 1);
-    }
+  .voice-side {
+    order: -1;
   }
 }
 
@@ -669,6 +880,11 @@ function audioUrlOf(p: any): string | null {
 @keyframes beat {
   0%, 100% { transform: translateY(0); opacity: .6 }
   50% { transform: translateY(-6px); opacity: 1 }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.95); opacity: 0.45 }
+  50% { transform: scale(1.05); opacity: 0.9 }
 }
 
 </style>

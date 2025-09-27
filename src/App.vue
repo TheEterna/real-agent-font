@@ -10,12 +10,7 @@
       <div class="sider-inner">
         <div class="sider-top">
           <button class="collapse-btn" @click="toggleCollapse" :title="collapsed ? '展开' : '折叠'" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-            <template v-if="effectiveCollapsed">
-              <MenuUnfoldOutlined />
-            </template>
-            <template v-else>
               <MenuFoldOutlined />
-            </template>
           </button>
           <div class="brand" v-show="!effectiveCollapsed">Real Agent</div>
           <div class="lang" v-show="!effectiveCollapsed">
@@ -159,9 +154,6 @@ const { t, locale } = useI18n()
 
 const currentLocale = ref(locale.value || 'zh')
 const collapsed = ref(false)
-const isHovering = ref(false)
-const hoverEnterTimer = ref<number | null>(null)
-const hoverLeaveTimer = ref<number | null>(null)
 
 const changeLanguage = (lang: string) => {
   locale.value = lang
@@ -176,27 +168,18 @@ const getCurrentMenu = () => {
 const isStandalone = computed(() => Boolean(route.meta && (route.meta as any).standalone))
 const showHeader = computed(() => !(route.meta && (route.meta as any).hideHeader))
 // 悬停自动展开：折叠状态下鼠标移入暂时展开
-const effectiveCollapsed = computed(() => collapsed.value && !isHovering.value)
+const effectiveCollapsed = computed(() => collapsed.value )
 
 const onMouseEnter = () => {
-  if (hoverLeaveTimer.value) { window.clearTimeout(hoverLeaveTimer.value); hoverLeaveTimer.value = null }
   if (!collapsed.value) return
-  if (hoverEnterTimer.value) window.clearTimeout(hoverEnterTimer.value)
-  hoverEnterTimer.value = window.setTimeout(() => { isHovering.value = true }, 120)
 }
 
 const onMouseLeave = () => {
-  if (hoverEnterTimer.value) { window.clearTimeout(hoverEnterTimer.value); hoverEnterTimer.value = null }
   if (!collapsed.value) return
-  if (hoverLeaveTimer.value) window.clearTimeout(hoverLeaveTimer.value)
-  hoverLeaveTimer.value = window.setTimeout(() => { isHovering.value = false }, 80)
 }
 
 const toggleCollapse = () => {
   // 点击切换时取消悬停展开，避免视觉抖动
-  if (hoverEnterTimer.value) { window.clearTimeout(hoverEnterTimer.value); hoverEnterTimer.value = null }
-  if (hoverLeaveTimer.value) { window.clearTimeout(hoverLeaveTimer.value); hoverLeaveTimer.value = null }
-  isHovering.value = false
   collapsed.value = !collapsed.value
 }
 </script>
@@ -210,9 +193,9 @@ const toggleCollapse = () => {
 .collapse-btn:hover{background:#f6f9ff}
 .lang{padding:0 0 8px}
 .sider-spacer{flex:1}
-.sider-bottom{display:grid;gap:6px;transition:all .25s ease}
+.sider-bottom{display: flex; flex-direction: column; gap: 6px; transition: all .25s ease}
 .sider-bottom--collapsed{display:flex;gap:8px;padding:6px;border:1px solid #eef2f7;background:#fff;border-radius:16px;justify-content:center;align-items:center}
-.app-icon{display:flex;align-items:center;gap:8px;border:1px solid #eef2f7;background:#fff;color:#222;padding:8px 10px;border-radius:10px;text-decoration:none;transition:all .25s ease}
+.app-icon{display:flex;align-items:center;gap:8px;border:1px solid #eef2f7;background:#fff;color:#222;padding:8px 10px;border-radius:10px;text-decoration:none;transition:all .25s ease; white-space: nowrap; overflow: hidden}
 .app-icon--collapsed{border-radius:999px;padding:6px;border-color:transparent;background:transparent}
 .app-icon--collapsed :deep(svg){font-size:18px}
 .app-icon--collapsed.router-link-active{background:#f5faff;border-color:#1677ff}

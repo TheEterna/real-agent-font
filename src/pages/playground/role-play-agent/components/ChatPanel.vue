@@ -1,60 +1,160 @@
 <template>
-  <a-card :bordered="true" class="chat-panel">
-    <div class="messages">
-      <div class="empty" v-if="!messages.length">暂无消息，开始对话吧～</div>
-      <div v-for="(m, i) in messages" :key="i" class="msg" :class="m.role">
-        <div class="bubble">{{ m.content }}</div>
-      </div>
-    </div>
-    <!-- 录音测试区域 -->
-    <div class="test-recording">
-      <div class="test-title">录音测试 (调试用)</div>
-      <div class="test-controls">
-        <a-button 
-          type="primary" 
-          :loading="testRecording" 
-          @click="startTestRecording"
-          :disabled="testRecording"
-        >
-          {{ testRecording ? `录音中 ${testDuration.toFixed(1)}s` : '开始5秒录音测试' }}
-        </a-button>
-        
-        <div v-if="testAudioUrl && !testRecording" class="test-playback">
-          <audio :src="testAudioUrl" controls style="width: 300px;"></audio>
-          <div class="test-info">
-            录制了 {{ testAudioData.length }} 个音频块（每块1600样本/3200字节），<br>
-            总样本数: {{ testAudioData.reduce((sum, chunk) => sum + chunk.length, 0) }}，<br>
-            总字节数: {{ testAudioData.reduce((sum, chunk) => sum + chunk.length, 0) * 2 }}
+  <div class="chat-layout">
+    <section class="chat-panel">
+      <div class="chat-shell">
+        <header class="chat-header">
+          <div class="chat-title">文本对话</div>
+          <div class="chat-subtitle">实时记录你与角色之间的每一句交流</div>
+        </header>
+
+        <div class="messages" ref="messagesRef">
+          <div class="empty" v-if="!messages.length">暂无消息，开始对话吧～</div>
+          <div
+            v-for="(m, i) in messages"
+            :key="i"
+            class="msg"
+            :class="m.role"
+          >
+            <div class="msg-meta">
+              <span class="sender">{{ m.role === 'user' ? '你' : 'AI' }}</span>
+            </div>
+            <div class="bubble" :class="m.role">
+              <div class="bubble-text">{{ m.content }}</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="composer">
-      <a-input-search v-model:value="draft" :enter-button="'发送'" @search="send" placeholder="来说点什么..." />
-    </div>
-  </a-card>
+        <footer class="composer">
+          <a-input-search
+            v-model:value="draft"
+            :enter-button="'发送'"
+            @search="send"
+            placeholder="来说点什么..."
+          />
+        </footer>
+      </div>
+    </section>
+
+    <aside class="chat-side">
+      <a-card class="record-card" bordered="false">
+        <div class="record-header">
+          <div class="record-title">
+            <span>录音调试</span>
+            <a-tag v-if="recordTest?.active" color="#5b77ff">进行中</a-tag>
+          </div>
+          <div class="record-hint">确保麦克风状态可用，录制链路通畅。</div>
+        </div>
+
+        <div v-if="recordTest" class="record-body">
+          <div class="record-status" :class="{ active: recordTest.active }">
+            <span class="status-light"></span>
+            <div class="status-text">
+              <span v-if="recordTest.active">{{ `录音测试进行中 · ${recordTest.duration.toFixed(1)}s` }}</span>
+              <span v-else-if="recordTest.lastCheckAt">最近一次测试：{{ recordTest.lastCheckAt }}</span>
+              <span v-else>尚未进行录音测试</span>
+            </div>
+          </div>
+
+          <a-space direction="vertical" style="width:100%">
+            <a-button type="primary" block :disabled="recordTest.active" @click="onStart">
+              开始 5 秒录音测试
+            </a-button>
+            <a-button block danger :disabled="!recordTest.active" @click="onStop">
+              手动停止
+            </a-button>
+          </a-space>
+
+          <div class="record-preview" v-if="recordTest.audioUrl">
+            <audio :src="recordTest.audioUrl" controls style="width: 100%;"></audio>
+            <div class="record-info">
+              <div>音频块：{{ recordTest.chunkCount }} 个</div>
+              <div>总样本数：{{ recordTest.totalSamples }}</div>
+              <div>总字节数：{{ recordTest.totalBytes }}</div>
+            </div>
+          </div>
+
+          <a-alert
+              v-else-if="!recordTest.active && recordTest.lastCheckAt"
+              type="warning"
+              show-icon
+              message="未捕获到任何音频数据，请检查麦克风权限或输入设备。"
+          />
+          <div class="record-preview-placeholder" v-else>
+            <div class="placeholder-content">
+              <div class="placeholder-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="24" r="20" fill="#F0F6FF"/>
+                  <path d="M20 16L20 32" stroke="#8AA4FF" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M28 16L28 32" stroke="#8AA4FF" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="placeholder-text">
+                <h3 v-if="recordTest.active">正在录音...</h3>
+                <h3 v-else>等待音频数据</h3>
+                <p>音频数据将在此处播放</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div v-else class="record-placeholder">
+          <div class="placeholder-content">
+            <div class="placeholder-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="20" fill="#F0F6FF"/>
+                <path d="M24 34C29.5228 34 34 29.5228 34 24C34 18.4772 29.5228 14 24 14C18.4772 14 14 18.4772 14 24C14 29.5228 18.4772 34 24 34Z" stroke="#8AA4FF" stroke-width="2"/>
+                <path d="M20 24L23 27L28 21" stroke="#8AA4FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="placeholder-text">
+              <h3>录音测试功能</h3>
+              <p>加载中...</p>
+            </div>
+          </div>
+        </div>
+      </a-card>
+    </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { nextTick, ref, watch, watchEffect } from 'vue'
 
 interface Message { role: 'user' | 'agent'; content: string }
 
-const props = defineProps<{ sessionId: string }>()
+interface RecordTestState {
+  active: boolean
+  lastCheckAt: string
+  duration: number
+  audioUrl: string | null
+  chunkCount: number
+  totalSamples: number
+  totalBytes: number
+}
+
+const props = defineProps<{
+  sessionId: string
+  recordTest?: RecordTestState
+  onStartTest?: () => void
+  onStopTest?: () => void
+}>()
 
 const messages = ref<Message[]>([])
 const draft = ref('')
-
-// 录音测试相关状态
-const testRecording = ref(false)
-const testAudioData = ref<Int16Array[]>([])
-const testAudioUrl = ref<string | null>(null)
-const testDuration = ref(0)
+const messagesRef = ref<HTMLElement | null>(null)
 
 watchEffect(() => {
   // 占位：当 sessionId 变化时，可在此加载历史
   void props.sessionId
+})
+
+watch(messages, () => {
+  nextTick(() => {
+    if (messagesRef.value) {
+      messagesRef.value.scrollTop = messagesRef.value.scrollHeight
+    }
+  })
 })
 
 function send() {
@@ -67,174 +167,280 @@ function send() {
   draft.value = ''
 }
 
-// 录音测试功能
-async function startTestRecording() {
-  if (testRecording.value) return
-  
-  try {
-    testAudioData.value = []
-    testDuration.value = 0
-    testRecording.value = true
-    
-    // 获取麦克风权限
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    const audioCtx = new AudioContext()
-    
-    // 加载AudioWorklet
-    await audioCtx.audioWorklet.addModule('/pcm16-worklet.js')
-    const source = audioCtx.createMediaStreamSource(stream)
-    const workletNode = new AudioWorkletNode(audioCtx, 'pcm16-processor', { 
-      processorOptions: { targetSampleRate: 16000 } 
-    })
-    
-    source.connect(workletNode)
-    
-    // 监听音频数据
-    workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-      const view = new Int16Array(e.data)
-      testAudioData.value.push(new Int16Array(view))
-    }
-    
-    // 5秒后停止录音
-    setTimeout(() => {
-      testRecording.value = false
-      workletNode.disconnect()
-      source.disconnect()
-      stream.getTracks().forEach(track => track.stop())
-      audioCtx.close()
-      
-      // 生成可播放的音频文件
-      generateTestAudio()
-    }, 5000)
-    
-    // 计时器
-    const timer = setInterval(() => {
-      if (!testRecording.value) {
-        clearInterval(timer)
-        return
-      }
-      testDuration.value += 0.1
-    }, 100)
-    
-  } catch (error) {
-    console.error('录音测试失败:', error)
-    testRecording.value = false
-  }
+const onStart = () => {
+  if (props.onStartTest) props.onStartTest()
 }
 
-// 生成可播放的WAV文件
-function generateTestAudio() {
-  if (testAudioData.value.length === 0) return
-  
-  // 合并所有音频数据
-  const totalSamples = testAudioData.value.reduce((sum, chunk) => sum + chunk.length, 0)
-  const combinedData = new Int16Array(totalSamples)
-  let offset = 0
-  
-  for (const chunk of testAudioData.value) {
-    combinedData.set(chunk, offset)
-    offset += chunk.length
-  }
-  
-  // 生成WAV文件
-  const wavBuffer = createWavFile(combinedData, 16000)
-  const blob = new Blob([wavBuffer], { type: 'audio/wav' })
-  
-  // 清理之前的URL
-  if (testAudioUrl.value) {
-    URL.revokeObjectURL(testAudioUrl.value)
-  }
-  
-  testAudioUrl.value = URL.createObjectURL(blob)
-}
-
-// 创建WAV文件格式
-function createWavFile(samples: Int16Array, sampleRate: number): ArrayBuffer {
-  const length = samples.length
-  const buffer = new ArrayBuffer(44 + length * 2)
-  const view = new DataView(buffer)
-  
-  // WAV文件头
-  const writeString = (offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i))
-    }
-  }
-  
-  writeString(0, 'RIFF')
-  view.setUint32(4, 36 + length * 2, true)
-  writeString(8, 'WAVE')
-  writeString(12, 'fmt ')
-  view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true)
-  view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * 2, true)
-  view.setUint16(32, 2, true)
-  view.setUint16(34, 16, true)
-  writeString(36, 'data')
-  view.setUint32(40, length * 2, true)
-  
-  // 音频数据
-  let offset = 44
-  for (let i = 0; i < length; i++) {
-    view.setInt16(offset, samples[i], true)
-    offset += 2
-  }
-  
-  return buffer
+const onStop = () => {
+  if (props.onStopTest) props.onStopTest()
 }
 </script>
 
 <style scoped lang="scss">
-.chat-panel { display:flex; flex-direction:column; gap:12px; height:100%; }
-.messages { flex:1; overflow:auto; display:grid; gap:8px; padding:8px; background:#fff; border:1px solid #eef2f7; border-radius:8px; }
-.msg { display:flex; }
-.msg.user { justify-content:flex-end; }
-.msg.agent { justify-content:flex-start; }
-.bubble { max-width:72%; padding:8px 10px; border-radius:10px; background:#f6f9ff; border:1px solid #e6eaf0; }
-.msg.user .bubble { background:#f5faff; border-color:#d6e6ff; }
-.empty{ color:#999; font-size:13px; }
-.composer { }
-
-// 录音测试区域
-.test-recording {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 12px 0;
+.chat-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: stretch;
+  height: 100%;
 }
 
-.test-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 12px;
+.chat-panel {
+  border-radius: 20px;
+  box-shadow: 0 26px 40px rgba(24, 52, 133, 0.12);
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(240, 246, 255, 0.9), #ffffff 60%);
+  border: 1px solid rgba(174, 191, 242, 0.24);
+}
+
+.chat-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 520px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.chat-header {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1c2358;
+}
+
+.chat-subtitle {
+  font-size: 13px;
+  color: #5a6592;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 24px 8px;
+  scrollbar-width: thin;
+}
+
+.empty {
+  color: #8893c2;
+  font-size: 14px;
   text-align: center;
+  padding: 80px 0;
 }
 
-.test-controls {
+.msg {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  gap: 6px;
+  max-width: 78%;
 }
 
-.test-playback {
+.msg.user {
+  align-self: flex-end;
+  text-align: right;
+}
+
+.msg.agent {
+  align-self: flex-start;
+}
+
+.msg.user .msg-meta {
+  justify-content: flex-end;
+}
+
+.msg-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  color: #7a86be;
+}
+
+.sender {
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.55;
+  box-shadow: 0 16px 30px rgba(35, 63, 148, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(142, 160, 215, 0.2);
+  color: #1f2558;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.bubble.user {
+  background: linear-gradient(135deg, rgba(129, 211, 255, 0.26), rgba(99, 162, 255, 0.24));
+  color: #124b73;
+  border-color: rgba(99, 162, 255, 0.28);
+}
+
+.bubble.agent {
+  background: linear-gradient(135deg, rgba(142, 233, 208, 0.24), rgba(97, 204, 169, 0.18));
+  color: #0b5d4d;
+  border-color: rgba(97, 204, 169, 0.22);
+}
+
+.composer {
+  padding: 8px 24px 24px;
+  display: flex;
+}
+
+.composer :deep(.ant-input) {
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.composer :deep(.ant-btn) {
+  border-radius: 0 14px 14px 0;
+  padding: 0 18px;
+  height: 46px;
+}
+
+.composer :deep(.ant-input-search-button) {
+  height: 46px;
+}
+
+.chat-side {
   display: flex;
   flex-direction: column;
+  min-height: 100%;
+}
+
+.record-card {
+  border-radius: 18px;
+  box-shadow: 0 20px 36px rgba(24, 52, 133, 0.12);
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.record-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.record-title {
+  display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2558;
 }
 
-.test-info {
+.record-hint {
+  font-size: 13px;
+  color: #6b78a9;
+}
+
+.record-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.record-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(92, 114, 205, 0.08);
+  border: 1px solid rgba(92, 114, 205, 0.18);
+}
+
+.record-status.active {
+  background: rgba(92, 114, 205, 0.14);
+  border-color: rgba(92, 114, 205, 0.28);
+}
+
+.status-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8aa4ff;
+  box-shadow: 0 0 0 4px rgba(138, 164, 255, 0.22);
+}
+
+.status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #4a5586;
+}
+
+.record-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(237, 243, 255, 0.6);
+}
+
+.record-info {
+  display: grid;
+  gap: 4px;
   font-size: 12px;
-  color: #6c757d;
+  color: #566296;
+}
+
+.record-preview-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 12px;
+  border-radius: 12px;
+  background: rgba(237, 243, 255, 0.6);
+  min-height: 120px;
+}
+
+.record-preview-placeholder .placeholder-content {
   text-align: center;
-  background: #e9ecef;
-  padding: 8px 12px;
-  border-radius: 4px;
+  color: #8893c2;
+}
+
+.record-preview-placeholder .placeholder-icon {
+  margin-bottom: 16px;
+}
+
+.record-preview-placeholder .placeholder-text h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #5a6592;
+}
+
+.record-preview-placeholder .placeholder-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #8893c2;
+}
+
+@media (max-width: 1024px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-side {
+    order: -1;
+  }
 }
 </style>

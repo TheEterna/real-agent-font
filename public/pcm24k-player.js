@@ -20,6 +20,15 @@ class PCM24kPlayerProcessor extends AudioWorkletProcessor {
           merged.set(this.src, 0);
           merged.set(f32, this.src.length);
           this.src = merged;
+          console.log('[PCM24k-Player] Received audio data:', {
+            inputBytes: ab.byteLength,
+            samples: view.length,
+            bufferSize: this.src.length,
+            firstSamples: Array.from(view.slice(0, 5)),
+            srcRate: this.srcRate,
+            dstRate: this.dstRate,
+            ratio: this.srcRate / this.dstRate
+          });
         }
       } else if (msg.type === 'done') {
         // Optionally mark end; we just let buffer drain
@@ -47,9 +56,33 @@ class PCM24kPlayerProcessor extends AudioWorkletProcessor {
     const ratio = this.srcRate / this.dstRate; // how many source frames per 1 output frame
 
     let needMaxIndex = Math.ceil(this.srcPos + frames * ratio) + 1;
-    if (this.src.length < needMaxIndex) {
-      // Not enough data; fill zeros for missing part
-      // We'll still output what we can to avoid blocking the graph
+    
+    // 确保有足够的缓冲数据再开始播放，避免断断续续
+    const minBufferSize = Math.max(1024, frames * ratio * 2); // 至少2倍的输出帧数
+    if (this.src.length < minBufferSize) {
+      // 缓冲不足，输出静音
+      for (let i = 0; i < frames; i++) {
+        ch0[i] = 0;
+        for (let ch = 1; ch < output.length; ch++) {
+          output[ch][i] = 0;
+        }
+      }
+      return true;
+    }
+
+    // 每200次process调用打印一次调试信息
+    if (!this.debugCounter) this.debugCounter = 0;
+    this.debugCounter++;
+    if (this.debugCounter % 200 === 0) {
+      console.log('[PCM24k-Player] Process debug:', {
+        bufferSize: this.src.length,
+        srcPos: this.srcPos,
+        frames: frames,
+        ratio: ratio,
+        srcRate: this.srcRate,
+        dstRate: this.dstRate,
+        minBufferSize: minBufferSize
+      });
     }
 
     for (let i = 0; i < frames; i++) {
