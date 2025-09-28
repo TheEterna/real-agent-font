@@ -48,6 +48,7 @@ let dotTimer: number | null = null
 const persistenceSignal = reactive({
   lastTurnAt: ''
 })
+const volumeSensitivity = props.volumeSensitivity ?? 3
 
 const recording = ref(false)
 const assistantResponding = ref(false)
@@ -666,7 +667,6 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-bottom: 40px;
 }
 
 .circle {

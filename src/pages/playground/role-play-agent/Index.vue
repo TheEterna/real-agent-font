@@ -23,10 +23,14 @@
         <div class="card-title">当前角色</div>
         <div class="role-overview" :class="{ 'role-overview--empty': !currentRole }">
           <template v-if="currentRole">
-            <img :src="currentRole.avatar" alt="avatar" />
+            <img :src="currentRole.avatarUrl || undefined" alt="avatar" />
             <div class="role-meta">
               <div class="role-name">{{ currentRole.name }}</div>
-              <div class="role-desc">{{ currentRole.desc || '这个角色正等你创造故事。' }}</div>
+              <div class="role-badges">
+                <a-tag v-if="currentRole.voice" color="#5b77ff">音色：{{ currentRole.voice }}</a-tag>
+                <a-tag v-if="currentRole.new" color="red">新角色</a-tag>
+              </div>
+              <div class="role-desc">{{ currentRole.description || '这个角色正等你创造故事。' }}</div>
             </div>
           </template>
           <template v-else>
@@ -39,46 +43,53 @@
     <main class="workspace" :class="{ 'workspace--voice': mode === '语音' }">
         <transition >
           <VoiceMode
-            v-if="mode === '语音' && currentRole"
+            v-if="mode === '语音' && currentRole && sessionId"
             :session-id="sessionId"
             :role-id="currentRole.id"
             @exit="mode = '文本'"
           />
           <ChatPanel
             v-else
-            :session-id="sessionId"
+            v-model:sessionId="sessionId"
+            :role-id="currentRole?.id"
             :record-test="recordTest"
             :on-start-test="startRecordTest"
             :on-stop-test="stopRecordTest"
+            @sessionSelected="onSessionSelected"
           />
         </transition>
     </main>
 
     <a-modal v-model:open="introVisible" :title="currentRole?.name || '角色简介'" :footer="null" width="520px">
-      <p v-if="currentRole">{{ currentRole.desc }}</p>
+      <p v-if="currentRole">{{ currentRole.description }}</p>
       <p v-else>未选择角色。</p>
     </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeftOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import ChatPanel from "@/pages/playground/role-play-agent/components/ChatPanel.vue";
 import VoiceMode from "@/pages/playground/role-play-agent/components/VoiceMode.vue";
-import { useRoleStore, type Role } from '@/stores/roleStore'
+import { createSession, fetchSession, endSession, fetchRoleById } from '@/services/roleplay'
+import type { SessionDetail, RoleDetail } from '@/types/roleplay'
 
 const router = useRouter()
 const route = useRoute()
-const goBack = () => router.push('/playground')
+const goBack = () => router.back()
 
-const sessionId = ref<string>('demo-session')
+// 会话管理
+const sessionId = ref<string>('')
+const sessionDetail = ref<SessionDetail | null>(null)
+const sessionLoading = ref(false)
 const mode = ref<'文本' | '语音'>('文本')
 
-const roleStore = useRoleStore()
-const roleId = computed(() => String(route.params.roleId || ''))
-const currentRole = computed<Role | undefined>(() => roleStore.getById(roleId.value))
+const roleId = computed(() => Number(route.params.roleId) || 0)
+const currentRole = ref<RoleDetail | null>(null)
+const roleLoading = ref(false)
 const introVisible = ref(false)
 
 const recordTest = reactive({
@@ -103,6 +114,106 @@ function openIntro() {
   if (!currentRole.value) return
   introVisible.value = true
 }
+
+function onSessionSelected(s: SessionDetail) {
+  // 将父组件中的当前会话信息更新为选中的会话
+  sessionDetail.value = s
+}
+
+// 加载角色信息
+async function loadRole() {
+  if (!roleId.value) {
+    message.error('角色ID无效')
+    router.push('/playground/role-play-agent')
+    return
+  }
+
+  roleLoading.value = true
+  try {
+    const response = await fetchRoleById(roleId.value)
+    currentRole.value = response.data
+    console.log('[RolePlay] 角色加载成功:', currentRole.value)
+  } catch (error) {
+    console.error('[RolePlay] 角色加载失败:', error)
+    message.error('角色加载失败，请重试')
+    router.push('/playground/role-play-agent')
+  } finally {
+    roleLoading.value = false
+  }
+}
+
+// 会话管理函数
+async function initializeSession() {
+  if (!currentRole.value) {
+    message.error('请先选择角色')
+    router.push('/playground/role-play-agent')
+    return
+  }
+
+  sessionLoading.value = true
+  try {
+    // 创建新会话
+    const sessionResponse = await createSession({
+      userId: 1, // 临时使用固定用户ID，后续可从用户状态获取
+      roleId: roleId.value,
+      mode: mode.value === '语音' ? 'voice' : 'text'
+    })
+
+    sessionDetail.value = sessionResponse.data
+    sessionId.value = sessionResponse.data.sessionCode
+
+    console.log('[RolePlay] 会话创建成功:', sessionDetail.value)
+  } catch (error) {
+    console.error('[RolePlay] 会话创建失败:', error)
+    message.error('会话创建失败，请重试')
+  } finally {
+    sessionLoading.value = false
+  }
+}
+
+async function handleEndSession() {
+  if (!sessionId.value) return
+
+  try {
+    await endSession(sessionId.value, '用户主动结束会话')
+    console.log('[RolePlay] 会话已结束')
+  } catch (error) {
+    console.error('[RolePlay] 结束会话失败:', error)
+  }
+}
+
+// 监听模式变化
+watch(mode, async (newMode) => {
+  // 若已有会话，先结束
+  if (sessionDetail.value) {
+    await handleEndSession()
+    sessionDetail.value = null
+    sessionId.value = ''
+  }
+
+  if (newMode === '语音' && currentRole.value) {
+    // 语音模式需要实时会话，切换时创建
+    await initializeSession()
+  } else {
+    // 文本模式懒创建：首次发送时再由 ChatPanel 触发创建
+    sessionDetail.value = null
+    sessionId.value = ''
+  }
+})
+
+// 页面初始化
+onMounted(async () => {
+  // 加载角色信息
+  await loadRole()
+
+  // 仅当是语音模式时预先创建会话；文本模式由首次发送时创建
+  if (currentRole.value && mode.value === '语音') {
+    await initializeSession()
+  } else {
+    sessionDetail.value = null
+    sessionId.value = ''
+  }
+})
 
 async function startRecordTest() {
   if (recordTest.active) return
@@ -259,7 +370,8 @@ function createWavFile(samples: Int16Array, sampleRate: number): ArrayBuffer {
   return buffer
 }
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
+  // 清理录音测试资源
   if (recordTest.audioUrl) {
     URL.revokeObjectURL(recordTest.audioUrl)
     recordTest.audioUrl = null
@@ -267,6 +379,9 @@ onBeforeUnmount(() => {
   if (recordTestTimer) window.clearInterval(recordTestTimer)
   if (recordTestTimeout) window.clearTimeout(recordTestTimeout)
   cleanupRecordTest()
+
+  // 结束会话
+  await handleEndSession()
 })
 </script>
 
@@ -276,8 +391,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  padding: 24px;
-  background: linear-gradient(145deg, #f7f9ff, #f0f5ff 40%, #ffffff 78%);
+  padding: 7px 24px 24px;
   max-height: 100vh;
   box-sizing: border-box;
 }
@@ -334,6 +448,7 @@ onBeforeUnmount(() => {
 
 .hero-role-card {
   min-width: 280px;
+  width: 50%;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 18px !important;
   box-shadow: 0 20px 40px rgba(44, 70, 176, 0.12);
@@ -371,8 +486,9 @@ onBeforeUnmount(() => {
 }
 
 .role-overview img {
-  width: 72px;
-  height: 72px;
+  margin: auto 0;
+  width: 74px;
+  height: 74px;
   border-radius: 18px;
   object-fit: cover;
   box-shadow: 0 12px 24px rgba(31, 60, 139, 0.25);
@@ -394,6 +510,13 @@ onBeforeUnmount(() => {
   font-size: 13px;
   color: #59628b;
   line-height: 1.4;
+  height: 50px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 3em;
 }
 
 .role-overview--empty {
