@@ -4,7 +4,7 @@ export enum EventType {
   STARTED = 'STARTED',
   EXECUTING = 'EXECUTING',
   THINKING = 'THINKING',
-  ACTING = 'ACTING',
+  ACTION = 'ACTION',
   OBSERVING = 'OBSERVING',
   TOOL = 'TOOL',
   TOOL_APPROVAL = 'TOOL_APPROVAL',
@@ -12,6 +12,7 @@ export enum EventType {
   ERROR = 'ERROR',
   DONE = 'DONE',
   DONEWITHWARNING = 'DONEWITHWARNING',
+  COMPLETED = 'COMPLETED'
 }
 
 export enum MessageType {
@@ -24,14 +25,17 @@ export enum MessageType {
 }
 
 export interface BaseEventItem {
-  type: EventType | string
-  message?: string
-  timestamp?: string
   sessionId?: string
   traceId?: string
+  startTime: Date
+  endTime?: Date
+  spanId?: string
   nodeId?: string
-  agentId?: string
+  agentId: string
+  type: EventType | string
+  message?: string
   data?: unknown
+  meta?: object
 }
 
 export interface ToolResponseData {
@@ -50,104 +54,20 @@ export interface UIMessage {
 
   // categorization
   type: MessageType
-  eventType?: EventType
+  eventType?: string
   sender: string
 
   // text payload
-  message: string
-  data?: object | string
+  message: string | undefined
+  data?: any
 
   // time
   startTime?: Date
   endTime?: Date
   timestamp?: Date
 
-  // flags
-  isCompletion?: boolean
-
   // tool/approval specific (optional, used by MessageItem/ToolBox)
-  approval?: unknown
-  events?: BaseEventItem[]
+  approval?: any
+  events?: BaseEventItem[],
+  meta?: object
 }
-
-// Discriminated union for incoming SSE events
-export type StartedEvent = {
-  type: EventType.STARTED
-  message?: string
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type ProgressEvent = {
-  type: EventType.PROGRESS | EventType.EXECUTING
-  message?: string
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type PhaseEvent = {
-  type: EventType.THINKING | EventType.ACTING | EventType.OBSERVING
-  message?: string
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type ToolEvent = {
-  type: EventType.TOOL
-  message?: string // usually tool title or brief
-  data?: unknown   // tool payload
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type ToolApprovalEvent = {
-  type: EventType.TOOL_APPROVAL
-  message?: string
-  data?: unknown
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type DoneEvent = {
-  type: EventType.DONE | EventType.DONEWITHWARNING
-  message?: string
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type ErrorEvent = {
-  type: EventType.ERROR
-  message?: string
-  timestamp?: string
-  sessionId?: string
-  traceId?: string
-  nodeId?: string
-  agentId?: string
-}
-
-export type SSEEvent =
-  | StartedEvent
-  | ProgressEvent
-  | PhaseEvent
-  | ToolEvent
-  | ToolApprovalEvent
-  | DoneEvent
-  | ErrorEvent

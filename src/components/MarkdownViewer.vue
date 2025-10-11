@@ -6,7 +6,7 @@ import MarkdownIt from 'markdown-it'
 // @ts-ignore
 import DOMPurify from 'dompurify'
 
-const props = defineProps<{ message: string }>()
+const props = defineProps<{ message: string | undefined }>()
 
 const md = new MarkdownIt({
   html: false,
@@ -21,7 +21,7 @@ const renderMarkdown = (message: string) => {
 </script>
 
 <template>
-  <div class="markdown-message" v-html="renderMarkdown(props.message)"></div>
+  <div class="markdown-message" v-html="renderMarkdown(props.message || '')"></div>
 </template>
 
 <style scoped>

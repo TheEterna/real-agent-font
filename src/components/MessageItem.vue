@@ -11,9 +11,11 @@ const props = defineProps<{
 }>()
 
 const toolEvents = computed(() => {
-  const events = (props.message as any)?.events as Array<any> | undefined
+
+  const events = ((props.message as UIMessage).data) as Array<any> | undefined
+
   if (!events || !events.length) return []
-  return events.filter(e => e?.type === EventType.TOOL)
+  return events.filter(e => e?.type ===  MessageType.Tool)
 })
 
 // 通用渲染辅助
@@ -27,7 +29,6 @@ const messageCssClass = computed(() => {
   const mes = props.message
   if (mes.type === MessageType.Tool) return 'tool'
   if (mes.type === MessageType.ToolApproval) return 'tool_approval'
-  if (mes.isCompletion) return 'completed'
   if (mes.eventType === EventType.PROGRESS) return 'progress'
   if (mes.eventType === EventType.DONEWITHWARNING) return 'warning'
   if (mes.type === MessageType.Error) {
@@ -38,7 +39,7 @@ const messageCssClass = computed(() => {
   if (mes.type === MessageType.Assistant) {
     switch (mes.eventType) {
       case EventType.THINKING: return 'thinking'
-      case EventType.ACTING: return 'action'
+      case EventType.ACTION: return 'action'
       case EventType.OBSERVING: return 'observing'
       default: return 'assistant'
     }
@@ -64,7 +65,7 @@ const formatTime = (ts?: Date | string) => {
 
     <div class="message-body">
       <!-- 工具消息：通用结构化渲染 -->
-      <template v-if="props.message.type === MessageType.Tool">
+      <!-- <template v-if="props.message.type === MessageType.Tool">
         <div v-if="props.message.data" class="tool-data">
           <div v-if="Array.isArray((props.message as any).data)" class="tool-grid">
             <div v-for="(item, idx) in (props.message as any).data" :key="idx" class="tool-card">
@@ -85,9 +86,13 @@ const formatTime = (ts?: Date | string) => {
             <pre v-else class="tool-json">{{ String((props.message as any).data ?? '') }}</pre>
           </template>
         </div>
-      </template>
 
-      
+      </template> -->
+
+       <!-- 嵌入：若该消息节点包含 TOOL 事件，则在同一消息框内追加工具框列表 -->
+      <div v-if="props.message.type === MessageType.Tool" class="embedded-tools">
+        <ToolBox :message="props.message" />
+      </div>
 
       <!-- 工具审批 -->
       <div v-else-if="props.message.type === MessageType.ToolApproval">
@@ -103,9 +108,10 @@ const formatTime = (ts?: Date | string) => {
     </div>
 
     <!-- 嵌入：若该消息节点包含 TOOL 事件，则在同一消息框内追加工具框列表 -->
-    <div v-if="toolEvents.length" class="embedded-tools">
+    <!-- <div v-if="toolEvents.length" class="embedded-tools">
       <ToolBox v-for="(ev, i) in toolEvents" :key="i" :title="(ev?.message || '工具调用')" :message="ev?.details || ev?.data || ''" />
-    </div>
+    </div> -->
+
   </div>
 </template>
 

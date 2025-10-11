@@ -1,5 +1,5 @@
 {
-  "name": "kit-font",
+  "name": "real-agent-font",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,6 +12,7 @@
     "ant-design-vue": "^4.2.5",
     "axios": "^1.7.7",
     "dompurify": "^3.2.6",
+    "gsap": "^3.13.0",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.22",
     "markdown-it": "^14.1.0",

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, computed, h, watch } from 'vue'
-import { UIMessage, MessageType } from '@/types/events'
+import {UIMessage, MessageType, EventType} from '@/types/events'
 import { AgentType } from '@/types/agents'
 import { useChatStore } from '@/stores/chatStore'
 import { getAgentUIConfig } from '@/agent-ui/registry'
@@ -34,6 +34,7 @@ import 'katex/dist/katex.min.css'
 import '@/styles/chat.css'
 import '@/styles/agents/react.css'
 import '@/styles/agents/coding.css'
+import { NotificationType } from '@/models/notification'
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
@@ -111,30 +112,9 @@ const updateScrollButtonVisibility = () => {
 }
 
 // 使用可复用的 SSE 组合式函数（取消自动滚动，仅按钮手动触发）
-const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; nodeId?: string }) => {
+const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; nodeId?: string, type: NotificationType }) => {
   const key = `done-${node.timestamp.getTime()}-${Math.random().toString(36).slice(2,8)}`
-  // let left = AUTOCLOSE_MS
-  // let start = Date.now()
-  // let closed = false
-  // let timer: number | undefined
-  // const close = () => {
-  //   if (closed) return
-  //   closed = true
-  //   if (timer) clearTimeout(timer)
-  //   notification.close(key)
-  // }
-  // const pause = () => {
-  //   if (closed) return
-  //   const elapsed = Date.now() - start
-  //   left = Math.max(0, left - elapsed)
-  //   if (timer) { clearTimeout(timer); timer = undefined }
-  // }
-  // const resume = () => {
-  //   if (closed) return
-  //   if (left <= 0) { close(); return }
-  //   start = Date.now()
-  //   timer = window.setTimeout(() => close(), left)
-  // }
+
   const onClick = () => locateByNode(node.nodeId)
 
   // const desc = h('div', { onMouseenter: pause, onMouseleave: resume, style: 'max-width: 280px;' }, [
@@ -146,18 +126,63 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
     ])
   ])
 
-  notification.success({
-    message: node.text,
-    description: desc,
-    key,
-    duration: 8, // 手动控制关闭以支持悬停暂停
-    onClick,
-    // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
-  })
+  switch(node.type) {
+    case NotificationType.SUCCESS:
+      notification.success({
+        message: node.text,
+        description: desc,
+        key,
+        duration: 8, // 手动控制关闭以支持悬停暂停
+        onClick,
+        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
+      })
+      break;
+    case NotificationType.ERROR:
+      notification.error({
+        message: node.text,
+        description: desc,
+        key,
+        duration: 8, // 手动控制关闭以支持悬停暂停
+        onClick,
+        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
+      })
+      break;
+    case NotificationType.WARNING:
+      notification.warning({
+        message: node.text,
+        description: desc,
+        key,
+        duration: 8, // 手动控制关闭以支持悬停暂停
+        onClick,
+        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
+      })
+      break;
+    case NotificationType.INFO:
+      notification.info({
+        message: node.text,
+        description: desc,
+        key,
+        duration: 8, // 手动控制关闭以支持悬停暂停
+        onClick,
+        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
+      })
+      break;
+    default:
+      notification.info({
+        message: node.text,
+        description: desc,
+        key,
+        duration: 8, // 手动控制关闭以支持悬停暂停
+        onClick,
+        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
+      })
+      break;
+  }
+
   // resume()
 }
 
-const { messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, executeCoding } = useSSE({ onDoneNotice: handleDoneNotice })
+const { messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct } = useSSE({ onDoneNotice: handleDoneNotice })
 
 const locateNotice = (n: { nodeId?: string }) => {
   if (n?.nodeId && chatContent.value) {
@@ -213,9 +238,9 @@ const sendMessage = async () => {
       case AgentType.ReAct:
         await executeReAct(currentMessage, sessionId.value)
         break
-      case AgentType.Coding:
-        await executeCoding(currentMessage, sessionId.value)
-        break
+      // case AgentType.Coding:
+      //   await executeCoding(currentMessage, sessionId.value)
+      //   break
       default:
         // 未实现的 Agent，临时回退
         await executeReAct(currentMessage, sessionId.value)
@@ -224,6 +249,7 @@ const sendMessage = async () => {
     console.error('发送消息失败:', error)
     messages.value.push({
       type: MessageType.Error,
+      eventType: 'ERROR',
       sender: 'System',
       message: '发送失败: ' + (error as Error).message,
       timestamp: new Date()
@@ -304,7 +330,7 @@ const onPaste = (e: ClipboardEvent) => {
 const templatesOpen = ref(false)
 const templates: TemplateItem[] = [
   new TemplateItem('分析并列出问题清单', '请分析以下需求并输出一份可执行的问题清单：\n- 背景：\n- 目标：\n- 约束：\n- 风险：'),
-  new TemplateItem('生成单元测试', '为以下代码生成JUnit5单元测试，包含边界与异常用例：\n```java\n// 粘贴代码\n```'),
+  new TemplateItem('生成单元测试', '为以下代码生成JUnit5单元测试，包含边界与异常用例：\n``java\n// 粘贴代码\n```'),
   new TemplateItem('优化说明文档', '请根据以下变更生成简洁明了的更新说明（变更点/影响范围/回滚方式）：\n- 变更点：\n- 影响范围：\n- 回滚方式：'),
 ]
 const insertTemplate = (t: string) => {
@@ -415,7 +441,7 @@ onMounted(() => {
     <!-- 主对话区域（滚动） -->
     <div class="chat-content" ref="chatContent">
       <!-- 状态指示器 -->
-      <StatusIndicator :status="taskStatus.value.value" />
+      <StatusIndicator :status="taskStatus.value" />
       <!-- 全局唯一进度显示器 -->
       <div v-if="progress" class="global-progress">
         <div class="gp-icon" aria-hidden></div>
@@ -456,7 +482,7 @@ onMounted(() => {
         <a-dropdown placement="topLeft">
           <a-button size="small" class="toolbar-btn">🧰 模板</a-button>
           <template #overlay>
-            <a-menu @click="({ key }) => insertTemplate((templates.find(t=>t.label===key) as any).text)">
+            <a-menu @click="({ key }) => insertTemplate((templates.find(t=>t.label=== key ) as any).text)">
               <a-menu-item v-for="t in templates" :key="t.label">{{ t.label }}</a-menu-item>
             </a-menu>
           </template>
