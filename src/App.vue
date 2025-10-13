@@ -119,7 +119,7 @@
       <a-layout-header class="header" v-if="showHeader">
         {{ t(`menu.${getCurrentMenu()}`) }}
       </a-layout-header>
-      <a-layout-content style="position: relative; overflow: auto;padding: 16px; display: flex;">
+      <a-layout-content style="position: relative; overflow: auto; display: flex;">
         <router-view />
       </a-layout-content>
     </a-layout>

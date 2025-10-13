@@ -1,0 +1,517 @@
+/* =================================================================
+   ANT DESIGN VUE COMPONENT OVERRIDES
+   为了与现代极简设计保持一致，覆盖Ant Design的默认样式
+   ================================================================= */
+
+/* ============= BUTTON OVERRIDES ============= */
+.react-plus-app .ant-btn {
+    font-family: var(--font-sans);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    font-weight: 500;
+}
+
+.react-plus-app .ant-btn-primary {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    box-shadow: none;
+}
+
+.react-plus-app .ant-btn-primary:hover:not(:disabled) {
+    background: var(--brand-hover);
+    border-color: var(--brand-hover);
+    box-shadow: var(--shadow-soft);
+}
+
+.react-plus-app .ant-btn-text {
+    color: var(--text-secondary);
+}
+
+.react-plus-app .ant-btn-text:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* ============= DROPDOWN OVERRIDES ============= */
+.react-plus-app .ant-dropdown {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-large);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.react-plus-app .ant-dropdown-menu {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+}
+
+.react-plus-app .ant-dropdown-menu-item {
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+    font-size: var(--font-size-sm);
+}
+
+.react-plus-app .ant-dropdown-menu-item:hover {
+    background: var(--bg-hover);
+    color: var(--brand-primary);
+}
+
+/* ============= TEXTAREA OVERRIDES ============= */
+.react-plus-app .ant-input,
+.react-plus-app .ant-input-textarea {
+    font-family: var(--font-sans);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+}
+
+.react-plus-app .ant-input:focus,
+.react-plus-app .ant-input-focused {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px var(--brand-light);
+}
+
+/* ============= NOTIFICATION OVERRIDES ============= */
+.ant-notification {
+    font-family: var(--font-sans);
+}
+
+.ant-notification-notice {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-large);
+    border: 1px solid var(--border-light);
+    backdrop-filter: blur(12px);
+    padding: var(--space-lg);
+}
+
+.ant-notification-notice-message {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    margin-bottom: var(--space-sm);
+}
+
+.ant-notification-notice-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.ant-notification-notice-close {
+    color: var(--text-tertiary);
+    transition: color var(--transition-fast);
+}
+
+.ant-notification-notice-close:hover {
+    color: var(--text-primary);
+}
+
+/* Success notification */
+.ant-notification-notice-success {
+    border-left: 3px solid var(--success);
+}
+
+.ant-notification-notice-success .ant-notification-notice-icon {
+    color: var(--success);
+}
+
+/* Error notification */
+.ant-notification-notice-error {
+    border-left: 3px solid var(--error);
+}
+
+.ant-notification-notice-error .ant-notification-notice-icon {
+    color: var(--error);
+}
+
+/* Warning notification */
+.ant-notification-notice-warning {
+    border-left: 3px solid var(--warning);
+}
+
+.ant-notification-notice-warning .ant-notification-notice-icon {
+    color: var(--warning);
+}
+
+/* Info notification */
+.ant-notification-notice-info {
+    border-left: 3px solid var(--info);
+}
+
+.ant-notification-notice-info .ant-notification-notice-icon {
+    color: var(--info);
+}
+
+/* ============= MENU OVERRIDES ============= */
+.ant-menu {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-medium);
+    padding: var(--space-sm);
+}
+
+.ant-menu-item {
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm) var(--space-md);
+    margin: 2px 0;
+    transition: all var(--transition-fast);
+}
+
+.ant-menu-item:hover {
+    background: var(--bg-hover);
+    color: var(--brand-primary);
+}
+
+.ant-menu-item-selected {
+    background: var(--brand-light);
+    color: var(--brand-primary);
+}
+
+/* ============= SPIN OVERRIDES ============= */
+.ant-spin-dot-item {
+    background-color: var(--brand-primary);
+}
+
+/* ============= CODE HIGHLIGHTING OVERRIDES ============= */
+.react-plus-app pre.hljs {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    overflow-x: auto;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    border: 1px solid var(--border-subtle);
+
+    /* Custom scrollbar for code blocks */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) transparent;
+}
+
+.react-plus-app pre.hljs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.react-plus-app pre.hljs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.react-plus-app pre.hljs::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: var(--radius-full);
+}
+
+.react-plus-app pre.hljs code {
+    font-family: var(--font-mono);
+}
+
+/* Adjust code colors for better readability */
+.react-plus-app .hljs-comment {
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+.react-plus-app .hljs-keyword,
+.react-plus-app .hljs-selector-tag,
+.react-plus-app .hljs-type {
+    color: var(--brand-primary);
+    font-weight: 600;
+}
+
+.react-plus-app .hljs-string,
+.react-plus-app .hljs-attr {
+    color: var(--success);
+}
+
+.react-plus-app .hljs-number,
+.react-plus-app .hljs-literal {
+    color: var(--accent-purple);
+}
+
+.react-plus-app .hljs-function,
+.react-plus-app .hljs-title {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* ============= MARKDOWN STYLES ============= */
+.react-plus-app h1,
+.react-plus-app h2,
+.react-plus-app h3,
+.react-plus-app h4,
+.react-plus-app h5,
+.react-plus-app h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    margin-top: var(--space-xl);
+    margin-bottom: var(--space-md);
+}
+
+.react-plus-app h1 {
+    font-size: var(--font-size-2xl);
+    border-bottom: 2px solid var(--border-subtle);
+    padding-bottom: var(--space-md);
+}
+
+.react-plus-app h2 {
+    font-size: var(--font-size-xl);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: var(--space-sm);
+}
+
+.react-plus-app h3 {
+    font-size: var(--font-size-lg);
+}
+
+.react-plus-app p {
+    color: var(--text-primary);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--space-md);
+}
+
+.react-plus-app ul,
+.react-plus-app ol {
+    color: var(--text-primary);
+    line-height: var(--line-height-relaxed);
+    margin-left: var(--space-lg);
+    margin-bottom: var(--space-md);
+}
+
+.react-plus-app li {
+    margin-bottom: var(--space-sm);
+}
+
+.react-plus-app a {
+    color: var(--brand-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.react-plus-app a:hover {
+    color: var(--brand-hover);
+    text-decoration: underline;
+}
+
+.react-plus-app code {
+    background: var(--bg-tertiary);
+    color: var(--accent-purple);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    border: 1px solid var(--border-subtle);
+}
+
+.react-plus-app blockquote {
+    border-left: 3px solid var(--brand-primary);
+    background: var(--bg-tertiary);
+    padding: var(--space-md) var(--space-lg);
+    margin: var(--space-lg) 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.react-plus-app table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--space-lg) 0;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.react-plus-app th,
+.react-plus-app td {
+    padding: var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.react-plus-app th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.react-plus-app tr:hover {
+    background: var(--bg-hover);
+}
+
+.react-plus-app tr:last-child td {
+    border-bottom: none;
+}
+
+/* Task lists */
+.react-plus-app .task-list-item {
+    list-style: none;
+    margin-left: -var(--space-lg);
+}
+
+.react-plus-app .task-list-item input[type="checkbox"] {
+    margin-right: var(--space-sm);
+}
+
+/* ============= KATEX MATH OVERRIDES ============= */
+.react-plus-app .katex {
+    font-size: 1.1em;
+}
+
+.react-plus-app .katex-display {
+    margin: var(--space-lg) 0;
+    overflow-x: auto;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+/* ============= SCROLLBAR IMPROVEMENTS ============= */
+.react-plus-app *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.react-plus-app *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.react-plus-app *::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: var(--radius-full);
+    transition: background var(--transition-fast);
+}
+
+.react-plus-app *::-webkit-scrollbar-thumb:hover {
+    background: var(--border-medium);
+}
+
+/* ============= SELECTION STYLES ============= */
+.react-plus-app ::selection {
+    background: var(--brand-light);
+    color: var(--brand-primary);
+}
+
+/* ============= IMAGE STYLES ============= */
+.react-plus-app img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+/* ============= HR STYLES ============= */
+.react-plus-app hr {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: var(--space-xl) 0;
+}
+
+/* ============= EMOJI STYLES ============= */
+.react-plus-app .emoji {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1.2em;
+    height: 1.2em;
+}
+
+/* ============= DARK MODE ADJUSTMENTS ============= */
+.dark-mode .ant-notification-notice {
+    background: rgba(23, 23, 23, 0.95);
+    backdrop-filter: blur(20px);
+}
+
+.dark-mode .ant-menu {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .hljs {
+    filter: invert(0.95) hue-rotate(180deg);
+}
+
+/* ============= FOCUS IMPROVEMENTS ============= */
+.react-plus-app button:focus-visible,
+.react-plus-app input:focus-visible,
+.react-plus-app textarea:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* ============= SMOOTH ANIMATIONS ============= */
+@keyframes gentleFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.react-plus-app [data-animate="fade-in"] {
+    animation: gentleFadeIn var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============= UTILITY CLASSES ============= */
+.text-muted {
+    color: var(--text-secondary);
+}
+
+.text-subtle {
+    color: var(--text-tertiary);
+}
+
+.text-brand {
+    color: var(--brand-primary);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-error {
+    color: var(--error);
+}
+
+.bg-subtle {
+    background: var(--bg-tertiary);
+}
+
+.border-subtle {
+    border: 1px solid var(--border-subtle);
+}
+
+.rounded-sm {
+    border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+    border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+.shadow-subtle {
+    box-shadow: var(--shadow-subtle);
+}
+
+.shadow-soft {
+    box-shadow: var(--shadow-soft);
+}
+
+.shadow-medium {
+    box-shadow: var(--shadow-medium);
+}

@@ -11,7 +11,7 @@ export default {
     },
     menu: {
         chat: 'AI对话',
-        "chat/react": '标准的 ReAct 框架 Agent',
+        "chat/": 'AI对话',
         "chat/react-plus": '强化版 ReAct agent',
         dashboard: '仪表盘',
         tools: '工具',

@@ -1,0 +1,65 @@
+/* =================================================================
+   BASE THEME VARIABLES
+   所有主题共享的基础变量定义
+   ================================================================= */
+
+/* 每个主题需要定义这些变量 */
+:root {
+  /* Message 组件颜色变量 - 占位符，会被具体主题覆盖 */
+  
+  /* 通用消息 */
+  --message-bg: #ffffff;
+  --message-border: #e5e7eb;
+  --message-shadow: rgba(15, 23, 42, 0.06);
+  --message-text: #333333;
+  
+  /* Thinking 状态 */
+  --message-thinking-bg: #fff3e0;
+  --message-thinking-border: #ff9800;
+  --message-thinking-text: #e65100;
+  
+  /* Action 状态 */
+  --message-action-bg: #e8f5e8;
+  --message-action-border: #4caf50;
+  --message-action-text: #2e7d32;
+  
+  /* Observing 状态 */
+  --message-observing-bg: #f3e5f5;
+  --message-observing-border: #9c27b0;
+  --message-observing-text: #6a1b9a;
+  
+  /* Error 状态 */
+  --message-error-bg: #ffebee;
+  --message-error-border: #f44336;
+  --message-error-text: #c62828;
+  
+  /* Tool 状态 */
+  --message-tool-bg: #e3f2fd;
+  --message-tool-border: #42a5f5;
+  --message-tool-text: #1565c0;
+  
+  /* Progress 状态 */
+  --message-progress-bg: #fffbea;
+  --message-progress-border: #f6c342;
+  --message-progress-text: #f57f17;
+  
+  /* Warning 状态 */
+  --message-warning-bg: #fff8e1;
+  --message-warning-border: #ffb300;
+  --message-warning-text: #ff6f00;
+  
+  /* User 消息 */
+  --message-user-bg: #ffffff;
+  --message-user-border: #e5e7eb;
+  --message-user-text: #1e88e5;
+  
+  /* 通用文本颜色 */
+  --message-header-text: #666666;
+  --message-sender-text: #333333;
+  
+  /* 间距和圆角 */
+  --message-padding: 1.1rem;
+  --message-radius: 12px;
+  --message-border-width: 4px;
+  --message-spacing: 1rem;
+}

@@ -10,20 +10,6 @@ const props = defineProps<{
   message: UIMessage
 }>()
 
-const toolEvents = computed(() => {
-
-  const events = ((props.message as UIMessage).data) as Array<any> | undefined
-
-  if (!events || !events.length) return []
-  return events.filter(e => e?.type ===  MessageType.Tool)
-})
-
-// 通用渲染辅助
-const pretty = (v: unknown) => {
-  try { return JSON.stringify(v, null, 2) } catch { return String(v as any) }
-}
-const isObject = (v: unknown) => v !== null && typeof v === 'object'
-
 // 主题样式需要的语义类名：thinking/action/observing/tool/error/completed/system/user
 const messageCssClass = computed(() => {
   const mes = props.message
@@ -64,30 +50,6 @@ const formatTime = (ts?: Date | string) => {
     </div>
 
     <div class="message-body">
-      <!-- 工具消息：通用结构化渲染 -->
-      <!-- <template v-if="props.message.type === MessageType.Tool">
-        <div v-if="props.message.data" class="tool-data">
-          <div v-if="Array.isArray((props.message as any).data)" class="tool-grid">
-            <div v-for="(item, idx) in (props.message as any).data" :key="idx" class="tool-card">
-              <div class="tool-card-title">{{ (item && (item.title || item.name)) ? (item.title || item.name) : `项目 #${idx + 1}` }}</div>
-              <div v-for="(val, key) in item" :key="String(key)" class="tool-card-row">
-                <template v-if="isObject(val)">
-                  <div><strong>{{ key }}</strong></div>
-                  <pre class="tool-json" style="margin-top:4px">{{ pretty(val) }}</pre>
-                </template>
-                <template v-else>
-                  {{ key }}：{{ val }}
-                </template>
-              </div>
-            </div>
-          </div>
-          <template v-else>
-            <pre v-if="isObject((props.message as any).data)" class="tool-json">{{ pretty((props.message as any).data) }}</pre>
-            <pre v-else class="tool-json">{{ String((props.message as any).data ?? '') }}</pre>
-          </template>
-        </div>
-
-      </template> -->
 
        <!-- 嵌入：若该消息节点包含 TOOL 事件，则在同一消息框内追加工具框列表 -->
       <div v-if="props.message.type === MessageType.Tool" class="embedded-tools">
@@ -107,48 +69,199 @@ const formatTime = (ts?: Date | string) => {
       </div>
     </div>
 
-    <!-- 嵌入：若该消息节点包含 TOOL 事件，则在同一消息框内追加工具框列表 -->
-    <!-- <div v-if="toolEvents.length" class="embedded-tools">
-      <ToolBox v-for="(ev, i) in toolEvents" :key="i" :title="(ev?.message || '工具调用')" :message="ev?.details || ev?.data || ''" />
-    </div> -->
 
   </div>
 </template>
 
 <style scoped lang="scss">
-@use "@/styles/_variables.scss" as *;
-.message { margin-bottom: 1rem; padding: 1.1rem; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
-.message.thinking { background: #fff3e0; border-left: 4px solid #ff9800; }
-.message.action { background: #e8f5e8; border-left: 4px solid #4caf50; }
-.message.observing { background: #f3e5f5; border-left: 4px solid #9c27b0; }
-.message.error { background: #ffebee; border-left: 4px solid #f44336; }
-.message.completed { background: #e8f5e8; border-left: 4px solid #4caf50; border-radius: 8px; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2); }
-.message.progress { background: #fffbea; border-left: 4px solid #f6c342; }
-.message.warning { background: #fff8e1; border-left: 4px solid #ffb300; }
-.message.tool { background: #e3f2fd; border-left: 4px solid #42a5f5; }
-/* 用户消息：右侧简洁气泡样式（朴素） */
-.message.user { background: #ffffff; border: 1px solid #e5e7eb; margin-left: auto; max-width: 88%; width: fit-content; box-shadow: none; border-radius: 12px; }
-.message.user .message-header { flex-direction: row-reverse; }
-.message.user .sender { color: #1e88e5; }
-.message-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #666; }
-.sender { font-weight: 500; }
-.message-message { line-height: 1.6; }
+/* 使用 CSS 变量实现主题化 */
+
+/* 基础消息样式 - 使用变量 */
+.message {
+  margin-bottom: var(--message-spacing, 1rem);
+  padding: var(--message-padding, 1.1rem);
+  border-radius: var(--message-radius, 12px);
+  background: var(--message-bg, white);
+  box-shadow: 0 2px 8px var(--message-shadow, rgba(15, 23, 42, 0.06));
+  color: var(--message-text, #333333);
+  transition: all 0.3s ease;
+}
+
+/* 各种状态 - 使用主题变量 */
+.message.thinking {
+  background: var(--message-thinking-bg, #fff3e0);
+  border-left: var(--message-border-width, 4px) solid var(--message-thinking-border, #ff9800);
+  color: var(--message-thinking-text, #e65100);
+}
+
+.message.action {
+  background: var(--message-action-bg, #e8f5e8);
+  border-left: var(--message-border-width, 4px) solid var(--message-action-border, #4caf50);
+  color: var(--message-action-text, #2e7d32);
+}
+
+.message.observing {
+  background: var(--message-observing-bg, #f3e5f5);
+  border-left: var(--message-border-width, 4px) solid var(--message-observing-border, #9c27b0);
+  color: var(--message-observing-text, #6a1b9a);
+}
+
+.message.error {
+  background: var(--message-error-bg, #ffebee);
+  border-left: var(--message-border-width, 4px) solid var(--message-error-border, #f44336);
+  color: var(--message-error-text, #c62828);
+}
+
+.message.completed {
+  background: var(--message-action-bg, #e8f5e8);
+  border-left: var(--message-border-width, 4px) solid var(--message-action-border, #4caf50);
+  border-radius: var(--message-radius, 8px);
+  box-shadow: 0 2px 8px var(--message-action-border, rgba(76, 175, 80, 0.2));
+}
+
+.message.progress {
+  background: var(--message-progress-bg, #fffbea);
+  border-left: var(--message-border-width, 4px) solid var(--message-progress-border, #f6c342);
+  color: var(--message-progress-text, #f57f17);
+}
+
+.message.warning {
+  background: var(--message-warning-bg, #fff8e1);
+  border-left: var(--message-border-width, 4px) solid var(--message-warning-border, #ffb300);
+  color: var(--message-warning-text, #ff6f00);
+}
+
+.message.tool {
+  background: var(--message-tool-bg, #e3f2fd);
+  border-left: var(--message-border-width, 4px) solid var(--message-tool-border, #42a5f5);
+  color: var(--message-tool-text, #1565c0);
+}
+
+/* 用户消息：右侧简洁气泡样式 */
+.message.user {
+  background: var(--message-user-bg, #ffffff);
+  border: 1px solid var(--message-user-border, #e5e7eb);
+  margin-left: auto;
+  max-width: 88%;
+  width: fit-content;
+  box-shadow: none;
+  border-radius: var(--message-radius, 12px);
+}
+
+.message.user .message-header {
+  flex-direction: row-reverse;
+}
+
+.message.user .sender {
+  color: var(--message-user-text, #1e88e5);
+}
+
+/* 消息头部 */
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--message-header-text, #666);
+}
+
+.sender {
+  font-weight: 500;
+  color: var(--message-sender-text, #333333);
+}
+
+.message-message {
+  line-height: 1.6;
+}
+
+/* 流式消息样式 */
 .stream-message .thinking-message,
 .stream-message .action-message,
 .stream-message .observing-message,
-.stream-message .completion-message { display: flex; align-items: flex-start; gap: 0.75rem; }
-.embedded-tools { display: grid; gap: 8px; margin-top: 8px; }
-.tool-data { margin-top: 10px; }
-.tool-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 10px; }
-@media (min-width: 768px) { .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.tool-card { background: #fff; border: 1px solid rgba(0,0,0,.06); border-radius: 12px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
-.tool-card-title { font-weight: 600; margin-bottom: 6px; color: #333; }
-.tool-card-row { font-size: 13px; color: #444; line-height: 1.6; }
-.tool-json { background: #0f172a; color: #e2e8f0; padding: 10px 12px; border-radius: 10px; overflow: auto; font-size: 12px; }
-.message-text { flex: 1; line-height: 1.6; margin-bottom: -1em; }
-.formatted-message { background: transparent; padding: 0; margin: 0; font-family: inherit; white-space: pre-wrap; word-wrap: break-word; border: none; }
-.completion-text { font-weight: 500; color: #2e7d32; }
-.completion-message { animation: slideInUp 0.3s ease-out; }
+.stream-message .completion-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+/* 嵌入工具 */
+.embedded-tools {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tool-data {
+  margin-top: 10px;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .tool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tool-card {
+  background: var(--message-bg, #fff);
+  border: 1px solid var(--message-border, rgba(0,0,0,.06));
+  border-radius: var(--message-radius, 12px);
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px var(--message-shadow, rgba(0,0,0,.05));
+}
+
+.tool-card-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--message-text, #333);
+}
+
+.tool-card-row {
+  font-size: 13px;
+  color: var(--message-text, #444);
+  line-height: 1.6;
+}
+
+.tool-json {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.message-text {
+  flex: 1;
+  line-height: 1.6;
+  margin-bottom: -1em;
+}
+
+.formatted-message {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: none;
+}
+
+.completion-text {
+  font-weight: 500;
+  color: var(--message-action-text, #2e7d32);
+}
+
+.completion-message {
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* 图标 */
 .icon-thinking::before { content: '🤔'; }
 .icon-action::before { content: '🛠️'; }
 .icon-observing::before { content: '👀'; }
@@ -156,15 +269,78 @@ const formatTime = (ts?: Date | string) => {
 .icon-progress::before { content: '⏳'; }
 
 /* 状态气泡（进度） */
-.status-bubble { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #fff8e1; border: 1px solid #ffe082; }
-.status-bubble.progress { background: #fff8e1; border-color: #ffd54f; }
-.status-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.status-bubble.progress .status-icon { animation: spin 1s linear infinite; }
-.status-content { display: grid; gap: 2px; }
-.status-title { font-weight: 600; color: #8d6e63; font-size: 0.85rem; }
-.status-text { font-size: 0.95rem; color: #5d4037; white-space: pre-wrap; }
-.status-meta { font-size: 0.75rem; color: #8d6e63; }
+.status-bubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--message-progress-bg, #fff8e1);
+  border: 1px solid var(--message-progress-border, #ffe082);
+}
+
+.status-bubble.progress {
+  background: var(--message-progress-bg, #fff8e1);
+  border-color: var(--message-progress-border, #ffd54f);
+}
+
+.status-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.status-bubble.progress .status-icon {
+  animation: spin 1s linear infinite;
+}
+
+.status-content {
+  display: grid;
+  gap: 2px;
+}
+
+.status-title {
+  font-weight: 600;
+  color: var(--message-warning-text, #8d6e63);
+  font-size: 0.85rem;
+}
+
+.status-text {
+  font-size: 0.95rem;
+  color: var(--message-text, #5d4037);
+  white-space: pre-wrap;
+}
+
+.status-meta {
+  font-size: 0.75rem;
+  color: var(--message-header-text, #8d6e63);
+}
+
 .icon-warning::before { content: '⚠️'; }
-@keyframes slideInUp { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
-@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+
+/* 动画 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
 </style>

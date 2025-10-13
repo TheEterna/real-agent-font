@@ -1,514 +1,791 @@
-/* ReAct+ 专属主题样式 - 高级版本 */
 
-.theme-react-plus {
-  --primary-color: #6366f1;
-  --primary-light: #a5b4fc;
-  --primary-dark: #4338ca;
-  --secondary-color: #10b981;
-  --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --text-primary: #1a202c;
-  --text-secondary: #4a5568;
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+/* =================================================================
+   REVOLUTIONARY NEOMORPHIC-CYBERPUNK UI FOR REACTPLUS
+   Complete visual paradigm break from traditional patterns
+   ================================================================= */
+
+/* ============= COSMIC BACKGROUND SYSTEM ============= */
+.reactplus-container {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(circle at 20% 80%, #0a0a0a 0%, #1a1a2e 40%, #16213e 100%);
+    color: #e0e6ed;
+    font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 }
 
-/* 整体容器增强 */
-.theme-react-plus .chat-container {
-  background: var(--gradient-bg);
-  min-height: 100vh;
-  position: relative;
+.cyber-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    overflow: hidden;
 }
 
-.theme-react-plus .chat-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.theme-react-plus .chat-content {
-  position: relative;
-  z-index: 1;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 16px;
-  margin: 16px;
-  box-shadow: var(--shadow-lg);
-}
-
-/* 消息样式增强 */
-.theme-react-plus .message {
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  margin: 12px 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.theme-react-plus .message::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--glass-bg);
-  z-index: -1;
-}
-
-.theme-react-plus .message:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-/* 不同状态的消息样式 */
-.theme-react-plus .message.thinking {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
-  border-left: 4px solid var(--warning-color);
-}
-
-.theme-react-plus .message.action {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
-  border-left: 4px solid var(--secondary-color);
-}
-
-.theme-react-plus .message.observing {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
-  border-left: 4px solid var(--primary-color);
-}
-
-.theme-react-plus .message.tool {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
-  border-left: 4px solid #3b82f6;
-}
-
-.theme-react-plus .message.user {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(67, 56, 202, 0.08) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  margin-left: auto;
-  margin-right: 0;
-  max-width: 80%;
-}
-
-.theme-react-plus .message.error {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
-  border-left: 4px solid var(--error-color);
-}
-
-/* 工具审批卡片样式 */
-.theme-react-plus .tool-approval-card {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  margin: 16px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.theme-react-plus .tool-approval-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-}
-
-.theme-react-plus .tool-approval-header {
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.theme-react-plus .tool-approval-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--primary-color);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 16px;
-}
-
-.theme-react-plus .tool-approval-content {
-  padding: 20px;
-}
-
-.theme-react-plus .tool-params {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 16px;
-  margin: 16px 0;
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  backdrop-filter: blur(10px);
-}
-
-.theme-react-plus .tool-approval-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* 按钮增强样式 */
-.theme-react-plus .approval-btn-primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  border: none;
-  color: white;
-  padding: 8px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-}
-
-.theme-react-plus .approval-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
-}
-
-.theme-react-plus .approval-btn-danger {
-  background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 100%);
-  border: none;
-  color: white;
-  padding: 8px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-}
-
-.theme-react-plus .approval-btn-danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-}
-
-.theme-react-plus .approval-btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.theme-react-plus .approval-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-/* 输入区域增强 */
-.theme-react-plus .chat-input {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  margin: 16px;
-  padding: 16px;
-  position: relative;
-  z-index: 1;
-}
-
-/* 增强工具栏样式 */
-.theme-react-plus .input-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.theme-react-plus .agent-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  padding: 6px 12px;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary-color);
-  backdrop-filter: blur(10px);
-}
-
-.theme-react-plus .input-surface {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  transition: all 0.3s ease;
-}
-
-.theme-react-plus .input-surface:hover,
-.theme-react-plus .input-surface--hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--primary-light);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.theme-react-plus .input-surface--light {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-/* 快速操作提示样式 */
-.theme-react-plus .quick-tips {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.theme-react-plus .tip-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-}
-
-.theme-react-plus .tip-item:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.3);
-  transform: translateY(-2px);
-  color: var(--primary-color);
-}
-
-.theme-react-plus .tip-item:active {
-  transform: translateY(0);
-}
-
-/* 状态指示器增强 */
-.theme-react-plus .status-indicator {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s ease;
-}
-
-.theme-react-plus .status-indicator.running {
-  border-color: var(--secondary-color);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
-}
-
-.theme-react-plus .status-indicator.error {
-  border-color: var(--error-color);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
-}
-
-/* 工具执行状态动画 */
-.theme-react-plus .tool-executing {
-  position: relative;
-  overflow: hidden;
-}
-
-.theme-react-plus .tool-executing::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-/* 脉冲动画 */
-.theme-react-plus .pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* 进度指示器增强 */
-.theme-react-plus .global-progress {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.theme-react-plus .gp-icon {
-  font-size: 20px;
-  color: var(--primary-color);
-}
-
-.theme-react-plus .gp-text {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.theme-react-plus .gp-time {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  font-family: 'SF Mono', Consolas, monospace;
-}
-
-/* 响应式适配 */
-@media (max-width: 768px) {
-  .theme-react-plus .chat-content {
-    margin: 8px;
-    border-radius: 12px;
-  }
-
-  .theme-react-plus .chat-input {
-    margin: 8px;
-    border-radius: 16px;
-  }
-
-  .theme-react-plus .tool-approval-actions {
-    flex-direction: column;
-  }
-
-  .theme-react-plus .approval-btn-primary,
-  .theme-react-plus .approval-btn-danger,
-  .theme-react-plus .approval-btn-secondary {
+.particle-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.neural-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+            linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-pulse 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes grid-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+}
+
+/* ============= CHAT CONTENT AREA ============= */
+.reactplus-container .chat-content {
+    position: relative;
+    z-index: 1;
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding: 20px;
+    margin: 0;
+    background: transparent;
+
+    /* Custom cyberpunk scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #00ffff rgba(255, 255, 255, 0.1);
+}
+
+.reactplus-container .chat-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.reactplus-container .chat-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.reactplus-container .chat-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #00ffff, #ff00ff);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.reactplus-container .messages-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ============= CYBER PROGRESS INDICATOR ============= */
+.cyber-progress {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #00ffff;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    backdrop-filter: blur(20px);
+    box-shadow:
+            0 0 30px rgba(0, 255, 255, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.cyber-progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+    animation: cyber-scan 2s infinite;
+}
+
+@keyframes cyber-scan {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.neural-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.synapses {
+    display: flex;
+    gap: 8px;
+    margin-right: 15px;
+}
+
+.synapse {
+    width: 12px;
+    height: 12px;
+    background: #00ffff;
+    border-radius: 50%;
+    animation: synapse-fire 1s infinite;
+    box-shadow: 0 0 20px #00ffff;
+}
+
+.synapse:nth-child(2) { animation-delay: 0.3s; }
+.synapse:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes synapse-fire {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.7;
+    }
+}
+
+.data-stream {
+    font-size: 16px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+    margin-bottom: 5px;
+}
+
+.timestamp-hex {
+    font-size: 12px;
+    color: #ff00ff;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ============= NEURAL LOADING ANIMATION ============= */
+.neural-loading {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #00ffff;
+    border-radius: 20px;
+    margin: 20px 0;
+    backdrop-filter: blur(15px);
+}
+
+.brain-wave {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.wave-line {
+    width: 3px;
+    background: linear-gradient(to top, #00ffff, #ff00ff);
+    border-radius: 2px;
+    animation: brain-pulse 1.2s ease-in-out infinite;
+}
+
+.wave-line:nth-child(1) { height: 20px; animation-delay: 0s; }
+.wave-line:nth-child(2) { height: 30px; animation-delay: 0.2s; }
+.wave-line:nth-child(3) { height: 25px; animation-delay: 0.4s; }
+.wave-line:nth-child(4) { height: 35px; animation-delay: 0.6s; }
+
+@keyframes brain-pulse {
+    0%, 100% {
+        transform: scaleY(0.3);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+.neural-text {
+    font-size: 16px;
+    color: #00ffff;
+    text-shadow: 0 0 15px #00ffff;
+    animation: text-glow 2s ease-in-out infinite;
+}
+
+@keyframes text-glow {
+    0%, 100% { text-shadow: 0 0 15px #00ffff; }
+    50% { text-shadow: 0 0 25px #00ffff, 0 0 35px #00ffff; }
+}
+
+/* ============= QUANTUM SCROLL BUTTON ============= */
+.cyber-scroll-fab {
+    position: fixed;
+    bottom: 200px;
+    right: 30px;
+    z-index: 100;
+}
+
+.quantum-button {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00ffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
-  }
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    overflow: hidden;
+}
 
-  .theme-react-plus .quick-tips {
-    flex-direction: column;
-  }
+.quantum-button:hover {
+    transform: scale(1.1);
+    box-shadow:
+            0 0 30px rgba(0, 255, 255, 0.6),
+            0 0 60px rgba(255, 0, 255, 0.3);
+    border-color: #ff00ff;
+}
 
-  .theme-react-plus .tip-item {
-    justify-content: center;
-  }
+.quantum-icon {
+    font-size: 24px;
+    z-index: 2;
+    position: relative;
+}
 
-  .theme-react-plus .input-toolbar {
+.button-ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.4), transparent);
+    transform: translate(-50%, -50%);
+    animation: ripple 2s infinite;
+}
+
+@keyframes ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+    }
+}
+
+/* ============= CYBER INPUT ZONE ============= */
+.cyber-input-zone {
+    position: sticky;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(25px);
+    border-top: 1px solid #00ffff;
+    padding: 20px;
+    z-index: 10;
+    box-shadow: 0 -10px 30px rgba(0, 255, 255, 0.1);
+}
+
+.control-panel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.neo-btn {
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid #00ffff !important;
+    color: #00ffff !important;
+    border-radius: 25px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    font-family: 'SF Mono', monospace !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0) !important;
+}
+
+.neo-btn:hover {
+    background: rgba(0, 255, 255, 0.1) !important;
+    border-color: #ff00ff !important;
+    color: #ff00ff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3) !important;
+}
+
+.agent-identity {
+    margin-left: auto;
+}
+
+.identity-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+    border: 1px solid #00ffff;
+    border-radius: 30px;
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+}
+
+.identity-chip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: identity-scan 3s infinite;
+}
+
+@keyframes identity-scan {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.agent-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+    z-index: 1;
+    position: relative;
+}
+
+.power-indicator {
+    width: 12px;
+    height: 12px;
+    background: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #00ff00;
+    animation: power-pulse 2s ease-in-out infinite;
+    z-index: 1;
+    position: relative;
+}
+
+@keyframes power-pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px #00ff00;
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 25px #00ff00, 0 0 35px #00ff00;
+        transform: scale(1.2);
+    }
+}
+
+/* ============= INPUT MATRIX ============= */
+.input-matrix {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    transition: all 0.3s ease;
+    background-clip: padding-box;
+}
+
+.input-matrix::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
+    border-radius: 20px;
+    z-index: -1;
+    animation: matrix-border 3s linear infinite;
+}
+
+@keyframes matrix-border {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.matrix-hover {
+    transform: translateY(-2px);
+    box-shadow:
+            0 10px 40px rgba(0, 255, 255, 0.2),
+            0 0 60px rgba(255, 0, 255, 0.1);
+}
+
+.matrix-active {
+    box-shadow:
+            0 0 50px rgba(0, 255, 255, 0.4),
+            0 0 100px rgba(255, 0, 255, 0.2);
+}
+
+.data-blocks {
+    display: flex;
     flex-wrap: wrap;
-  }
+    gap: 12px;
+    margin-bottom: 15px;
+}
 
-  .theme-react-plus .agent-info {
-    order: -1;
-    margin-left: 0;
-    flex-grow: 1;
+.data-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid #00ffff;
+    border-radius: 25px;
+    font-size: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.data-block:hover {
+    background: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    transform: scale(1.05);
+}
+
+.block-name {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #00ffff;
+}
+
+.block-size {
+    color: #888;
+    font-family: 'Courier New', monospace;
+}
+
+.block-delete {
+    background: none;
+    border: none;
+    color: #ff0050;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-  }
+    border-radius: 50%;
+    transition: all 0.3s ease;
 }
 
-/* 加载动画增强 */
-.theme-react-plus .loading-message {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin: 16px;
+.block-delete:hover {
+    background: rgba(255, 0, 80, 0.2);
+    transform: scale(1.2);
 }
 
-.theme-react-plus .loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(99, 102, 241, 0.3);
-  border-top-color: var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.input-interface {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.input-interface textarea {
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: #e0e6ed !important;
+    border: 1px solid rgba(0, 255, 255, 0.3) !important;
+    border-radius: 15px !important;
+    font-family: 'SF Mono', monospace !important;
+    line-height: 1.6 !important;
+    font-size: 14px !important;
+    padding: 15px !important;
+    resize: vertical !important;
+    backdrop-filter: blur(10px) !important;
+    transition: all 0.3s ease !important;
 }
 
-/* 滚动按钮样式 */
-.theme-react-plus .scroll-bottom-btn {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  border: none;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 25px;
-  font-weight: 600;
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
-  backdrop-filter: blur(20px);
+.input-interface textarea:focus {
+    border-color: #00ffff !important;
+    box-shadow:
+            0 0 0 2px rgba(0, 255, 255, 0.2) ,
+            0 0 20px rgba(0, 255, 255, 0.1) !important;
+    background: rgba(0, 0, 0, 0.7) !important;
 }
 
-.theme-react-plus .scroll-bottom-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+.input-interface textarea::placeholder {
+    color: rgba(0, 255, 255, 0.5) !important;
+    font-style: italic !important;
 }
 
-/* 工具栏按钮增强 */
-.theme-react-plus .toolbar-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+.quantum-send-btn {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2)) !important;
+    border: 2px solid #00ffff !important;
+    color: #00ffff !important;
+    border-radius: 15px !important;
+    padding: 15px 30px !important;
+    font-weight: 700 !important;
+    font-family: 'SF Mono', monospace !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    backdrop-filter: blur(15px) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0) !important;
 }
 
-.theme-react-plus .toolbar-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: var(--primary-color);
-  transform: translateY(-1px);
+.quantum-send-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.quantum-send-btn:hover::before {
+    left: 100%;
+}
+
+.quantum-ready {
+    border-color: #ff00ff !important;
+    color: #ff00ff !important;
+    box-shadow:
+            0 0 30px rgba(255, 0, 255, 0.4) , 0 5px 20px rgba(0, 255, 255, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+.quantum-ready:hover {
+    background: linear-gradient(135deg, rgba(255, 0, 255, 0.3), rgba(0, 255, 255, 0.3)) !important;
+    box-shadow:
+            0 0 50px rgba(255, 0, 255, 0.6) ,
+            0 10px 30px rgba(0, 255, 255, 0.4) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* ============= QUANTUM PANELS ============= */
+.quantum-panel {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.panel-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 30px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.panel-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.panel-item:hover::before {
+    transform: translateX(100%);
+}
+
+.panel-item:hover {
+    border-color: #00ffff;
+    transform: translateY(-5px);
+    box-shadow:
+            0 10px 30px rgba(0, 255, 255, 0.3),
+            0 0 60px rgba(255, 0, 255, 0.2);
+}
+
+.panel-item span {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #00ffff;
+    z-index: 1;
+    position: relative;
+}
+
+.panel-item .anticon {
+    font-size: 24px;
+    color: #00ffff;
+    z-index: 1;
+    position: relative;
+}
+
+.item-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.4), transparent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+    z-index: 0;
+}
+
+.panel-item:hover .item-glow {
+    width: 100px;
+    height: 100px;
+}
+
+.neural-analysis:hover {
+    border-color: #ffff00;
+}
+
+.neural-analysis:hover span,
+.neural-analysis:hover .anticon {
+    color: #ffff00;
+}
+
+.tool-chain:hover {
+    border-color: #ff00ff;
+}
+
+.tool-chain:hover span,
+.tool-chain:hover .anticon {
+    color: #ff00ff;
+}
+
+.code-matrix:hover {
+    border-color: #00ff00;
+}
+
+.code-matrix:hover span,
+.code-matrix:hover .anticon {
+    color: #00ff00;
+}
+
+/* ============= RESPONSIVE DESIGN ============= */
+@media (max-width: 768px) {
+    .cyber-input-zone {
+        padding: 15px;
+    }
+
+    .control-panel {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .input-interface {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .quantum-send-btn {
+        width: 100% !important;
+        padding: 18px 30px !important;
+    }
+
+    .quantum-panel {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .panel-item {
+        min-width: 200px;
+    }
+
+    .cyber-scroll-fab {
+        right: 20px;
+        bottom: 180px;
+    }
+
+    .quantum-button {
+        width: 50px;
+        height: 50px;
+    }
+
+    .reactplus-container .chat-content {
+        height: calc(100vh - 220px);
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .reactplus-container .chat-content {
+        height: calc(100vh - 250px);
+        padding: 10px;
+    }
+
+    .cyber-progress {
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .neural-loading {
+        padding: 20px;
+        margin: 15px 0;
+    }
+
+    .input-matrix {
+        padding: 15px;
+    }
+}
+
+/* ============= ACCESSIBILITY & PERFORMANCE ============= */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+    .reactplus-container {
+        background: #000;
+    }
+
+    .neo-btn,
+    .quantum-send-btn,
+    .panel-item {
+        border-width: 3px !important;
+    }
+
+    .data-stream,
+    .neural-text,
+    .agent-name {
+        text-shadow: none;
+        font-weight: bold;
+    }
 }

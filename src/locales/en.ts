@@ -11,6 +11,7 @@ export default {
     },
     menu: {
         chat: 'AI Chat',
+        "chat/": 'AI Chat',
         dashboard: 'Dashboard',
         tools: 'Tools',
         agents: 'Agents',

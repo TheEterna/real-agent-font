@@ -58,7 +58,7 @@ export interface UIMessage {
   sender: string
 
   // text payload
-  message: string | undefined
+  message: string
   data?: any
 
   // time

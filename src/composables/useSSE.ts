@@ -2,9 +2,9 @@ import {ref, nextTick} from 'vue'
 import {UIMessage, EventType, BaseEventItem} from '../types/events'
 import {MessageType} from '@/types/events'
 import {MessageTypeMap, SenderLabel} from '../constants/ui'
-import {ConnectionStatus, TaskStatus, ProgressInfo} from '@/models/status'
+import {ConnectionStatus, TaskStatus, ProgressInfo} from '@/types/status'
 import {TypeFlags} from 'typescript'
-import {NotificationType} from '@/models/notification'
+import {NotificationType} from '@/types/notification'
 
 // Use SSEEvent as strong type alias for incoming SSE events
 

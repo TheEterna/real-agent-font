@@ -52,17 +52,6 @@ export enum AgentType {
   Coding = 'coding',         // 代码编写（预留）
 }
 
-// Agent UI 配置
-export interface AgentUIConfig {
-  type: AgentType
-  title: string
-  themeClass: string          // 主题样式类名
-  renderer: Component | string // 渲染器（可扩展）
-  toolbarSlots?: string[]     // 工具栏插槽
-  interactions?: {            // 交互行为定义
-    sendFnName?: string       // 发送函数名称
-  }
-}
 ```
 
 **新增 Agent 的步骤：**

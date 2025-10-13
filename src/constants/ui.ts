@@ -32,10 +32,3 @@ export const MessageTypeMap: Record<string, MessageType> = {
   [EventType.ERROR]: MessageType.Error,
 }
 
-export const Icons = {
-  tool: '🛠️',
-  running: '🟢',
-  done: '✅',
-  warning: '⚠️',
-  error: '❌',
-}
