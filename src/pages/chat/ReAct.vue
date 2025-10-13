@@ -1,20 +1,4 @@
 <script setup lang="ts">
-/**
- * ⚠️ DEPRECATED: 该文件已弃用
- *
- * 各Agent类型现已拆分为独立页面：
- * - ReAct: src/pages/chat/ReAct.vue (路由: /chat/react)
- * - Coding: src/pages/chat/Coding.vue (待实现)
- * - 其他: 可参考 ReAct.vue 创建新页面
- *
- * 该文件保留作为参考，如需创建新的Agent页面，
- * 建议直接复制 ReAct.vue 并根据需求修改。
- *
- * 架构设计原则：
- * - 每个Agent类型独立页面，避免过度耦合
- * - 共享逻辑通过 composables（如 useSSE）复用
- * - UI组件（如 MessageItem、StatusIndicator）跨页面共享
- */
 import { ref, onMounted, onUnmounted, nextTick, computed, h, watch } from 'vue'
 import {UIMessage, MessageType, EventType} from '@/types/events'
 import { AgentType } from '@/types/agents'
@@ -49,16 +33,14 @@ import 'highlight.js/styles/github.css'
 import 'katex/dist/katex.min.css'
 import '@/styles/chat.css'
 import '@/styles/agents/react.css'
-import '@/styles/agents/coding.css'
 import { NotificationType } from '@/models/notification'
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
-// 已移除渲染模式，统一为 Markdown 行为（组件内处理工具渲染）
 const inputMessage = ref('')
 const attachments = ref<Attachment[]>([])
 
-// 附件约束（放在 attachments 定义之后，以确保引用有效）
+// 附件约束
 const MAX_FILES = 4
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const MAX_TOTAL_SIZE = 20 * 1024 * 1024 // 20MB
@@ -105,7 +87,7 @@ const pushFilesWithValidation = (files: File[]) => {
 const isLoading = ref(false)
 const chatContent = ref<HTMLElement>()
 const showScrollButton = ref(false)
-// 发送可用状态（控制“亮起”）
+// 发送可用状态（控制"亮起"）
 const canSend = computed(() => inputMessage.value.trim().length > 0 && !isLoading.value)
 // 输入区 hover 状态（原子类控制）
 const isInputHover = ref(false)
@@ -133,7 +115,6 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
 
   const onClick = () => locateByNode(node.nodeId)
 
-  // const desc = h('div', { onMouseenter: pause, onMouseleave: resume, style: 'max-width: 280px;' }, [
   const desc = h('div', { style: 'max-width: 280px;' }, [
     h('div', { style: 'margin-top:4px; font-size:12px; color:#888; display:flex; align-items:center; gap:6px;' }, [
       h('span', formatTime(node.timestamp as any)),
@@ -148,9 +129,8 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
         message: node.text,
         description: desc,
         key,
-        duration: 8, // 手动控制关闭以支持悬停暂停
+        duration: 8,
         onClick,
-        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
       })
       break;
     case NotificationType.ERROR:
@@ -158,9 +138,8 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
         message: node.text,
         description: desc,
         key,
-        duration: 8, // 手动控制关闭以支持悬停暂停
+        duration: 8,
         onClick,
-        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
       })
       break;
     case NotificationType.WARNING:
@@ -168,9 +147,8 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
         message: node.text,
         description: desc,
         key,
-        duration: 8, // 手动控制关闭以支持悬停暂停
+        duration: 8,
         onClick,
-        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
       })
       break;
     case NotificationType.INFO:
@@ -178,9 +156,8 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
         message: node.text,
         description: desc,
         key,
-        duration: 8, // 手动控制关闭以支持悬停暂停
+        duration: 8,
         onClick,
-        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
       })
       break;
     default:
@@ -188,14 +165,11 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
         message: node.text,
         description: desc,
         key,
-        duration: 8, // 手动控制关闭以支持悬停暂停
+        duration: 8,
         onClick,
-        // onClose: () => { closed = true; if (timer) clearTimeout(timer) }
       })
       break;
   }
-
-  // resume()
 }
 
 const { messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct } = useSSE({ onDoneNotice: handleDoneNotice })
@@ -221,12 +195,10 @@ onUnmounted(() => {
 })
 
 // 根据所选 Agent 获取 UI 配置（主题/渲染/交互）
-const agentUI = computed(() => getAgentUIConfig(chat.selectedTag.value))
+const agentUI = computed(() => getAgentUIConfig(AgentType.ReAct))
 
 // 会话ID
 const sessionId = chat.sessionId
-
-// 渲染模式已移除，无需切换
 
 // 发送消息
 const sendMessage = async () => {
@@ -249,18 +221,7 @@ const sendMessage = async () => {
   scrollToBottom()
 
   try {
-    // 直接根据 AgentType 派发对应执行函数（1对1映射）
-    switch (chat.selectedTag.value) {
-      case AgentType.ReAct:
-        await executeReAct(currentMessage, sessionId.value)
-        break
-      // case AgentType.Coding:
-      //   await executeCoding(currentMessage, sessionId.value)
-      //   break
-      default:
-        // 未实现的 Agent，临时回退
-        await executeReAct(currentMessage, sessionId.value)
-    }
+    await executeReAct(currentMessage, sessionId.value)
   } catch (error) {
     console.error('发送消息失败:', error)
     messages.value.push({
@@ -276,7 +237,6 @@ const sendMessage = async () => {
     if (taskStatus.value.is('running')) {
       taskStatus.value.set('error')
     }
-    // 不自动滚动，保留当前滚动位置
     // 清空已发送的附件
     attachments.value = []
   }
@@ -353,9 +313,6 @@ const insertTemplate = (t: string) => {
   inputMessage.value = (inputMessage.value ? inputMessage.value + '\n' : '') + t
   templatesOpen.value = false
 }
-
-// 导出对话
-
 
 // 格式化时间
 const formatTime = (date: Date) => {
@@ -442,16 +399,17 @@ onMounted(() => {
     messages.value.push({
       type: MessageType.System,
       sender: 'AI Assistant',
-      message: `欢迎使用 ${chat.selectedTag.value} Agent！我可以帮助您解决各种问题。请输入您的问题开始对话。`,
+      message: `欢迎使用 ReAct Agent！我可以帮助您解决各种问题。请输入您的问题开始对话。`,
       timestamp: new Date()
     })
   }
 
-  // 监听滚动，控制“下滑按钮”显隐
+  // 监听滚动，控制"下滑按钮"显隐
   chatContent.value?.addEventListener('scroll', updateScrollButtonVisibility)
   updateScrollButtonVisibility()
 })
 </script>
+
 <template>
   <div class="chat-container" :class="agentUI.themeClass">
     <!-- 主对话区域（滚动） -->
@@ -504,15 +462,6 @@ onMounted(() => {
           </template>
         </a-dropdown>
       </div>
-      <div v-if="templatesOpen" class="input-toolbar" style="margin-top: -6px;">
-        <a-button
-          v-for="t in templates"
-          :key="t.label"
-          size="small"
-          class="toolbar-btn"
-          @click="insertTemplate(t.text)"
-        >{{ t.label }}</a-button>
-      </div>
 
       <div
         class="input-surface"
@@ -564,19 +513,9 @@ onMounted(() => {
           />
         </div>
       </div>
-
-      <!-- <div class="quick-actions">
-        <a-button @click="clearChat" class="action-btn">
-          清空对话
-        </a-button>
-        <a-button @click="exportChat" class="action-btn">
-          导出对话
-        </a-button>
-      </div> -->
     </div>
   </div>
 </template>
-
 
 <style scoped lang="scss">
 /* Styles moved to src/styles/chat.css; component-specific styles live in each component */

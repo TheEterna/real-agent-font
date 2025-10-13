@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
-  { path: '/', redirect: '/chat' },
-  { path: '/chat', components: { default: () => import('@/pages/chat/Chat.vue'), sider: () => import('@/pages/chat/ChatSider.vue') } },
+  { path: '/', redirect: '/chat/react' },
+  { path: '/chat', redirect: '/chat/react' },
+  { path: '/chat/react', components: { default: () => import('@/pages/chat/ReAct.vue'), sider: () => import('@/pages/chat/ChatSider.vue') } },
+  { path: '/chat/react-plus', components: { default: () => import('@/pages/chat/ReActPlus.vue'), sider: () => import('@/pages/chat/ChatSider.vue') } },
   { path: '/dashboard', component: () => import('@/pages/Dashboard.vue') },
   { path: '/tools', component: () => import('@/pages/Tools.vue') },
   { path: '/agents', component: () => import('@/pages/Agents.vue') },

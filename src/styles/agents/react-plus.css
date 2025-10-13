@@ -1,0 +1,514 @@
+/* ReAct+ 专属主题样式 - 高级版本 */
+
+.theme-react-plus {
+  --primary-color: #6366f1;
+  --primary-light: #a5b4fc;
+  --primary-dark: #4338ca;
+  --secondary-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* 整体容器增强 */
+.theme-react-plus .chat-container {
+  background: var(--gradient-bg);
+  min-height: 100vh;
+  position: relative;
+}
+
+.theme-react-plus .chat-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.theme-react-plus .chat-content {
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  margin: 16px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* 消息样式增强 */
+.theme-react-plus .message {
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  margin: 12px 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-react-plus .message::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-bg);
+  z-index: -1;
+}
+
+.theme-react-plus .message:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 不同状态的消息样式 */
+.theme-react-plus .message.thinking {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border-left: 4px solid var(--warning-color);
+}
+
+.theme-react-plus .message.action {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+  border-left: 4px solid var(--secondary-color);
+}
+
+.theme-react-plus .message.observing {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
+  border-left: 4px solid var(--primary-color);
+}
+
+.theme-react-plus .message.tool {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+  border-left: 4px solid #3b82f6;
+}
+
+.theme-react-plus .message.user {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(67, 56, 202, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  margin-left: auto;
+  margin-right: 0;
+  max-width: 80%;
+}
+
+.theme-react-plus .message.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+  border-left: 4px solid var(--error-color);
+}
+
+/* 工具审批卡片样式 */
+.theme-react-plus .tool-approval-card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  margin: 16px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-react-plus .tool-approval-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+}
+
+.theme-react-plus .tool-approval-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-react-plus .tool-approval-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--primary-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.theme-react-plus .tool-approval-content {
+  padding: 20px;
+}
+
+.theme-react-plus .tool-params {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  backdrop-filter: blur(10px);
+}
+
+.theme-react-plus .tool-approval-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 按钮增强样式 */
+.theme-react-plus .approval-btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  border: none;
+  color: white;
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.theme-react-plus .approval-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+}
+
+.theme-react-plus .approval-btn-danger {
+  background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 100%);
+  border: none;
+  color: white;
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.theme-react-plus .approval-btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+
+.theme-react-plus .approval-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.theme-react-plus .approval-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+/* 输入区域增强 */
+.theme-react-plus .chat-input {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  margin: 16px;
+  padding: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 增强工具栏样式 */
+.theme-react-plus .input-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-react-plus .agent-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 6px 12px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-color);
+  backdrop-filter: blur(10px);
+}
+
+.theme-react-plus .input-surface {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.theme-react-plus .input-surface:hover,
+.theme-react-plus .input-surface--hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.theme-react-plus .input-surface--light {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* 快速操作提示样式 */
+.theme-react-plus .quick-tips {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-react-plus .tip-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.theme-react-plus .tip-item:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+  color: var(--primary-color);
+}
+
+.theme-react-plus .tip-item:active {
+  transform: translateY(0);
+}
+
+/* 状态指示器增强 */
+.theme-react-plus .status-indicator {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.theme-react-plus .status-indicator.running {
+  border-color: var(--secondary-color);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+}
+
+.theme-react-plus .status-indicator.error {
+  border-color: var(--error-color);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+}
+
+/* 工具执行状态动画 */
+.theme-react-plus .tool-executing {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-react-plus .tool-executing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* 脉冲动画 */
+.theme-react-plus .pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 进度指示器增强 */
+.theme-react-plus .global-progress {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-react-plus .gp-icon {
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+.theme-react-plus .gp-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.theme-react-plus .gp-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .theme-react-plus .chat-content {
+    margin: 8px;
+    border-radius: 12px;
+  }
+
+  .theme-react-plus .chat-input {
+    margin: 8px;
+    border-radius: 16px;
+  }
+
+  .theme-react-plus .tool-approval-actions {
+    flex-direction: column;
+  }
+
+  .theme-react-plus .approval-btn-primary,
+  .theme-react-plus .approval-btn-danger,
+  .theme-react-plus .approval-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .theme-react-plus .quick-tips {
+    flex-direction: column;
+  }
+
+  .theme-react-plus .tip-item {
+    justify-content: center;
+  }
+
+  .theme-react-plus .input-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .theme-react-plus .agent-info {
+    order: -1;
+    margin-left: 0;
+    flex-grow: 1;
+    justify-content: center;
+  }
+}
+
+/* 加载动画增强 */
+.theme-react-plus .loading-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 16px;
+}
+
+.theme-react-plus .loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 滚动按钮样式 */
+.theme-react-plus .scroll-bottom-btn {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(20px);
+}
+
+.theme-react-plus .scroll-bottom-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 工具栏按钮增强 */
+.theme-react-plus .toolbar-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.theme-react-plus .toolbar-btn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}

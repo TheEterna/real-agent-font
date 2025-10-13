@@ -2,6 +2,7 @@ import type { Component } from 'vue'
 
 export enum AgentType {
   ReAct = 'ReAct',
+  ReAct_Plus = 'ReAct+',
   Coding = 'coding',
 }
 

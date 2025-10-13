@@ -13,6 +13,16 @@ const registry: Record<AgentType, AgentUIConfig> = {
       sendFnName: 'executeReAct',
     },
   },
+  [AgentType.ReAct_Plus]: {
+    type: AgentType.ReAct_Plus,
+    title: 'ReAct+ ReAct 本系统新一代通用主力智能体',
+    themeClass: 'theme-react-plus',
+    renderer: 'default', // 先复用默认列表渲染
+    interactions: {
+      // Chat.vue 中会按名称分发到具体执行函数
+      sendFnName: 'executeReAct',
+    },
+  },
   [AgentType.Coding]: {
     type: AgentType.Coding,
     title: '代码编写（预留）',

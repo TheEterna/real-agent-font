@@ -34,17 +34,17 @@ export interface BaseEventItem {
   agentId: string
   type: EventType | string
   message?: string
-  data?: unknown
+  data?: any
   meta?: object
 }
 
 export interface ToolResponseData {
   toolCallId?: string
   toolName?: string
-  responseData?: unknown
+  responseData?: any
 }
 
-export type ToolEventData = ToolResponseData | Record<string, unknown> | unknown
+export type ToolEventData = ToolResponseData | Record<string, any> | any
 
 export interface UIMessage {
   // identity & tracing
