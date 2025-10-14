@@ -20,6 +20,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/playground/role-play-agent', component: () => import('@/pages/playground/role-play-agent/RoleSelect.vue'), meta: { hideHeader: true }  },
   { path: '/playground/role-play-agent/:roleId', component: () => import('@/pages/playground/role-play-agent/Index.vue'), meta: { hideHeader: true }  },
   { path: '/SseTest', component: () => import('@/pages/SseTest.vue') },
+  // 🏺 青花瓷冰裂纹效果演示
+  { path: '/demo/crackle', component: () => import('@/pages/demo/CrackleDemo.vue'), meta: { hideHeader: true } },
 ]
 
 const router = createRouter({

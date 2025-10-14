@@ -1,408 +1,336 @@
-# CLAUDE.md
+# CLAUDE 开发规范文档
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**严格遵守本文档所有规范，确保代码与现有架构完美融合**
 
-## 项目概述
+## 项目架构简介
 
-Real Agent Console 是一个基于 Vue 3 + TypeScript + Vite + Ant Design Vue 的智能体（Agent）交互前端应用。项目采用模块化架构，支持多种 Agent 类型，提供实时流式交互能力。
+Real Agent Console：Vue 3 + TypeScript 智能体交互前端，采用 **Agent 注册表模式** + **SSE 流式通信**。
 
-**技术栈：**
-- **框架**: Vue 3 (Composition API)
-- **语言**: TypeScript
-- **构建工具**: Vite
-- **UI 框架**: Ant Design Vue 4.x
-- **动画库**: GSAP
-- **状态管理**: Pinia
-- **路由**: Vue Router 4
-- **国际化**: Vue I18n
-- **实时通信**: SSE (Server-Sent Events)
+**核心技术**: Vue 3 (Composition API), TypeScript (严格模式), Ant Design Vue, GSAP (必须用于动效), Pinia, Vue Router 4
 
-## 开发命令
+**架构特点**: 模块化、类型安全、流式交互、主题化
 
-```bash
-# 安装依赖
-npm install
+## 📋 强制架构规范
 
-# 启动开发服务器（端口 5173）
-npm run dev
+### 🔴 Agent 开发规范 (严格遵守)
 
-# 构建生产版本
-npm run build
+**核心原则**: 所有 Agent 必须通过注册表模式集成，禁止直接修改核心文件。
 
-# 预览构建结果
-npm run preview
+#### 1. Agent 注册流程 (必须按顺序执行)
 
-# 类型检查
-vue-tsc -b
-```
-
-**重要**: 项目依赖后端服务，默认代理到 `http://localhost:8080`，可通过 `.env` 文件中的 `VITE_API_BASE_URL` 配置。
-
-## 核心架构
-
-### 1. Agent 注册机制
-
-项目采用 **Agent 注册表模式**，所有 Agent 配置集中在 `src/agent-ui/registry.ts`：
-
+**步骤 1**: 在 `src/types/agents.ts` 添加类型
 ```typescript
-// Agent 类型定义
 export enum AgentType {
-  ReAct = 'ReAct',           // 推理-行动-观察框架
-  ReAct_Plus = 'ReAct+',     // 增强版 ReAct
-  Coding = 'coding',         // 代码编写（预留）
+  YourAgent = 'your-agent-name'  // ⚠️ 使用 kebab-case
 }
-
 ```
 
-**新增 Agent 的步骤：**
+**步骤 2**: 在 `src/agent-ui/registry.ts` 注册配置
+```typescript
+[AgentType.YourAgent]: {
+  type: AgentType.YourAgent,
+  title: 'Agent 显示名称',
+  themeClass: 'theme-your-agent',     // ⚠️ 必须以 theme- 开头
+  renderer: 'default',
+  interactions: {
+    sendFnName: 'executeYourAgent',   // ⚠️ 函数名必须以 execute 开头
+  },
+}
+```
 
-1. **在 `src/types/agents.ts` 中定义 Agent 类型**
-   ```typescript
-   export enum AgentType {
-     // ... 现有类型
-     YourNewAgent = 'your-agent-type',
-   }
-   ```
+**步骤 3**: 创建主题样式 `src/styles/agents/your-agent.css`
+```css
+.theme-your-agent {
+  /* ⚠️ 必须定义完整的主题变量 */
+}
+```
 
-2. **在 `src/agent-ui/registry.ts` 中注册配置**
-   ```typescript
-   [AgentType.YourNewAgent]: {
-     type: AgentType.YourNewAgent,
-     title: '新 Agent 标题',
-     themeClass: 'theme-your-agent',
-     renderer: 'default',
-     interactions: {
-       sendFnName: 'executeYourAgent',
-     },
-   }
-   ```
+**步骤 4**: 在 `src/composables/useSSE.ts` 实现执行函数
+```typescript
+const executeYourAgent = async (text: string, sessionId: string) => {
+  // ⚠️ 必须遵守 SSE 事件规范，见下文
+}
+```
 
-3. **创建 Agent 专属样式** (`src/styles/agents/your-agent.css`)
-   ```css
-   .theme-your-agent {
-     /* Agent 专属主题样式 */
-   }
-   ```
+**步骤 5**: 创建页面组件 `src/pages/chat/YourAgent.vue`
+- ⚠️ 必须继承自 `ReAct.vue` 的模式
+- ⚠️ 必须实现错误处理和加载状态
 
-4. **在 `src/composables/useSSE.ts` 中实现执行函数**
-   ```typescript
-   const executeYourAgent = async (text: string, sessionId: string) => {
-     // 实现 SSE 流式通信逻辑
-   }
-   ```
+**步骤 6**: 添加路由 `src/router/index.ts`
+```typescript
+{
+  path: '/chat/your-agent',
+  components: {
+    default: () => import('@/pages/chat/YourAgent.vue'),
+    sider: () => import('@/pages/chat/ChatSider.vue')  // ⚠️ 侧边栏必须复用
+  }
+}
+```
 
-5. **创建 Agent 页面** (`src/pages/chat/YourAgent.vue`)，参考 `ReAct.vue` 实现
+**步骤 7**: 在 `src/pages/chat/ChatSider.vue` 添加导航
 
-6. **在 `src/router/index.ts` 中添加路由**
-   ```typescript
-   {
-     path: '/chat/your-agent',
-     components: {
-       default: () => import('@/pages/chat/YourAgent.vue'),
-       sider: () => import('@/pages/chat/ChatSider.vue')
-     }
-   }
-   ```
+#### ❌ 禁止行为
+- 直接修改 `registry.ts` 已有配置
+- 绕过注册机制直接创建路由
+- 修改 `useSSE.ts` 的核心逻辑
+- 创建不符合命名规范的文件
 
-7. **在 `src/pages/chat/ChatSider.vue` 中添加导航按钮**
+### 🔴 SSE 事件流规范 (严格遵守)
 
-### 2. SSE 事件流处理
+**核心原则**: 所有 Agent 必须遵守统一的事件类型和处理流程。
 
-项目使用 `useSSE` Composable 处理 Server-Sent Events 流式通信：
-
-**核心事件类型** (`src/types/events.ts`)：
+#### 2. 强制事件类型 (`src/types/events.ts`)
 ```typescript
 export enum EventType {
-  STARTED = 'STARTED',              // 任务开始
+  STARTED = 'STARTED',              // ⚠️ 任务开始 - 必须发送
   EXECUTING = 'EXECUTING',          // 执行中
   THINKING = 'THINKING',            // 思考中
   ACTION = 'ACTION',                // 动作执行
   OBSERVING = 'OBSERVING',          // 观察结果
-  TOOL = 'TOOL',                    // 工具调用
+  TOOL = 'TOOL',                    // 工具调用 - 独立消息
   TOOL_APPROVAL = 'TOOL_APPROVAL',  // 工具审批
-  PROGRESS = 'PROGRESS',            // 进度更新（全局）
-  ERROR = 'ERROR',                  // 错误
+  PROGRESS = 'PROGRESS',            // ⚠️ 进度更新 - 不进消息列表
+  ERROR = 'ERROR',                  // ⚠️ 错误 - 必须处理
   DONE = 'DONE',                    // 完成（普通）
   DONEWITHWARNING = 'DONEWITHWARNING', // 完成（警告）
-  COMPLETED = 'COMPLETED'           // 流结束信号
+  COMPLETED = 'COMPLETED'           // ⚠️ 流结束 - 必须发送
 }
 ```
 
-**消息聚合规则**：
-- 相同 `nodeId` 的事件会累积到同一条消息
-- `TOOL` 事件作为独立消息插入（视觉上仍归属于父节点）
-- `PROGRESS` 事件不进入消息列表，仅更新全局进度状态
-- `COMPLETED` 事件关闭 SSE 连接，不生成消息
+#### 3. 强制消息聚合规则
+- ✅ **相同 `nodeId`**: 自动合并为同一条消息
+- ✅ **TOOL 事件**: 独立消息插入，视觉归属父节点
+- ✅ **PROGRESS 事件**: 仅更新全局状态，不生成消息
+- ✅ **COMPLETED 事件**: 关闭连接，不生成消息
 
-### 3. 会话管理
-
-使用 `src/stores/chatStore.ts` 管理多会话状态：
-
+#### 4. SSE 函数实现模板 (必须遵守)
 ```typescript
-// 会话结构
-interface Session {
-  id: string
-  title: string
-  updatedAt: Date
-}
+const executeYourAgent = async (text: string, sessionId: string) => {
+  try {
+    // ⚠️ 1. 必须发送 STARTED 事件
+    handleEvent({
+      sessionId,
+      agentId: 'your-agent',
+      type: EventType.STARTED,
+      message: '开始处理...',
+      nodeId: generateNodeId(), // ⚠️ 必须生成唯一nodeId
+      startTime: new Date()
+    });
 
-// 核心方法
+    // ⚠️ 2. 业务逻辑处理，发送对应事件类型
+
+    // ⚠️ 3. 必须发送 COMPLETED 事件
+    handleEvent({
+      sessionId,
+      agentId: 'your-agent',
+      type: EventType.COMPLETED,
+      endTime: new Date()
+    });
+  } catch (error) {
+    // ⚠️ 4. 错误处理 - 必须实现
+    handleEvent({
+      sessionId,
+      agentId: 'your-agent',
+      type: EventType.ERROR,
+      message: error.message,
+      endTime: new Date()
+    });
+  }
+}
+```
+
+#### ❌ SSE 开发禁止行为
+- 修改 `useSSE.ts` 核心事件处理逻辑
+- 不发送 STARTED 或 COMPLETED 事件
+- 忽略错误处理
+- 使用未定义的事件类型
+- 破坏 nodeId 聚合机制
+
+### 🔴 状态管理规范 (严格遵守)
+
+**核心原则**: 使用 Pinia Store 统一管理状态，禁止组件间直接状态传递。
+
+#### 5. 会话管理必须遵守的接口 (`src/stores/chatStore.ts`)
+```typescript
+// ⚠️ 只能调用以下方法，禁止直接修改 store 状态
 - switchConversation(id: string)    // 切换会话
 - newConversation()                 // 创建新会话
 - selectTag(tag: AgentType)         // 选择 Agent
 - getSessionMessages(id: string)    // 获取会话消息
 - setSessionMessages(id, messages)  // 保存会话消息
-- touchSession(id: string)          // 更新会话时间戳
+- touchSession(id: string)          // 更新时间戳
 ```
 
-**会话切换机制**：
-- 使用 `watch` 监听 `sessionId` 变化
-- 切换时保存旧会话消息，加载新会话消息
-- 自动清理 `nodeIndex`（用于事件聚合）
-
-### 4. 路由与布局
-
-项目使用 **命名视图**（Named Views）实现侧边栏与主内容分离：
-
+#### 6. 路由规范 (强制使用命名视图)
 ```typescript
+// ⚠️ 必须按此格式添加路由，不得直接修改
 {
-  path: '/chat/react',
+  path: '/chat/your-agent',
   components: {
-    default: () => import('@/pages/chat/ReAct.vue'),    // 主内容
-    sider: () => import('@/pages/chat/ChatSider.vue')    // 侧边栏
+    default: () => import('@/pages/chat/YourAgent.vue'),
+    sider: () => import('@/pages/chat/ChatSider.vue')  // ⚠️ 侧边栏强制复用
   }
 }
 ```
 
-`App.vue` 中定义两个 `<router-view>`：
+## 💡 开发规范与最佳实践
+
+### 🔴 代码质量要求 (不可违反)
+
+#### TypeScript 严格规范
+- ✅ **严格模式**: `strict: true` 强制启用
+- ❌ **禁用 any**: 必要时添加 `// @ts-ignore` 注释说明
+- ✅ **类型定义**: 所有接口和类型必须完整定义
+- ✅ **组件类型化**: Props 和 Emits 必须类型化
+
+#### Vue 组件开发规范
 ```vue
-<router-view name="sider" />  <!-- 侧边栏 -->
-<router-view />                <!-- 主内容 -->
+<!-- ⚠️ 组件开发强制模板 -->
+<script setup lang="ts">
+// 1. 类型导入
+import type { PropType } from 'vue'
+
+// 2. Props 定义 (必须类型化)
+interface Props {
+  data: SomeType
+}
+const props = defineProps<Props>()
+
+// 3. Emits 定义 (必须类型化)
+interface Emits {
+  change: [value: string]
+}
+const emit = defineEmits<Emits>()
+
+// 4. 组合式函数使用
+const { messages } = useSSE()
+</script>
+
+<style scoped>
+/* ⚠️ 组件样式必须 scoped */
+</style>
 ```
 
-## 开发规范
+#### 样式开发规范
+- ✅ **主题样式**: 放置于 `src/styles/agents/`
+- ✅ **组件样式**: 必须使用 `scoped`
+- ✅ **动画实现**: 强制使用 GSAP（禁用 CSS transition）
+- ✅ **颜色工具**: 使用 `src/utils/colorUtils.ts` 生成颜色
 
-### UI 设计原则
+#### 命名规范 (严格执行)
+```typescript
+// ✅ 正确命名
+Component: PascalCase     // MessageItem.vue
+File: kebab-case         // color-utils.ts
+Variable: camelCase      // sessionId
+Constant: UPPER_CASE     // EVENT_TYPE
+AgentType: kebab-case    // 'react-plus'
+ThemeClass: kebab-case   // 'theme-react-plus'
+Function: camelCase      // executeReact
+```
 
-**核心理念**：效果优先、炫酷、切合主题、艺术感
+## 🚀 快速开发指南
 
-- **视觉冲击力**：参考 OpenManus 的演示效果，技术实现可以简单，但视觉呈现必须惊艳
-- **动画流畅性**：使用 GSAP 实现高性能动画，注重微交互细节
-- **主题一致性**：每个 Agent 有独立主题样式（`theme-react`, `theme-react-plus`, `theme-coding`）
-- **玻璃态（Glassmorphism）**：使用 `src/utils/colorUtils.ts` 中的颜色工具生成半透明效果
-- **渐进增强**：基础功能稳定，视觉效果逐步提升
+### 5分钟添加新 Agent
 
-**UI 组件使用**：
-- 优先使用 Ant Design Vue 组件
-- 自定义组件放在 `src/components/`
-- 复杂交互可扩展 Ant Design 组件（如 Tooltip、Notification）
+```bash
+# 1. 创建 Agent 目录结构
+mkdir -p src/pages/chat/NewAgent
+mkdir -p src/styles/agents
 
-### 颜色工具使用
+# 2. 复制模板文件
+cp src/pages/chat/ReAct.vue src/pages/chat/NewAgent.vue
+cp src/styles/agents/react.css src/styles/agents/new-agent.css
+```
 
-`src/utils/colorUtils.ts` 提供多种颜色生成方法：
+**步骤清单** (⚠️ 按顺序执行)：
+1. ✅ `src/types/agents.ts` → 添加 `NewAgent = 'new-agent'`
+2. ✅ `src/agent-ui/registry.ts` → 注册配置
+3. ✅ `src/styles/agents/new-agent.css` → 定义主题
+4. ✅ `src/composables/useSSE.ts` → 实现 `executeNewAgent`
+5. ✅ `src/pages/chat/NewAgent.vue` → 修改组件
+6. ✅ `src/router/index.ts` → 添加路由
+7. ✅ `src/pages/chat/ChatSider.vue` → 添加导航
+
+### 核心文件速查
+
+```
+📁 核心架构文件 (⚠️ 修改需谨慎)
+├── src/agent-ui/registry.ts         # Agent 注册表
+├── src/composables/useSSE.ts        # SSE 流处理
+├── src/stores/chatStore.ts          # 会话状态管理
+├── src/types/events.ts              # 事件类型定义
+└── src/types/agents.ts              # Agent 类型定义
+
+📁 开发主要文件
+├── src/pages/chat/ReAct.vue         # Agent 页面模板
+├── src/utils/colorUtils.ts          # 颜色工具
+├── src/router/index.ts              # 路由配置
+└── src/pages/chat/ChatSider.vue     # 侧边栏导航
+
+📁 样式文件
+├── src/styles/agents/               # Agent 主题样式
+└── src/components/                  # 通用组件
+```
+
+## ⚠️ 开发禁区
+
+### 🚫 绝对不能修改的文件
+- `src/composables/useSSE.ts` 核心逻辑
+- `src/stores/chatStore.ts` 状态管理逻辑
+- `src/agent-ui/registry.ts` 已有配置
+- `App.vue` 路由视图结构
+
+### 🚫 绝对不能违反的规则
+1. **不得绕过注册机制** 直接创建 Agent
+2. **不得破坏 SSE 事件流** 自定义事件类型
+3. **不得违反命名规范** 使用错误的命名方式
+4. **不得忽略错误处理** 在 SSE 函数中
+5. **不得使用 CSS transition** 强制使用 GSAP
+
+### 🚫 架构升级审批制
+当遇到以下情况必须先获得用户批准：
+- 现有架构无法支持新功能
+- 需要修改核心文件结构
+- 性能瓶颈需要重构解决
+- 新需求与现有设计冲突
+
+## 🛠️ 颜色工具速用
 
 ```typescript
-// 随机玻璃色（浅色、半透明）
-generateGlassColor(alpha?, saturation, lightness)
+import { getRandomGlassColor, getRandomTooltipColor } from '@/utils/colorUtils'
 
-// 适用于 Tooltip 的深色背景（确保文字可读性）
-generateTooltipColor(alpha?, saturation, lightness)
+// 玻璃效果背景 (浅色、半透明)
+const cardBg = getRandomGlassColor()
 
-// 基于主题色生成浅色版本
-generateThemeGlassColor(themeColor, alpha)
+// Tooltip 背景 (深色、可读性好)
+const tooltipBg = getRandomTooltipColor()
 
-// 获取预定义玻璃色彩色板
-getGlassColorPalette()
-
-// 随机选择玻璃色/Tooltip 色
-getRandomGlassColor()
-getRandomTooltipColor()
+// GSAP 动画应用
+gsap.to(element, { backgroundColor: cardBg, duration: 0.3 })
 ```
 
-**使用场景**：
-- Tooltip 背景色：使用 `getRandomTooltipColor()`（深色，文字可读）
-- 卡片背景：使用 `getRandomGlassColor()`（浅色，玻璃态效果）
-- 主题色衍生：使用 `generateThemeGlassColor()`
+## 📝 开发检查清单
 
-### 架构扩展原则
+**新 Agent 开发完成检查**：
+- [ ] Agent 类型已添加到 `agents.ts`
+- [ ] 注册表配置正确且完整
+- [ ] 主题样式文件已创建
+- [ ] SSE 函数实现 STARTED/COMPLETED 事件
+- [ ] 页面组件继承 ReAct 模式
+- [ ] 路由使用命名视图格式
+- [ ] 侧边栏导航已添加
+- [ ] 错误处理已实现
+- [ ] TypeScript 严格模式通过
+- [ ] 所有动画使用 GSAP
 
-**关键原则**：严格遵守现有架构，避免过度设计
-
-1. **功能扩展前评估**：
-   - 当前架构是否支持？
-   - 是否会破坏简洁性和鲁棒性？
-   - 是否需要架构升级？（需用户审批）
-
-2. **架构升级条件**：
-   - 功能膨胀导致代码混乱
-   - 性能瓶颈无法通过优化解决
-   - 新需求与现有设计冲突
-
-3. **升级流程**：
-   - 向用户说明问题和方案
-   - 明确不改变现有功能
-   - 获得批准后执行
-
-### 代码质量要求
-
-**TypeScript 严格模式**：
-- 启用 `strict: true`
-- 避免使用 `any`（必要时添加注释说明）
-- 定义清晰的接口和类型
-
-**组件开发**：
-- 使用 Composition API
-- Props 和 Emits 类型化
-- 逻辑复用通过 Composables
-
-**样式管理**：
-- 组件样式使用 `scoped`
-- 全局样式放在 `src/styles/`
-- Agent 主题样式独立文件（`src/styles/agents/`）
-
-**命名规范**：
-- 组件：PascalCase（`MessageItem.vue`）
-- 文件：kebab-case（`color-utils.ts`）或 PascalCase（组件文件）
-- 变量/函数：camelCase
-- 常量/枚举：UPPER_SNAKE_CASE 或 PascalCase
-
-## 重要文件说明
-
-### 配置文件
-- `vite.config.ts` - Vite 配置（代理、别名、构建）
-- `tsconfig.json` - TypeScript 配置（严格模式、路径别名）
-- `package.json` - 依赖管理
-
-### 核心目录
-```
-src/
-├── agent-ui/        # Agent 注册表和 UI 配置
-├── components/      # 通用组件（MessageItem, ToolBox, StatusIndicator）
-├── composables/     # 可复用逻辑（useSSE）
-├── pages/           # 页面组件
-│   ├── chat/        # 聊天页面（ReAct, ReActPlus, ChatSider）
-│   └── playground/  # 实验性功能（角色扮演、数据实验室）
-├── router/          # 路由配置
-├── services/        # API 服务（http, tools, roleplay）
-├── stores/          # 状态管理（chatStore, roleStore）
-├── styles/          # 全局样式和 Agent 主题
-├── types/           # TypeScript 类型定义
-├── utils/           # 工具函数（colorUtils）
-├── i18n/            # 国际化配置
-├── locales/         # 语言文件（zh.ts, en.ts）
-├── constants/       # 常量定义（UI 映射、角色配置）
-└── models/          # 数据模型（Attachment, Status, Notification）
-```
-
-### 关键文件
-- `src/composables/useSSE.ts` - SSE 流处理核心逻辑
-- `src/agent-ui/registry.ts` - Agent 注册表
-- `src/types/events.ts` - 事件类型定义
-- `src/stores/chatStore.ts` - 会话状态管理
-- `src/utils/colorUtils.ts` - 颜色生成工具
-- `src/pages/chat/ReAct.vue` - Agent 页面模板（最佳实践）
-
-## 后端接口约定
-
-**SSE 流式接口**：
-- 端点：`POST /api/agent/chat/react/stream`
-- Content-Type: `application/json`
-- Accept: `text/event-stream`
-
-**请求体**：
-```json
-{
-  "message": "用户输入",
-  "userId": "user-001",
-  "sessionId": "session-xxx",
-  "agentType": "ReAct"
-}
-```
-
-**SSE 事件格式**：
-```typescript
-interface BaseEventItem {
-  sessionId?: string
-  traceId?: string
-  startTime: Date
-  endTime?: Date
-  spanId?: string
-  nodeId?: string        // 事件聚合标识
-  agentId: string
-  type: EventType        // 事件类型（STARTED, THINKING, TOOL 等）
-  message?: string       // 文本内容
-  data?: any             // 附加数据（工具调用结果等）
-  meta?: object          // 元数据
-}
-```
-
-## 调试技巧
-
-**SSE 流调试**：
-1. 打开浏览器开发者工具 → Network
-2. 筛选 `EventStream` 类型
-3. 查看 `Messages` 标签页查看实时事件流
-
-**状态调试**：
-- 使用 Vue DevTools 查看 Pinia Store
-- 查看 `chatStore` 的 `messagesBySession` 了解会话消息
-
-**样式调试**：
-- 检查元素的 `class`，确认主题类名已正确应用
-- 查看 `src/styles/agents/` 中的对应主题文件
-
-## 反思与改进指南
-
-开发时持续自问：
-1. **功能实现**：是否符合 Agent 注册机制？是否破坏了现有架构？
-2. **用户体验**：交互是否流畅？视觉效果是否惊艳？加载状态是否明确？
-3. **代码质量**：类型定义是否完整？是否有重复代码？是否易于维护？
-4. **性能优化**：列表渲染是否需要虚拟滚动？动画是否影响性能？
-5. **扩展性**：新功能是否易于集成？是否为未来需求留有余地？
-
-**改进建议提交流程**：
-1. 发现架构缺陷或功能瓶颈
-2. 分析问题根源和影响范围
-3. 提出解决方案（含实现成本和风险评估）
-4. 向用户说明并获得批准
-5. 在不破坏现有功能的前提下实施
-
-## 特殊注意事项
-
-1. **不要随意修改 Agent 注册表**：
-   - 任何对 `src/agent-ui/registry.ts` 的修改需经过充分测试
-   - 确保不影响已有 Agent 的运行
-
-2. **SSE 连接管理**：
-   - 始终在 `COMPLETED` 或 `ERROR` 事件后关闭连接
-   - 避免内存泄漏，组件卸载时清理事件监听器
-
-3. **会话数据持久化**：
-   - 当前仅内存存储，刷新页面会丢失
-   - 如需持久化，考虑使用 LocalStorage 或后端存储
-
-4. **国际化支持**：
-   - 所有用户可见文本应使用 `$t()` 或 `t()` 函数
-   - 在 `src/locales/zh.ts` 和 `en.ts` 中添加翻译
-
-5. **Markdown 渲染安全**：
-   - 使用 DOMPurify 清理不安全的 HTML
-   - 配置 markdown-it 禁用 HTML 标签（`html: false`）
-
-## Playground 实验性功能
-
-`src/pages/playground/` 包含实验性 Agent：
-
-- **角色扮演 Agent** (`role-play-agent/`)：
-  - 支持语音交互（WebSocket + PCM 音频流）
-  - 多角色选择（孙悟空、哈利波特、蝙蝠侠等）
-  - 会话管理和语音模式切换
-
-- **数据实验室** (`DataLab.vue`)：
-  - 预留用于数据分析和可视化功能
-
-实验性功能可能不稳定，开发时注意隔离影响范围。
+**代码质量检查**：
+- [ ] 无 TypeScript 错误
+- [ ] Props/Emits 已类型化
+- [ ] 组件样式使用 scoped
+- [ ] 遵循命名规范
+- [ ] 无 eslint 警告
 
 ---
 
-**最后提醒**：保持代码简洁、架构清晰、视觉惊艳。遇到架构瓶颈时，先思考再行动，必要时寻求用户批准。
+**🎯 目标**: 让每个开发者都能在严格遵守架构规范的前提下，快速、正确地扩展项目功能。

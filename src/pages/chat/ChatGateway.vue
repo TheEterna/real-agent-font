@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, nextTick, shallowRef } from 'vue'
 import { useChatStore } from '@/stores/chatStore'
 import { AgentType } from '@/types/session'
-import gsap from 'gsap'
+import CeladonVideoLoading from '@/components/loading/CeladonVideoLoading.vue'
 
 // 动态导入Agent组件
 import ReAct from './ReAct.vue'
@@ -14,16 +14,27 @@ const chat = useChatStore()
 const currentComponent = shallowRef<any>(null)
 const previousComponent = shallowRef<any>(null)
 
-// 过渡动画相关
-const transitionOverlay = ref<HTMLElement>()
-const currentView = ref<HTMLElement>()
+// 青花瓷过渡动画相关
 const isTransitioning = ref(false)
+const showVideoTransition = ref(false)
+const transitionAudioIndex = ref(0)
+
+// 过渡文案
+const transitionTitle = ref('切换中')
+const transitionSubtitle = ref('...')
 
 // Agent组件映射
 const agentComponentMap: Record<AgentType, any> = {
   [AgentType.ReAct]: ReAct,
   [AgentType.ReAct_Plus]: ReActPlus,
   [AgentType.Coding]: ReAct, // todo 暂时使用ReAct作为placeholder
+}
+
+// Agent名称映射
+const agentNameMap: Record<AgentType, string> = {
+  [AgentType.ReAct]: 'ReAct',
+  [AgentType.ReAct_Plus]: 'ReAct+',
+  [AgentType.Coding]: 'Coding'
 }
 
 // 获取当前session
@@ -34,63 +45,75 @@ const getComponentForAgent = (agentType: AgentType) => {
   return agentComponentMap[agentType] || ReAct
 }
 
-// 全屏过渡动画
-const playTransitionAnimation = async () => {
-  if (!transitionOverlay.value || isTransitioning.value) return
+// 青花瓷过渡动画
+const playVideoTransition = async (targetAgent?: AgentType) => {
+  if (isTransitioning.value) return
 
   isTransitioning.value = true
 
-  const tl = gsap.timeline({
-    onComplete: () => {
-      isTransitioning.value = false
-    }
-  })
+  // 设置过渡文案
+  if (targetAgent) {
+    transitionTitle.value = `切换至 ${agentNameMap[targetAgent]}`
+    transitionSubtitle.value = '切换中...'
+  } else {
+    transitionTitle.value = '切换中'
+    transitionSubtitle.value = '...'
+  }
 
-  // 创建炫酷的粒子效果
-  tl.set(transitionOverlay.value, {
-    display: 'flex',
-    opacity: 0
-  })
+  // 随机选择音效
+  transitionAudioIndex.value = Math.floor(Math.random() * 3)
 
-  // 淡入遮罩
-  tl.to(transitionOverlay.value, {
-    opacity: 1,
-    duration: 0.3,
-    ease: 'power2.in'
-  })
+  // 显示视频过渡
+  showVideoTransition.value = true
+}
 
-  // 缩放动画
-  tl.to(transitionOverlay.value, {
-    scale: 1.2,
-    duration: 0.4,
-    ease: 'power2.out'
-  }, '-=0.1')
+// 视频过渡事件处理
+const onTransitionStarted = () => {
+  console.log('🎬 青花瓷过渡开始')
+}
 
-  // 淡出遮罩
-  tl.to(transitionOverlay.value, {
-    opacity: 0,
-    scale: 1,
-    duration: 0.3,
-    ease: 'power2.out'
-  })
+const onTransitionEnded = () => {
+  console.log('🎬 青花瓷过渡结束')
+  showVideoTransition.value = false
+  isTransitioning.value = false
+}
 
-  tl.set(transitionOverlay.value, {
-    display: 'none'
-  })
+const onTransitionError = (error: string) => {
+  console.error('🎬 青花瓷过渡失败:', error)
+  showVideoTransition.value = false
+  isTransitioning.value = false
 }
 
 // 监听session变化
 watch(() => chat.sessionId.value, async (newSessionId, oldSessionId) => {
-  if (oldSessionId && newSessionId !== oldSessionId) {
-    // 播放过渡动画
-    await playTransitionAnimation()
-  }
+  console.log('🔄 会话切换检测:', { newSessionId, oldSessionId })
 
-  // 更新组件
-  const session = chat.getCurrentSession()
-  if (session) {
-    previousComponent.value = currentComponent.value
-    currentComponent.value = getComponentForAgent(session.agentType)
+  if (oldSessionId && newSessionId !== oldSessionId) {
+    console.log('🎬 开始播放过渡动画')
+
+    const session = chat.getCurrentSession()
+
+    // 1. 先播放青花瓷过渡动画，阻止组件切换
+    if (session) {
+      await playVideoTransition(session.agentType)
+    }
+
+    // 2. 等待过渡动画开始后再更新组件
+    setTimeout(() => {
+      console.log('🔄 更新组件')
+      const currentSession = chat.getCurrentSession()
+      if (currentSession) {
+        previousComponent.value = currentComponent.value
+        currentComponent.value = getComponentForAgent(currentSession.agentType)
+      }
+    }, 100) // 100ms后更新，确保过渡动画已开始显示
+  } else {
+    // 初始加载或没有切换，直接更新组件
+    const session = chat.getCurrentSession()
+    if (session) {
+      previousComponent.value = currentComponent.value
+      currentComponent.value = getComponentForAgent(session.agentType)
+    }
   }
 }, { immediate: true })
 
@@ -105,16 +128,16 @@ onMounted(() => {
 
 <template>
   <div class="chat-gateway">
-    <!-- 过渡遮罩 -->
-    <div ref="transitionOverlay" class="transition-overlay">
-      <div class="transition-content">
-        <div class="loader-ring"></div>
-        <div class="transition-text">
-          <h3 v-if="currentSession">切换至 {{ currentSession.title }}</h3>
-          <p>正在加载智能助手...</p>
-        </div>
-      </div>
-    </div>
+    <!-- 青花瓷视频过渡效果 -->
+    <CeladonVideoLoading
+      :visible="showVideoTransition"
+      :title="transitionTitle"
+      :subtitle="transitionSubtitle"
+      :audio-index="transitionAudioIndex"
+      @started="onTransitionStarted"
+      @ended="onTransitionEnded"
+      @error="onTransitionError"
+    />
 
     <!-- 动态渲染Agent组件 -->
     <Transition name="fade" mode="out-in">
@@ -122,7 +145,6 @@ onMounted(() => {
         v-if="currentComponent"
         :is="currentComponent"
         :key="chat.sessionId.value"
-        ref="currentView"
         class="agent-view"
       />
       <div v-else class="empty-state">
@@ -145,53 +167,6 @@ onMounted(() => {
 .agent-view {
   width: 100%;
   height: 100%;
-}
-
-.transition-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  z-index: 10000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-}
-
-.transition-content {
-  text-align: center;
-  color: white;
-}
-
-.loader-ring {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 30px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.transition-text h3 {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-}
-
-.transition-text p {
-  font-size: 16px;
-  opacity: 0.9;
 }
 
 /* 空状态 */

@@ -97,7 +97,7 @@ const toggleExpand = () => {
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #e5e5e5;
+  border: 2px solid var(--thinking-spinner-bg, #e5e5e5);
   border-top-color: var(--thinking-spinner-color, #10a37f);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -177,30 +177,90 @@ const toggleExpand = () => {
   opacity: 1;
 }
 
-/* 主题适配 */
+/* ========== ReActPlus 青花瓷主题适配 ========== */
 .theme-react-plus .collapsible-thinking {
-  background: rgba(0, 255, 255, 0.05);
-  border-color: rgba(0, 255, 255, 0.2);
+  /* 使用青花瓷配色 - 淡雅的青瓷背景 */
+  background: var(--message-thinking-bg, #F8F8F0);
+  border-color: var(--message-thinking-border, rgba(91, 138, 138, 0.2));
+  backdrop-filter: blur(8px);
+}
+
+.theme-react-plus .collapsible-thinking:hover {
+  border-color: var(--brand-primary, #5B8A8A);
+  box-shadow: 0 2px 12px var(--brand-glow, rgba(91, 138, 138, 0.15));
 }
 
 .theme-react-plus .thinking-header:hover {
-  background: rgba(0, 255, 255, 0.1);
+  /* 悬浮时的青瓷光晕 */
+  background: var(--bg-hover, rgba(232, 240, 240, 0.6));
 }
 
 .theme-react-plus .thinking-label {
-  color: #00ffff;
+  /* 使用深青色，优雅内敛 */
+  color: var(--brand-hover, #3A5F5F);
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .theme-react-plus .spinner {
-  border-color: rgba(0, 255, 255, 0.3);
-  border-top-color: #00ffff;
+  /* 青花瓷风格的旋转器 */
+  border-color: var(--brand-light, rgba(216, 232, 232, 0.4));
+  border-top-color: var(--brand-primary, #5B8A8A);
+  box-shadow: 0 0 8px var(--brand-glow, rgba(91, 138, 138, 0.3));
+}
+
+.theme-react-plus .toggle-hint {
+  color: var(--text-tertiary, #8B9D9D);
+}
+
+.theme-react-plus .toggle-icon {
+  color: var(--brand-primary, #5B8A8A);
 }
 
 .theme-react-plus .thinking-content {
-  border-top-color: rgba(0, 255, 255, 0.2);
+  /* 分割线使用青瓷色 */
+  border-top-color: var(--border-subtle, rgba(224, 232, 232, 0.6));
+  background: var(--bg-secondary, rgba(254, 254, 254, 0.8));
 }
 
 .theme-react-plus .content-wrapper {
-  color: #e0e6ed;
+  /* 内容文字使用主墨色 */
+  color: var(--message-thinking-text, #8B7536);
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    var(--brand-glow, rgba(91, 138, 138, 0.02)) 50%,
+    transparent 100%
+  );
+  border-radius: 6px;
+}
+
+/* 青花瓷风格的微妙装饰 */
+.theme-react-plus .collapsible-thinking::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--brand-primary, #5B8A8A) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-react-plus .collapsible-thinking:hover::before {
+  opacity: 0.6;
+}
+
+/* 展开状态下的增强效果 */
+.theme-react-plus .collapsible-thinking:has(.thinking-content:not([style*="display: none"])) {
+  box-shadow:
+    0 4px 16px var(--brand-glow, rgba(91, 138, 138, 0.12)),
+    0 2px 6px var(--brand-glow, rgba(91, 138, 138, 0.06));
 }
 </style>

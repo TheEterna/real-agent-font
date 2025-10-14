@@ -321,9 +321,20 @@ watch(() => chat.sessionId.value, (newId, oldId) => {
 })
 
 // 消息变化时，更新当前会话的消息，并触碰更新时间
-watch(messages, (val) => {
+watch(messages, (val, oldVal) => {
   chat.setSessionMessages(sessionId.value, val)
   chat.touchSession(sessionId.value)
+
+  // 🐉 GSAP: 为新添加的消息应用入场动画
+  if (val.length > oldVal.length) {
+    nextTick(() => {
+      const messageElements = document.querySelectorAll('.message-wrapper')
+      const newMessage = messageElements[messageElements.length - 1] as HTMLElement
+      if (newMessage) {
+        animateMessageEntry(newMessage)
+      }
+    })
+  }
 }, { deep: true })
 
 // 输入区工具栏
@@ -430,15 +441,300 @@ const md = new MarkdownIt({
   .use(resolvePlugin(anchor))
   .use(resolvePlugin(mkatex))
 
-// 优雅的GSAP动画初始化
+// 🐉 GSAP 动画系统 - 青龙之力全面接管
 const initGSAPAnimations = () => {
-  // 页面淡入动画 - 更加柔和
+  // ========== 1. 页面初始化动画 ==========
   if (appContainer.value) {
+    // 页面淡入 + 青龙觉醒效果
     gsap.fromTo(appContainer.value,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.6, ease: "power2.out" }
+      { opacity: 0, y: 20 },
+      { 
+        opacity: 1, 
+        y: 0,
+        duration: 0.8, 
+        ease: "power3.out" 
+      }
     )
   }
+
+  // ========== 2. 进度指示器 - 青龙呼吸 ==========
+  const pulseRings = document.querySelectorAll('.pulse-ring')
+  const pulseDots = document.querySelectorAll('.pulse-dot')
+
+  pulseRings.forEach(ring => {
+    gsap.to(ring, {
+      scale: 1.3,
+      rotation: 180,
+      opacity: 0.2,
+      duration: 2.5,
+      ease: "sine.inOut",
+      repeat: -1,
+      yoyo: true
+    })
+  })
+
+  pulseDots.forEach(dot => {
+    gsap.to(dot, {
+      scale: 0.85,
+      opacity: 0.6,
+      duration: 2.5,
+      ease: "sine.inOut",
+      repeat: -1,
+      yoyo: true
+    })
+  })
+}
+
+// ========== 3. 消息出现动画 - 青龙升腾 ==========
+const animateMessageEntry = (element: HTMLElement) => {
+  gsap.fromTo(element,
+    {
+      opacity: 0,
+      y: 20,
+      scale: 0.98
+    },
+    {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.5,
+      ease: "back.out(1.2)",  // 青龙腾飞效果
+      clearProps: "all"  // 动画完成后清除内联样式
+    }
+  )
+}
+
+// ========== 4. 消息 Hover - 青瓷釉光扫过 ==========
+const setupMessageHoverEffects = () => {
+  const messages = document.querySelectorAll('.message')
+  
+  messages.forEach(message => {
+    const glazeEffect = message.querySelector('::before')
+    
+    message.addEventListener('mouseenter', () => {
+      // 消息轻微上浮
+      gsap.to(message, {
+        x: 4,
+        duration: 0.3,
+        ease: "power2.out"
+      })
+
+      // 发送者下划线展开
+      const sender = message.querySelector('.sender')
+      if (sender) {
+        const underline = window.getComputedStyle(sender, '::after')
+        gsap.to(sender, {
+          '--underline-width': '100%',
+          duration: 0.3,
+          ease: "power2.out"
+        })
+      }
+    })
+
+    message.addEventListener('mouseleave', () => {
+      gsap.to(message, {
+        x: 0,
+        duration: 0.3,
+        ease: "power2.out"
+      })
+
+      const sender = message.querySelector('.sender')
+      if (sender) {
+        gsap.to(sender, {
+          '--underline-width': '0%',
+          duration: 0.3,
+          ease: "power2.out"
+        })
+      }
+    })
+  })
+}
+
+// ========== 5. 输入框聚焦动效 - 青龙觉醒 ==========
+const setupInputAnimations = () => {
+  const inputContainer = document.querySelector('.input-container')
+  
+  if (!inputContainer) return
+
+  const textarea = inputContainer.querySelector('textarea')
+  
+  if (textarea) {
+    textarea.addEventListener('focus', () => {
+      gsap.to(inputContainer, {
+        y: -3,
+        scale: 1.01,
+        boxShadow: '0 0 0 4px rgba(91, 138, 138, 0.15), 0 8px 32px rgba(91, 138, 138, 0.12), 0 0 32px rgba(91, 138, 138, 0.2)',
+        duration: 0.4,
+        ease: "back.out(1.5)"
+      })
+    })
+
+    textarea.addEventListener('blur', () => {
+      gsap.to(inputContainer, {
+        y: 0,
+        scale: 1,
+        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
+        duration: 0.3,
+        ease: "power2.out"
+      })
+    })
+  }
+}
+
+// ========== 6. 发送按钮动效 - 青龙之力爆发 ==========
+const setupSendButtonAnimation = () => {
+  const sendButton = document.querySelector('.send-button')
+  
+  if (!sendButton) return
+
+  // 按钮 hover 效果
+  sendButton.addEventListener('mouseenter', () => {
+    gsap.to(sendButton, {
+      scale: 1.05,
+      boxShadow: '0 0 24px rgba(91, 138, 138, 0.4), 0 0 48px rgba(91, 138, 138, 0.2)',
+      duration: 0.3,
+      ease: "back.out(1.5)"
+    })
+  })
+
+  sendButton.addEventListener('mouseleave', () => {
+    gsap.to(sendButton, {
+      scale: 1,
+      boxShadow: '0 4px 12px rgba(91, 138, 138, 0.2)',
+      duration: 0.3,
+      ease: "power2.out"
+    })
+  })
+
+  // 按钮点击效果
+  sendButton.addEventListener('mousedown', () => {
+    gsap.to(sendButton, {
+      scale: 0.95,
+      duration: 0.1,
+      ease: "power2.in"
+    })
+  })
+
+  sendButton.addEventListener('mouseup', () => {
+    gsap.to(sendButton, {
+      scale: 1.05,
+      duration: 0.2,
+      ease: "back.out(2)"
+    })
+  })
+}
+
+// ========== 7. 快捷操作按钮 - 依次浮现 ==========
+const setupQuickActionsAnimation = () => {
+  const quickActions = document.querySelectorAll('.quick-action-btn')
+  
+  gsap.fromTo(quickActions,
+    {
+      opacity: 0,
+      y: 20,
+      scale: 0.9
+    },
+    {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.4,
+      stagger: 0.1,  // 依次出现，间隔 100ms
+      ease: "back.out(1.5)",
+      clearProps: "all"
+    }
+  )
+
+  // 悬停效果
+  quickActions.forEach(btn => {
+    btn.addEventListener('mouseenter', () => {
+      gsap.to(btn, {
+        y: -4,
+        scale: 1.05,
+        duration: 0.3,
+        ease: "back.out(1.5)"
+      })
+    })
+
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, {
+        y: 0,
+        scale: 1,
+        duration: 0.3,
+        ease: "power2.out"
+      })
+    })
+  })
+}
+
+// ========== 8. 滚动到底部按钮 - 青龙盘旋 ==========
+const setupScrollButtonAnimation = () => {
+  const scrollButton = document.querySelector('.scroll-to-bottom button')
+  
+  if (!scrollButton) return
+
+  // 持续的脉动效果
+  gsap.to(scrollButton, {
+    scale: 1.1,
+    boxShadow: '0 0 24px rgba(91, 138, 138, 0.4)',
+    duration: 1.5,
+    ease: "sine.inOut",
+    repeat: -1,
+    yoyo: true
+  })
+
+  // Hover 增强
+  scrollButton.addEventListener('mouseenter', () => {
+    gsap.to(scrollButton, {
+      scale: 1.15,
+      rotation: 360,
+      duration: 0.5,
+      ease: "back.out(1.5)"
+    })
+  })
+
+  scrollButton.addEventListener('mouseleave', () => {
+    gsap.to(scrollButton, {
+      rotation: 0,
+      duration: 0.5,
+      ease: "power2.out"
+    })
+  })
+}
+
+// ========== 9. 附件预览动画 ==========
+const animateAttachmentEntry = (element: HTMLElement) => {
+  gsap.fromTo(element,
+    {
+      opacity: 0,
+      scale: 0.8,
+      y: -10
+    },
+    {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      duration: 0.3,
+      ease: "back.out(1.5)"
+    }
+  )
+}
+
+// ========== 10. 加载点动画 - 青龙吐息 ==========
+const setupLoadingDotsAnimation = () => {
+  const loadingDots = document.querySelectorAll('.loading-dots span')
+  
+  loadingDots.forEach((dot, index) => {
+    gsap.to(dot, {
+      y: -10,
+      opacity: 0.3,
+      duration: 0.6,
+      ease: "sine.inOut",
+      repeat: -1,
+      yoyo: true,
+      delay: index * 0.2  // 依次波动
+    })
+  })
 }
 
 // 右侧面板切换动画
@@ -773,9 +1069,29 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
     messages.value = testMessages
   }
 
-  // 初始化 GSAP 动画
+  // 🐉 初始化 GSAP 动画系统 - 青龙觉醒
   nextTick(() => {
+    // 1. 页面初始化 + 进度指示器
     initGSAPAnimations()
+    
+    // 2. 消息 hover 效果
+    setupMessageHoverEffects()
+    
+    // 3. 输入框动画
+    setupInputAnimations()
+    
+    // 4. 发送按钮动画
+    setupSendButtonAnimation()
+    
+    // 5. 快捷操作动画
+    setupQuickActionsAnimation()
+    
+    // 6. 滚动按钮动画
+    setupScrollButtonAnimation()
+    
+    // 7. 加载点动画
+    setupLoadingDotsAnimation()
+    
     // 监听滚动，控制下滑按钮显隐
     chatContent.value?.addEventListener('scroll', updateScrollButtonVisibility)
     updateScrollButtonVisibility()
@@ -1164,30 +1480,9 @@ onUnmounted(() => {
   }
 }
 
-/* 柔和升起 - 云雾缭绕 */
-@keyframes dragonRise {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* 弹性缩放 - 龙腾之态 */
-@keyframes dragonScale {
-  0% {
-    transform: scale(0.95);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
+/* 🐉 以下动画已由 GSAP 接管，CSS 定义已删除 */
+/* dragonRise - 由 animateMessageEntry() 实现 */
+/* dragonScale - 由 GSAP hover 效果实现 */
 
 /* 波光粼粼 - 水面反光 */
 @keyframes shimmer {
@@ -1372,38 +1667,10 @@ onUnmounted(() => {
   }
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes dragonRing {
-  0%, 100% {
-    transform: scale(0.85) rotate(0deg);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.25) rotate(180deg);
-    opacity: 0.2;
-  }
-}
-
-@keyframes dragonCore {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(0.85);
-  }
-}
+/* 🐉 以下动画已由 GSAP 接管 */
+/* slideDown - 由 GSAP 页面初始化实现 */
+/* dragonRing - 由 setupPulseAnimation() 实现 */
+/* dragonCore - 由 setupPulseAnimation() 实现 */
 
 /* ============= CHAT CONTAINER ============= */
 .react-plus-app {
@@ -1456,12 +1723,11 @@ onUnmounted(() => {
   }
 
   .message-wrapper {
-    animation: dragonRise var(--transition-slow) cubic-bezier(0.16, 1, 0.3, 1);
+    /* 🐉 入场动画由 GSAP animateMessageEntry() 处理 */
     transition: all var(--transition-normal);
 
     &:hover {
-      transform: translateX(4px);
-
+      /* 🐉 hover 动画由 GSAP setupMessageHoverEffects() 处理 */
       .message-item {
         box-shadow: var(--shadow-medium), -4px 0 12px var(--brand-glow);
       }
@@ -1579,12 +1845,12 @@ onUnmounted(() => {
 
 /* 青花瓷加载点 */
 .react-plus-app .loading-dots span {
-  position: relative;
+  display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--brand-primary);
-  animation: dragonDotPulse 1.6s ease-in-out infinite;
+  /* 🐉 波动动画由 GSAP setupLoadingDotsAnimation() 处理 */
   box-shadow: 0 0 8px var(--brand-glow);
 }
 
@@ -1622,27 +1888,9 @@ onUnmounted(() => {
   animation-delay: 0.4s;
 }
 
-@keyframes dragonDotPulse {
-  0%, 60%, 100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  30% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-}
-
-@keyframes dragonDotRing {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
+/* 🐉 以下动画已由 GSAP 接管 */
+/* dragonDotPulse - 由 setupLoadingDotsAnimation() 实现 */
+/* dragonDotRing - 由 GSAP 实现 */
 
 .react-plus-app .loading-text {
   font-size: var(--font-size-sm);
