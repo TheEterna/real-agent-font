@@ -33,7 +33,7 @@ export interface BaseEventItem {
   nodeId?: string
   agentId: string
   type: EventType | string
-  message?: string
+  message: string
   data?: any
   meta?: object
 }

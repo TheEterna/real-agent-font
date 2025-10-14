@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import MarkdownViewer from '@/components/MarkdownViewer.vue'
 
 const props = defineProps<{
   content: string
   sender?: string
   timestamp?: Date | string
+  isThinking?: boolean  // 是否正在思考（默认false表示已完成）
 }>()
+
+// 计算是否显示 loading 动画
+const showSpinner = computed(() => props.isThinking ?? false)
 
 const isExpanded = ref(false)
 
@@ -26,8 +30,22 @@ const toggleExpand = () => {
       :aria-expanded="isExpanded"
     >
       <div class="thinking-indicator">
-        <div class="spinner" :class="{ paused: isExpanded }"></div>
-        <span class="thinking-label">思考过程</span>
+        <!-- 思考中：显示 spinner -->
+        <div v-if="showSpinner" class="spinner" :class="{ paused: isExpanded }"></div>
+        <!-- 思考完成：显示完成图标 -->
+        <div v-else class="check-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="2" fill="none" />
+            <path 
+              d="M5 8L7 10L11 6" 
+              stroke="currentColor" 
+              stroke-width="2" 
+              stroke-linecap="round" 
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <span class="thinking-label">{{ showSpinner ? '思考中...' : '思考过程' }}</span>
       </div>
       
       <div class="header-right">
@@ -109,6 +127,17 @@ const toggleExpand = () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* 完成图标 */
+.check-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--thinking-check-color, #10a37f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .thinking-label {
@@ -207,6 +236,11 @@ const toggleExpand = () => {
   border-color: var(--brand-light, rgba(216, 232, 232, 0.4));
   border-top-color: var(--brand-primary, #5B8A8A);
   box-shadow: 0 0 8px var(--brand-glow, rgba(91, 138, 138, 0.3));
+}
+
+.theme-react-plus .check-icon {
+  /* 青花瓷风格的完成图标 */
+  color: var(--brand-primary, #5B8A8A);
 }
 
 .theme-react-plus .toggle-hint {

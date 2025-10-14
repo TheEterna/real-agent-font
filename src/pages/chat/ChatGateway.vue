@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick, shallowRef } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useChatStore } from '@/stores/chatStore'
 import { AgentType } from '@/types/session'
 import CeladonVideoLoading from '@/components/loading/CeladonVideoLoading.vue'
@@ -8,6 +9,8 @@ import CeladonVideoLoading from '@/components/loading/CeladonVideoLoading.vue'
 import ReAct from './ReAct.vue'
 import ReActPlus from './ReActPlus.vue'
 
+const router = useRouter()
+const route = useRoute()
 const chat = useChatStore()
 
 // 使用shallowRef优化性能
@@ -84,7 +87,41 @@ const onTransitionError = (error: string) => {
   isTransitioning.value = false
 }
 
-// 监听session变化
+// 🔥 URL 同步逻辑：会话切换时更新 URL
+watch(() => chat.sessionId.value, (newSessionId) => {
+  // 更新 URL query 参数（不触发页面刷新）
+  if (route.query.sessionId !== newSessionId) {
+    router.replace({ 
+      query: { ...route.query, sessionId: newSessionId } 
+    })
+  }
+})
+
+// 🔥 URL 同步逻辑：监听 URL 变化，切换会话
+watch(() => route.query.sessionId as string | undefined, (urlSessionId) => {
+  if (urlSessionId && urlSessionId !== chat.sessionId.value) {
+    // URL 中的 sessionId 存在且与当前不同，切换会话
+    const sessionExists = chat.sessions.value.find(s => s.id === urlSessionId)
+    if (sessionExists) {
+      console.log('🔗 从 URL 恢复会话:', urlSessionId)
+      chat.switchConversation(urlSessionId)
+    } else {
+      console.warn('⚠️ URL 中的 sessionId 不存在:', urlSessionId)
+      // URL 中的会话不存在，使用默认会话并更新 URL
+      const defaultSessionId = chat.sessions.value[0]?.id
+      if (defaultSessionId) {
+        chat.switchConversation(defaultSessionId)
+      }
+    }
+  } else if (!urlSessionId && chat.sessionId.value) {
+    // URL 中没有 sessionId，但 store 中有当前会话，同步到 URL
+    router.replace({ 
+      query: { ...route.query, sessionId: chat.sessionId.value } 
+    })
+  }
+}, { immediate: true })
+
+// 监听session变化，处理组件切换和过渡动画
 watch(() => chat.sessionId.value, async (newSessionId, oldSessionId) => {
   console.log('🔄 会话切换检测:', { newSessionId, oldSessionId })
 
@@ -115,7 +152,7 @@ watch(() => chat.sessionId.value, async (newSessionId, oldSessionId) => {
       currentComponent.value = getComponentForAgent(session.agentType)
     }
   }
-}, { immediate: true })
+})
 
 // 初始化
 onMounted(() => {

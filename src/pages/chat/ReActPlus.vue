@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, computed, h, watch } from 'vue'
-import { UIMessage, MessageType, EventType } from '@/types/events'
-import { AgentType } from '@/types/session'
-import { useChatStore } from '@/stores/chatStore'
+import {ref, onMounted, onUnmounted, nextTick, computed, h, watch} from 'vue'
+import {UIMessage, MessageType, EventType} from '@/types/events'
+import {AgentType} from '@/types/session'
+import {useChatStore} from '@/stores/chatStore'
 import StatusIndicator from '@/components/StatusIndicator.vue'
 import MessageItem from '@/components/MessageItem.vue'
 import CollapsibleThinking from '@/components/messages/CollapsibleThinking.vue'
 import EnhancedToolApprovalCard from '@/components/EnhancedToolApprovalCard.vue'
-import { useSSE } from '@/composables/useSSE'
-import { notification } from 'ant-design-vue'
+import InkModeButton from '@/components/InkModeButton.vue'
+import InkTransition from '@/components/InkTransition.vue'
+import {useSSE} from '@/composables/useSSE'
+import {notification} from 'ant-design-vue'
 import {
   SendOutlined,
   PaperClipOutlined,
@@ -22,8 +24,8 @@ import {
   MenuOutlined,
   CloseOutlined
 } from '@ant-design/icons-vue'
-import { Attachment } from '@/types/attachment'
-import { TemplateItem } from '@/types/template'
+import {Attachment} from '@/types/attachment'
+import {TemplateItem} from '@/types/template'
 // Markdown 渲染相关
 // @ts-ignore
 import MarkdownIt from 'markdown-it'
@@ -42,21 +44,26 @@ import * as mkatex from 'markdown-it-katex'
 // @ts-ignore
 import DOMPurify from 'dompurify'
 // GSAP动画库
-import { gsap } from 'gsap'
+import {gsap} from 'gsap'
 // 样式引入
 import 'highlight.js/styles/atom-one-light.css'
 import 'katex/dist/katex.min.css'
-import { NotificationType } from '@/types/notification'
-import { useMessageConfig } from '@/composables/useMessageConfig'
-import { MessageStyle } from '@/types/messageConfig'
+import {NotificationType} from '@/types/notification'
+import {useMessageConfig} from '@/composables/useMessageConfig'
+import {MessageStyle} from '@/types/messageConfig'
+import {ProgressInfo} from "@/types/status";
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
 const inputMessage = ref('')
 const attachments = ref<Attachment[]>([])
 
+// 🎭 输入模式状态
+type InputMode = 'geek' | 'multimodal' | 'command'
+const currentMode = ref<InputMode>('geek')
+
 // 消息配置 - 使用 ChatGPT 风格
-const { getMessageConfig, shouldCollapse } = useMessageConfig(MessageStyle.CHATGPT)
+const {getMessageConfig, shouldCollapse} = useMessageConfig(MessageStyle.CHATGPT)
 
 // 工具审批状态管理
 const pendingApprovals = ref<Map<string, any>>(new Map())
@@ -67,6 +74,9 @@ const isLoading = ref(false)
 const chatContent = ref<HTMLElement>()
 const showScrollButton = ref(false)
 const rightPanelCollapsed = ref(false)
+
+const inkTransitionTrigger = ref(false)
+const inkOrigin = ref({x: 0, y: 0})
 
 // DOM引用
 const appContainer = ref<HTMLElement>()
@@ -80,9 +90,9 @@ const MAX_FILES = 4
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const MAX_TOTAL_SIZE = 20 * 1024 * 1024 // 20MB
 const allowedExts = new Set([
-  '.txt','.md','.markdown','.java','.kt','.scala','.py','.go','.js','.mjs','.cjs','.ts','.tsx',
-  '.json','.yml','.yaml','.xml','.html','.css','.scss','.less','.vue','.svelte','.c','.cpp','.h','.hpp',
-  '.cs','.rs','.php','.rb','.swift','.m','.mm','.sql','.sh','.bat','.ps1','.ini','.conf','.log','.pdf'
+  '.txt', '.md', '.markdown', '.java', '.kt', '.scala', '.py', '.go', '.js', '.mjs', '.cjs', '.ts', '.tsx',
+  '.json', '.yml', '.yaml', '.xml', '.html', '.css', '.scss', '.less', '.vue', '.svelte', '.c', '.cpp', '.h', '.hpp',
+  '.cs', '.rs', '.php', '.rb', '.swift', '.m', '.mm', '.sql', '.sh', '.bat', '.ps1', '.ini', '.conf', '.log', '.pdf'
 ])
 
 const isAllowedFile = (f: File) => {
@@ -93,29 +103,32 @@ const isAllowedFile = (f: File) => {
   return allowedExts.has(ext)
 }
 
-const bytes = (n: number) => Math.round(n/1024)
-const totalSize = () => attachments.value.reduce((s,a)=>s+a.size,0)
+const bytes = (n: number) => Math.round(n / 1024)
+const totalSize = () => attachments.value.reduce((s, a) => s + a.size, 0)
 
 const pushFilesWithValidation = (files: File[]) => {
   // 数量限制
   if (attachments.value.length + files.length > MAX_FILES) {
-    notification.error({ message: '超出附件数量上限', description: `最多支持 ${MAX_FILES} 个附件` })
+    notification.error({message: '超出附件数量上限', description: `最多支持 ${MAX_FILES} 个附件`})
     return
   }
   // 校验每个文件
   let added: Attachment[] = []
   for (const f of files) {
     if (!isAllowedFile(f)) {
-      notification.error({ message: '不支持的文件类型', description: `${f.name}` })
+      notification.error({message: '不支持的文件类型', description: `${f.name}`})
       continue
     }
     if (f.size > MAX_FILE_SIZE) {
-      notification.error({ message: '文件过大', description: `${f.name} 大小 ${bytes(f.size)}KB，单个上限为 ${bytes(MAX_FILE_SIZE)}KB` })
+      notification.error({
+        message: '文件过大',
+        description: `${f.name} 大小 ${bytes(f.size)}KB，单个上限为 ${bytes(MAX_FILE_SIZE)}KB`
+      })
       continue
     }
-    const after = totalSize() + added.reduce((s,a)=>s+a.size,0) + f.size
+    const after = totalSize() + added.reduce((s, a) => s + a.size, 0) + f.size
     if (after > MAX_TOTAL_SIZE) {
-      notification.error({ message: '超过总大小限制', description: `当前合计将超过 ${bytes(MAX_TOTAL_SIZE)}KB` })
+      notification.error({message: '超过总大小限制', description: `当前合计将超过 ${bytes(MAX_TOTAL_SIZE)}KB`})
       continue
     }
     added.push(new Attachment(f.name, f.size, f))
@@ -126,7 +139,7 @@ const pushFilesWithValidation = (files: File[]) => {
 // 滚动相关
 const scrollToBottom = () => {
   if (!chatContent.value) return
-  chatContent.value.scrollTo({ top: chatContent.value.scrollHeight, behavior: 'smooth' })
+  chatContent.value.scrollTo({top: chatContent.value.scrollHeight, behavior: 'smooth'})
 }
 
 const updateScrollButtonVisibility = () => {
@@ -138,8 +151,14 @@ const updateScrollButtonVisibility = () => {
 }
 
 // 增强的通知处理
-const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; nodeId?: string, type: NotificationType }) => {
-  const key = `done-${node.timestamp.getTime()}-${Math.random().toString(36).slice(2,8)}`
+const handleDoneNotice = (node: {
+  text: string;
+  timestamp: Date;
+  title: string;
+  nodeId?: string,
+  type: NotificationType
+}) => {
+  const key = `done-${node.timestamp.getTime()}-${Math.random().toString(36).slice(2, 8)}`
 
   const onClick = () => locateByNode(node.nodeId)
 
@@ -154,21 +173,21 @@ const handleDoneNotice = (node: { text: string; timestamp: Date; title: string; 
     }
   }
 
-  switch(node.type) {
+  switch (node.type) {
     case NotificationType.SUCCESS:
-      notification.success({ ...notificationConfig, message: `✅ ${node.text}` })
+      notification.success({...notificationConfig, message: `✅ ${node.text}`})
       break
     case NotificationType.ERROR:
-      notification.error({ ...notificationConfig, message: `❌ ${node.text}` })
+      notification.error({...notificationConfig, message: `❌ ${node.text}`})
       break
     case NotificationType.WARNING:
-      notification.warning({ ...notificationConfig, message: `⚠️ ${node.text}` })
+      notification.warning({...notificationConfig, message: `⚠️ ${node.text}`})
       break
     case NotificationType.INFO:
-      notification.info({ ...notificationConfig, message: `ℹ️ ${node.text}` })
+      notification.info({...notificationConfig, message: `ℹ️ ${node.text}`})
       break
     default:
-      notification.info({ ...notificationConfig, message: `🔔 ${node.text}` })
+      notification.info({...notificationConfig, message: `🔔 ${node.text}`})
       break
   }
 }
@@ -212,13 +231,12 @@ const customHandleEvent = (event: any, source: any) => {
   handleEvent(event, source)
 }
 
-const { messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, handleEvent } = useSSE({
+let {messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, handleEvent} = useSSE({
   onDoneNotice: handleDoneNotice
 })
-
 // 工具审批处理函数
 const handleToolApproved = (approvalId: string, result: any) => {
-  approvalResults.value.set(approvalId, { status: 'approved', result, timestamp: new Date() })
+  approvalResults.value.set(approvalId, {status: 'approved', result, timestamp: new Date()})
   pendingApprovals.value.delete(approvalId)
 
   notification.success({
@@ -229,7 +247,7 @@ const handleToolApproved = (approvalId: string, result: any) => {
 }
 
 const handleToolRejected = (approvalId: string, reason: string) => {
-  approvalResults.value.set(approvalId, { status: 'rejected', reason, timestamp: new Date() })
+  approvalResults.value.set(approvalId, {status: 'rejected', reason, timestamp: new Date()})
   pendingApprovals.value.delete(approvalId)
 
   notification.warning({
@@ -240,12 +258,60 @@ const handleToolRejected = (approvalId: string, reason: string) => {
 }
 
 const handleToolError = (approvalId: string, error: Error) => {
-  approvalResults.value.set(approvalId, { status: 'error', error: error.message, timestamp: new Date() })
+  approvalResults.value.set(approvalId, {status: 'error', error: error.message, timestamp: new Date()})
 
   notification.error({
     message: '工具执行失败',
     description: error.message,
     duration: 5
+  })
+}
+
+const handleToolRetryRequested = (approvalId: string, params: any) => {
+  approvalResults.value.set(approvalId, {status: 'retry-requested', params, timestamp: new Date()})
+  pendingApprovals.value.delete(approvalId)
+
+  notification.info({
+    message: '🔄 工具重新执行请求',
+    description: `正在重新分析 ${params.toolName} 工具调用...`,
+    duration: 4
+  })
+
+  // 这里可以触发重新执行工具的逻辑
+  console.log('🔄 重新执行工具请求:', params)
+
+  // TODO: 实现重新执行工具的后端API调用
+  // 可以调用类似 executeReAct 但是专门用于重试工具的API
+}
+
+const handleToolTerminateRequested = (approvalId: string, reason: string) => {
+  approvalResults.value.set(approvalId, {status: 'terminated', reason, timestamp: new Date()})
+  pendingApprovals.value.delete(approvalId)
+
+  notification.warning({
+    message: '🛑 对话已终止',
+    description: reason,
+    duration: 6
+  })
+
+  // 终止当前任务和连接
+  if (taskStatus.value.is('running')) {
+    taskStatus.value.set('completed')
+  }
+  connectionStatus.value.set('disconnected')
+
+  // 添加系统消息通知用户对话已终止
+  messages.value.push({
+    type: MessageType.System,
+    sender: 'System',
+    message: `🛑 **对话已终止**\n\n${reason}\n\n您可以开始新的对话或选择其他会话继续。`,
+    timestamp: new Date(),
+    nodeId: `terminate-${Date.now()}`
+  })
+
+  // 滚动到底部显示终止消息
+  nextTick(() => {
+    scrollToBottom()
   })
 }
 
@@ -255,7 +321,7 @@ const locateByNode = (nodeId?: string) => {
     if (target) {
       const container = chatContent.value
       const top = (target as HTMLElement).offsetTop
-      container.scrollTo({ top: Math.max(0, top - 12), behavior: 'smooth' })
+      container.scrollTo({top: Math.max(0, top - 12), behavior: 'smooth'})
       return
     }
   }
@@ -307,6 +373,7 @@ const sendMessage = async () => {
   }
 }
 
+
 // 会话切换：保存旧会话消息并加载新会话消息
 watch(() => chat.sessionId.value, (newId, oldId) => {
   if (oldId) {
@@ -335,7 +402,7 @@ watch(messages, (val, oldVal) => {
       }
     })
   }
-}, { deep: true })
+}, {deep: true})
 
 // 输入区工具栏
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -425,21 +492,22 @@ const md = new MarkdownIt({
   highlight(code: string, lang?: string): string {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        const out = hljs.highlight(code, { language: lang }).value
+        const out = hljs.highlight(code, {language: lang}).value
         return `<pre class="hljs"><code>${out}</code></pre>`
-      } catch {}
+      } catch {
+      }
     }
     const escaped = md.utils.escapeHtml(code)
     return `<pre class="hljs"><code>${escaped}</code></pre>`
   }
 })
-  .use(resolvePlugin(emoji))
-  .use(resolvePlugin(taskLists), { label: true, labelAfter: true })
-  .use(resolvePlugin(container), 'info')
-  .use(resolvePlugin(container), 'warning')
-  .use(resolvePlugin(container), 'success')
-  .use(resolvePlugin(anchor))
-  .use(resolvePlugin(mkatex))
+    .use(resolvePlugin(emoji))
+    .use(resolvePlugin(taskLists), {label: true, labelAfter: true})
+    .use(resolvePlugin(container), 'info')
+    .use(resolvePlugin(container), 'warning')
+    .use(resolvePlugin(container), 'success')
+    .use(resolvePlugin(anchor))
+    .use(resolvePlugin(mkatex))
 
 // 🐉 GSAP 动画系统 - 青龙之力全面接管
 const initGSAPAnimations = () => {
@@ -447,13 +515,13 @@ const initGSAPAnimations = () => {
   if (appContainer.value) {
     // 页面淡入 + 青龙觉醒效果
     gsap.fromTo(appContainer.value,
-      { opacity: 0, y: 20 },
-      { 
-        opacity: 1, 
-        y: 0,
-        duration: 0.8, 
-        ease: "power3.out" 
-      }
+        {opacity: 0, y: 20},
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power3.out"
+        }
     )
   }
 
@@ -488,29 +556,29 @@ const initGSAPAnimations = () => {
 // ========== 3. 消息出现动画 - 青龙升腾 ==========
 const animateMessageEntry = (element: HTMLElement) => {
   gsap.fromTo(element,
-    {
-      opacity: 0,
-      y: 20,
-      scale: 0.98
-    },
-    {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      duration: 0.5,
-      ease: "back.out(1.2)",  // 青龙腾飞效果
-      clearProps: "all"  // 动画完成后清除内联样式
-    }
+      {
+        opacity: 0,
+        y: 20,
+        scale: 0.98
+      },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.5,
+        ease: "back.out(1.2)",  // 青龙腾飞效果
+        clearProps: "all"  // 动画完成后清除内联样式
+      }
   )
 }
 
 // ========== 4. 消息 Hover - 青瓷釉光扫过 ==========
 const setupMessageHoverEffects = () => {
   const messages = document.querySelectorAll('.message')
-  
+
   messages.forEach(message => {
     const glazeEffect = message.querySelector('::before')
-    
+
     message.addEventListener('mouseenter', () => {
       // 消息轻微上浮
       gsap.to(message, {
@@ -553,11 +621,11 @@ const setupMessageHoverEffects = () => {
 // ========== 5. 输入框聚焦动效 - 青龙觉醒 ==========
 const setupInputAnimations = () => {
   const inputContainer = document.querySelector('.input-container')
-  
+
   if (!inputContainer) return
 
   const textarea = inputContainer.querySelector('textarea')
-  
+
   if (textarea) {
     textarea.addEventListener('focus', () => {
       gsap.to(inputContainer, {
@@ -584,7 +652,7 @@ const setupInputAnimations = () => {
 // ========== 6. 发送按钮动效 - 青龙之力爆发 ==========
 const setupSendButtonAnimation = () => {
   const sendButton = document.querySelector('.send-button')
-  
+
   if (!sendButton) return
 
   // 按钮 hover 效果
@@ -624,53 +692,10 @@ const setupSendButtonAnimation = () => {
   })
 }
 
-// ========== 7. 快捷操作按钮 - 依次浮现 ==========
-const setupQuickActionsAnimation = () => {
-  const quickActions = document.querySelectorAll('.quick-action-btn')
-  
-  gsap.fromTo(quickActions,
-    {
-      opacity: 0,
-      y: 20,
-      scale: 0.9
-    },
-    {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      duration: 0.4,
-      stagger: 0.1,  // 依次出现，间隔 100ms
-      ease: "back.out(1.5)",
-      clearProps: "all"
-    }
-  )
-
-  // 悬停效果
-  quickActions.forEach(btn => {
-    btn.addEventListener('mouseenter', () => {
-      gsap.to(btn, {
-        y: -4,
-        scale: 1.05,
-        duration: 0.3,
-        ease: "back.out(1.5)"
-      })
-    })
-
-    btn.addEventListener('mouseleave', () => {
-      gsap.to(btn, {
-        y: 0,
-        scale: 1,
-        duration: 0.3,
-        ease: "power2.out"
-      })
-    })
-  })
-}
-
 // ========== 8. 滚动到底部按钮 - 青龙盘旋 ==========
 const setupScrollButtonAnimation = () => {
   const scrollButton = document.querySelector('.scroll-to-bottom button')
-  
+
   if (!scrollButton) return
 
   // 持续的脉动效果
@@ -705,25 +730,25 @@ const setupScrollButtonAnimation = () => {
 // ========== 9. 附件预览动画 ==========
 const animateAttachmentEntry = (element: HTMLElement) => {
   gsap.fromTo(element,
-    {
-      opacity: 0,
-      scale: 0.8,
-      y: -10
-    },
-    {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      duration: 0.3,
-      ease: "back.out(1.5)"
-    }
+      {
+        opacity: 0,
+        scale: 0.8,
+        y: -10
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.3,
+        ease: "back.out(1.5)"
+      }
   )
 }
 
 // ========== 10. 加载点动画 - 青龙吐息 ==========
 const setupLoadingDotsAnimation = () => {
   const loadingDots = document.querySelectorAll('.loading-dots span')
-  
+
   loadingDots.forEach((dot, index) => {
     gsap.to(dot, {
       y: -10,
@@ -737,9 +762,293 @@ const setupLoadingDotsAnimation = () => {
   })
 }
 
-// 右侧面板切换动画
-const toggleRightPanel = () => {
-  rightPanelCollapsed.value = !rightPanelCollapsed.value
+
+// ========== 🎨 高级 GSAP 动画系统 - 替代 CSS keyframes ==========
+
+/**
+ * 输入容器汉白玉龙泉青瓷动画
+ * 替代: dragonGlaze, jadeShimmer, dragonJadeBreathing, dragonJadeRotation
+ */
+const setupInputContainerAdvancedAnimations = () => {
+  const inputContainer = document.querySelector('.input-container')
+  if (!inputContainer) return
+
+  const beforeElement = inputContainer
+  const afterElement = inputContainer
+
+  // 1. 龙泉青瓷顶部流光动画 (::after) - 替代 dragonGlaze
+  gsap.to(afterElement, {
+    backgroundPosition: '200% center',
+    duration: 6,
+    ease: 'none',
+    repeat: -1,
+    yoyo: true
+  })
+
+  // 2. 汉白玉深层纹理流动动画 (::before) - 替代 jadeShimmer
+  const shimmerTimeline = gsap.timeline({repeat: -1, yoyo: false})
+  shimmerTimeline.to(beforeElement, {
+    backgroundPosition: '25% 25%, 75% 75%, 25% 75%, 75% 25%, 75% 75%, 25% 25%, 75% 75%',
+    opacity: 0.8,
+    duration: 2,
+    ease: 'sine.inOut'
+  })
+  shimmerTimeline.to(beforeElement, {
+    backgroundPosition: '50% 50%, 50% 50%, 50% 50%, 50% 50%, 100% 100%, 50% 50%, 50% 50%',
+    opacity: 1,
+    duration: 2,
+    ease: 'sine.inOut'
+  })
+  shimmerTimeline.to(beforeElement, {
+    backgroundPosition: '75% 75%, 25% 25%, 75% 25%, 25% 75%, 25% 25%, 75% 75%, 25% 25%',
+    opacity: 0.8,
+    duration: 2,
+    ease: 'sine.inOut'
+  })
+  shimmerTimeline.to(beforeElement, {
+    backgroundPosition: '100% 100%, 0% 0%, 100% 0%, 0% 100%, 0% 0%, 100% 100%, 0% 0%',
+    opacity: 0.6,
+    duration: 2,
+    ease: 'sine.inOut'
+  })
+
+  // 监听聚焦状态，启动汉白玉龙泉青瓷呼吸动效
+  const textarea = inputContainer.querySelector('textarea')
+  if (textarea) {
+    let breathingAnimation: gsap.core.Tween | null = null
+
+    textarea.addEventListener('focus', () => {
+      // 青龙旋转光环 - 替代 dragonJadeRotation
+      const rotationElement = document.createElement('div')
+      rotationElement.className = 'dragon-jade-rotation-ring'
+      inputContainer.appendChild(rotationElement)
+
+      gsap.to(rotationElement, {
+        rotation: 360,
+        scale: 1.02,
+        opacity: 0.7,
+        duration: 6,
+        ease: 'none',
+        repeat: -1
+      })
+
+      // 汉白玉龙泉青瓷呼吸 - 替代 dragonJadeBreathing
+      breathingAnimation = gsap.to(inputContainer, {
+        boxShadow: `
+          0 0 0 8px rgba(107, 154, 152, 0.2),
+          0 0 0 16px rgba(91, 138, 138, 0.12),
+          0 24px 72px rgba(91, 138, 138, 0.3),
+          0 12px 36px rgba(255, 255, 255, 0.9),
+          0 8px 24px rgba(91, 138, 138, 0.15),
+          inset 0 2px 0 rgba(255, 255, 255, 1),
+          inset 0 -2px 0 rgba(107, 154, 152, 0.2),
+          0 0 80px rgba(107, 154, 152, 0.25),
+          0 0 40px rgba(91, 138, 138, 0.4)
+        `,
+        duration: 2.5,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true
+      })
+    })
+
+    textarea.addEventListener('blur', () => {
+      // 停止呼吸动画
+      if (breathingAnimation) {
+        breathingAnimation.kill()
+      }
+
+      // 移除旋转光环
+      const rotationRing = inputContainer.querySelector('.dragon-jade-rotation-ring')
+      if (rotationRing) {
+        gsap.to(rotationRing, {
+          opacity: 0,
+          duration: 0.3,
+          onComplete: () => rotationRing.remove()
+        })
+      }
+    })
+  }
+}
+
+/**
+ * Textarea 龙泉青瓷光晕动画
+ * 替代: textareaJadeGlow
+ */
+const setupTextareaAdvancedAnimations = () => {
+  const textarea = document.querySelector('.input-area textarea')
+  if (!textarea) return
+
+  let glowAnimation: gsap.core.Tween | null = null
+
+  textarea.addEventListener('focus', () => {
+    // 聚焦时的龙泉青瓷光晕呼吸 - 替代 textareaJadeGlow
+    glowAnimation = gsap.to(textarea, {
+      boxShadow: `
+        0 0 0 6px rgba(107, 154, 152, 0.12),
+        0 0 0 12px rgba(91, 138, 138, 0.08),
+        0 12px 36px rgba(91, 138, 138, 0.12),
+        0 6px 18px rgba(255, 255, 255, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(107, 154, 152, 0.08),
+        0 0 48px rgba(107, 154, 152, 0.15)
+      `,
+      duration: 2.5,
+      ease: 'sine.inOut',
+      repeat: -1,
+      yoyo: true
+    })
+  })
+
+  textarea.addEventListener('blur', () => {
+    if (glowAnimation) {
+      glowAnimation.kill()
+    }
+  })
+}
+
+/**
+ * 发送按钮持续动画
+ * 替代: sendButtonJadeBreathing, jadeInnerFlow
+ */
+const setupSendButtonAdvancedAnimations = () => {
+  const sendButton = document.querySelector('.send-button')
+  if (!sendButton) return
+
+  let breathingAnimation: gsap.core.Tween | null = null
+  let innerFlowAnimation: gsap.core.Tween | null = null
+
+  sendButton.addEventListener('mouseenter', () => {
+    // 发送按钮呼吸动画 - 替代 sendButtonJadeBreathing
+    breathingAnimation = gsap.to(sendButton, {
+      boxShadow: `
+        0 20px 60px rgba(91, 138, 138, 0.5),
+        0 16px 40px rgba(91, 138, 138, 0.4),
+        0 12px 32px rgba(91, 138, 138, 0.3),
+        0 6px 20px rgba(255, 255, 255, 0.6),
+        inset 0 2px 0 rgba(255, 255, 255, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(58, 95, 95, 0.4),
+        inset 0 -2px 0 rgba(58, 95, 95, 0.3),
+        0 0 64px rgba(107, 154, 152, 0.4),
+        0 0 32px rgba(91, 138, 138, 0.5)
+      `,
+      duration: 2.5,
+      ease: 'sine.inOut',
+      repeat: -1,
+      yoyo: true
+    })
+
+    // 龙泉青瓷内在流光 - 替代 jadeInnerFlow
+    const beforeElement = sendButton.querySelector('::before')
+    if (beforeElement) {
+      innerFlowAnimation = gsap.to(beforeElement, {
+        backgroundPosition: '100% 100%',
+        opacity: 1,
+        duration: 5,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true
+      })
+    }
+  })
+
+  sendButton.addEventListener('mouseleave', () => {
+    if (breathingAnimation) breathingAnimation.kill()
+    if (innerFlowAnimation) innerFlowAnimation.kill()
+  })
+}
+
+/**
+ * 工具栏按钮涟漪动画
+ * 替代: dragonRipple
+ */
+const setupToolbarAdvancedAnimations = () => {
+  const toolbarButtons = document.querySelectorAll('.input-toolbar button')
+
+  toolbarButtons.forEach(button => {
+    button.addEventListener('mouseenter', () => {
+      // 创建涟漪元素
+      const ripple = document.createElement('div')
+      ripple.className = 'gsap-ripple-effect'
+      button.appendChild(ripple)
+
+      // 涟漪扩散动画 - 替代 dragonRipple
+      gsap.timeline()
+          .fromTo(ripple,
+              {scale: 0.9, opacity: 0.8},
+              {scale: 1.05, opacity: 0.4, duration: 0.5, ease: 'power2.out'}
+          )
+          .to(ripple,
+              {scale: 1.15, opacity: 0, duration: 0.7, ease: 'power2.out'}
+          )
+          .then(() => ripple.remove())
+    })
+  })
+}
+
+/**
+ * 附件卡片光泽动画
+ * 替代: shimmer
+ */
+const setupAttachmentAdvancedAnimations = () => {
+  const attachmentChips = document.querySelectorAll('.attachment-chip')
+
+  attachmentChips.forEach(chip => {
+    chip.addEventListener('mouseenter', () => {
+      const beforeElement = chip
+
+      // 斜向光泽流动 - 替代 shimmer
+      gsap.fromTo(beforeElement,
+          {backgroundPosition: '-100% center'},
+          {
+            backgroundPosition: '100% center',
+            duration: 2,
+            ease: 'power2.inOut'
+          }
+      )
+    })
+  })
+}
+
+/**
+ * 通用涟漪效果
+ * 替代: dragonRipple, spinRipple
+ */
+const createRippleEffect = (element: Element, config = {}) => {
+  const defaultConfig = {
+    duration: 1.2,
+    scale: 1.3,
+    rotation: 360,
+    ease: 'power2.out'
+  }
+
+  const finalConfig = {...defaultConfig, ...config}
+
+  gsap.fromTo(element,
+      {scale: 1, rotation: 0, opacity: 0.6},
+      {
+        scale: finalConfig.scale,
+        rotation: finalConfig.rotation,
+        opacity: 0,
+        duration: finalConfig.duration,
+        ease: finalConfig.ease
+      }
+  )
+}
+
+/**
+ * 青光脉动效果
+ * 替代: dragonPulse
+ */
+const createPulseEffect = (element: Element) => {
+  return gsap.to(element, {
+    boxShadow: '0 0 0 8px var(--brand-glow), var(--shadow-large)',
+    duration: 2,
+    ease: 'sine.inOut',
+    repeat: -1,
+    yoyo: true
+  })
 }
 
 // 组件挂载
@@ -823,14 +1132,14 @@ onMounted(() => {
         message: '扫描项目文件结构',
         data: {
           toolName: 'file_scanner',
-          args: { path: './src', recursive: true },
+          args: {path: './src', recursive: true},
           result: {
             totalFiles: 45,
             directories: ['components', 'pages', 'stores', 'types', 'styles'],
             largestFiles: [
-              { name: 'ReActPlus.vue', size: '15KB', lines: 882 },
-              { name: 'MessageItem.vue', size: '8KB', lines: 170 },
-              { name: 'react-plus.css', size: '12KB', lines: 791 }
+              {name: 'ReActPlus.vue', size: '15KB', lines: 882},
+              {name: 'MessageItem.vue', size: '8KB', lines: 170},
+              {name: 'react-plus.css', size: '12KB', lines: 791}
             ]
           }
         },
@@ -1073,25 +1382,40 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
   nextTick(() => {
     // 1. 页面初始化 + 进度指示器
     initGSAPAnimations()
-    
+
     // 2. 消息 hover 效果
     setupMessageHoverEffects()
-    
+
     // 3. 输入框动画
     setupInputAnimations()
-    
+
     // 4. 发送按钮动画
     setupSendButtonAnimation()
-    
+
     // 5. 快捷操作动画
-    setupQuickActionsAnimation()
-    
+
     // 6. 滚动按钮动画
     setupScrollButtonAnimation()
-    
+
     // 7. 加载点动画
     setupLoadingDotsAnimation()
-    
+
+    // ========== 🎨 高级 GSAP 动画 - 替代 CSS keyframes ==========
+    // 8. 输入容器汉白玉龙泉青瓷动画
+    setupInputContainerAdvancedAnimations()
+
+    // 9. Textarea 龙泉青瓷光晕动画
+    setupTextareaAdvancedAnimations()
+
+    // 10. 发送按钮持续动画
+    setupSendButtonAdvancedAnimations()
+
+    // 11. 工具栏按钮涟漪动画
+    setupToolbarAdvancedAnimations()
+
+    // 12. 附件卡片光泽动画
+    setupAttachmentAdvancedAnimations()
+
     // 监听滚动，控制下滑按钮显隐
     chatContent.value?.addEventListener('scroll', updateScrollButtonVisibility)
     updateScrollButtonVisibility()
@@ -1110,27 +1434,18 @@ onUnmounted(() => {
       <!-- 顶部状态栏 -->
       <div class="top-status-bar">
         <div class="status-left">
-          <StatusIndicator :status="taskStatus.value" />
+          <StatusIndicator :status="taskStatus.value"/>
         </div>
-        <div class="status-right">
-          <a-button
-            type="text"
-            size="small"
-            :icon="h(SettingOutlined)"
-            @click="toggleRightPanel"
-            class="action-btn"
-          />
-        </div>
-      </div>
 
+      </div>
       <!-- 全局进度指示器 -->
-      <div v-if="progress" class="global-progress">
+      <div class="global-progress">
         <div class="progress-content">
           <div class="progress-icon">
             <div class="pulse-ring"></div>
             <div class="pulse-dot"></div>
           </div>
-          <div class="progress-text">{{ progress.text }}</div>
+          <div class="progress-text">11</div>
         </div>
       </div>
 
@@ -1138,31 +1453,34 @@ onUnmounted(() => {
       <div class="chat-container" ref="chatContent">
         <div class="messages-wrapper">
           <div
-            v-for="(message, index) in messages"
-            :key="index"
-            :id="message.nodeId ? 'msg-' + message.nodeId : undefined"
-            class="message-wrapper"
+              v-for="(message, index) in messages"
+              :key="index"
+              :id="message.nodeId ? 'msg-' + message.nodeId : undefined"
+              class="message-wrapper"
           >
             <!-- 工具审批消息 -->
             <EnhancedToolApprovalCard
-              v-if="message.type === MessageType.ToolApproval && message.approval"
-              :approval="message.approval"
-              :session-id="sessionId"
-              @approved="handleToolApproved(message.nodeId!, $event)"
-              @rejected="handleToolRejected(message.nodeId!, $event)"
-              @error="handleToolError(message.nodeId!, $event)"
-              class="message-item"
+                v-if="message.type === MessageType.ToolApproval && message.approval"
+                :approval="message.approval"
+                :session-id="sessionId"
+                @approved="handleToolApproved(message.nodeId!, $event)"
+                @rejected="handleToolRejected(message.nodeId!, $event)"
+                @error="handleToolError(message.nodeId!, $event)"
+                @retryRequested="handleToolRetryRequested(message.nodeId!, $event)"
+                @terminateRequested="handleToolTerminateRequested(message.nodeId!, $event)"
+                class="message-item"
             />
             <!-- Thinking 消息 - 使用折叠组件 -->
             <CollapsibleThinking
-              v-else-if="message.eventType === EventType.THINKING && shouldCollapse(message)"
-              :content="message.message"
-              :sender="message.sender"
-              :timestamp="message.timestamp"
-              class="message-item"
+                v-else-if="message.eventType === EventType.THINKING && shouldCollapse(message)"
+                :content="message.message"
+                :sender="message.sender"
+                :timestamp="message.timestamp"
+                :is-thinking="!message.endTime"
+                class="message-item"
             />
             <!-- 普通消息 -->
-            <MessageItem v-else :message="message" class="message-item" />
+            <MessageItem v-else :message="message" class="message-item"/>
           </div>
 
           <!-- 加载状态 -->
@@ -1179,40 +1497,80 @@ onUnmounted(() => {
         <!-- 滚动到底部按钮 -->
         <Transition name="fade">
           <div v-show="showScrollButton" class="scroll-to-bottom" @click="scrollToBottom">
-            <a-button type="primary" shape="circle" :icon="h(ArrowDownOutlined)" />
+            <a-button type="primary" shape="circle" :icon="h(ArrowDownOutlined)"/>
           </div>
         </Transition>
       </div>
 
-      <!-- 输入区域 -->
-      <div class="input-zone">
-        <!-- 附件预览 -->
-        <div v-if="attachments.length" class="attachments-preview">
-          <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
-            <FileTextOutlined class="attachment-icon" />
-            <span class="attachment-name">{{ attachment.name }}</span>
-            <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
-            <a-button
-              type="text"
-              size="small"
-              @click="removeAttachment(attachment.name)"
-              class="remove-btn"
-            >×</a-button>
-          </div>
-        </div>
-
-        <!-- 输入容器 -->
-        <div
+      <div
           class="input-container"
           :class="{ 'input-focused': canSend }"
           @dragover.prevent
           @drop="onDropFiles"
-        >
+      >
+        <!-- 🎭 模式选择器 -->
+        <div class="mode-selector">
+          <button
+              class="mode-btn"
+              :class="{ active: currentMode === 'geek' }"
+              @click="currentMode = 'geek'"
+          >
+            <RobotOutlined/>
+            <span>极客模式</span>
+          </button>
+          <button
+              class="mode-btn"
+              :class="{ active: currentMode === 'multimodal' }"
+              @click="currentMode = 'multimodal'"
+          >
+            <ThunderboltOutlined/>
+            <span>多模态模式</span>
+          </button>
+        </div>
+
+        <!-- 📎 附件预览 -->
+        <div v-if="attachments.length" class="attachments-preview">
+          <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
+            <FileTextOutlined class="attachment-icon"/>
+            <span class="attachment-name">{{ attachment.name }}</span>
+            <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
+            <button
+                size="small"
+                @click="removeAttachment(attachment.name)"
+                class="remove-btn"
+            >×
+            </button>
+          </div>
+        </div>
+
+        <!-- ✍️ 输入区域（textarea + 发送按钮 + 工具栏） -->
+        <div class="input-area">
+          <a-textarea
+              v-model:value="inputMessage"
+              :maxlength="4000"
+              :auto-size="{ minRows: 1, maxRows: 8 }"
+              placeholder="请输入您的问题..."
+              :disabled="isLoading"
+              :bordered="false"
+              @pressEnter="onPressEnter"
+              @paste="onPaste"
+          />
+          <a-button
+              :disabled="!canSend"
+              :loading="isLoading"
+              @click="sendMessage"
+              class="send-button"
+          >
+            <SendOutlined v-if="!isLoading"/>
+            <span>{{ isLoading ? '处理中...' : '发送' }}</span>
+          </a-button>
+
+          <!-- 🛠️ 工具按钮组 -->
           <div class="input-toolbar">
-            <a-button type="text" size="small" @click="handleUploadClick" :icon="h(PaperClipOutlined)" />
-            <a-button type="text" size="small" @click="insertCodeBlock" :icon="h(BulbOutlined)" />
+            <a-button type="text" size="large" @click="handleUploadClick" :icon="h(PaperClipOutlined)"/>
+            <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(BulbOutlined)"/>
             <a-dropdown placement="topLeft" trigger="click">
-              <a-button type="text" size="small" :icon="h(ThunderboltOutlined)" />
+              <a-button type="text" size="large" :icon="h(ThunderboltOutlined)"/>
               <template #overlay>
                 <a-menu @click="({ key }) => insertTemplate((templates.find(t=>t.label=== key ) as any).text)">
                   <a-menu-item v-for="t in templates" :key="t.label">
@@ -1222,87 +1580,23 @@ onUnmounted(() => {
               </template>
             </a-dropdown>
           </div>
-
-          <div class="input-field">
-            <a-textarea
-              v-model:value="inputMessage"
-              :auto-size="{ minRows: 1, maxRows: 8 }"
-              :maxlength="4000"
-              placeholder="请输入您的问题..."
-              :disabled="isLoading"
-              :bordered="false"
-              @pressEnter="onPressEnter"
-              @paste="onPaste"
-            />
-            <a-button
-              type="primary"
-              :disabled="!canSend"
-              :loading="isLoading"
-              @click="sendMessage"
-              class="send-button"
-            >
-              <template #icon v-if="!isLoading">
-                <SendOutlined />
-              </template>
-              {{ isLoading ? '处理中...' : '发送' }}
-            </a-button>
-          </div>
-        </div>
-
-        <!-- 快速操作 -->
-        <div v-if="!isLoading && messages.length <= 1" class="quick-actions">
-          <div
-            v-for="(template, index) in templates.slice(0, 3)"
-            :key="template.label"
-            class="quick-action-btn"
-            @click="insertTemplate(template.text)"
-          >
-            <ThunderboltOutlined v-if="index === 0" />
-            <BulbOutlined v-else-if="index === 1" />
-            <FileTextOutlined v-else />
-            <span>{{ template.label.replace('🧠 ', '').replace('🔧 ', '').replace('📊 ', '') }}</span>
-          </div>
         </div>
       </div>
+
+
     </div>
-
-    <!-- 右侧面板（可收起） - 暂时不需要 -->
-    <!-- <div class="right-panel" :class="{ collapsed: rightPanelCollapsed }">
-      <div class="panel-header">
-        <h4>工具面板</h4>
-        <a-button
-          type="text"
-          size="small"
-          :icon="h(CloseOutlined)"
-          @click="toggleRightPanel"
-        />
-      </div>
-      <div class="panel-content">
-        <div class="tool-section">
-          <h5>常用模板</h5>
-          <div class="template-list">
-            <div
-              v-for="template in templates"
-              :key="template.label"
-              class="template-item"
-              @click="insertTemplate(template.text)"
-            >
-              {{ template.label }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> -->
 
     <!-- 隐藏文件输入 -->
     <input
-      ref="fileInput"
-      type="file"
-      style="display: none"
-      multiple
-      accept=".txt,.md,.markdown,.java,.kt,.scala,.py,.go,.js,.mjs,.cjs,.ts,.tsx,.json,.yml,.yaml,.xml,.html,.css,.scss,.less,.vue,.svelte,.c,.cpp,.h,.hpp,.cs,.rs,.php,.rb,.swift,.m,.mm,.sql,.sh,.bat,.ps1,.ini,.conf,.log,.pdf,image/*"
-      @change="onFileChange"
+        type="file"
+        ref="fileInput"
+        style="display: none"
+        multiple
+        accept=".txt,.md,.markdown,.java,.kt,.scala,.py,.go,.js,.mjs,.cjs,.ts,.tsx,.json,.yml,.yaml,.xml,.html,.css,.scss,.less,.vue,.svelte,.c,.cpp,.h,.hpp,.cs,.rs,.php,.rb,.swift,.m,.mm,.sql,.sh,.bat,.ps1,.ini,.conf,.log,.pdf,image/*"
+        @change="onFileChange"
     />
+
+
   </div>
 </template>
 
@@ -1316,42 +1610,42 @@ onUnmounted(() => {
 .react-plus-app {
   /* 🎨 青花瓷配色系统 - Celadon Color System */
   /* 背景 - 素雅瓷白 */
-  --bg-primary: #F8F9FA;           /* 瓷器底色 - 素雅米白 */
-  --bg-secondary: #FEFEFE;         /* 主体瓷白 - 纯净如玉 */
-  --bg-tertiary: #F0F4F4;          /* 淡青瓷面 - 青白相间 */
-  --bg-hover: #E8F0F0;             /* 悬浮态 - 青影浮动 */
+  --bg-primary: #F8F9FA; /* 瓷器底色 - 素雅米白 */
+  --bg-secondary: #FEFEFE; /* 主体瓷白 - 纯净如玉 */
+  --bg-tertiary: #F0F4F4; /* 淡青瓷面 - 青白相间 */
+  --bg-hover: #E8F0F0; /* 悬浮态 - 青影浮动 */
 
   /* 文字 - 墨色系统 */
-  --text-primary: #2C3E3E;         /* 主墨色 - 深邃内敛 */
-  --text-secondary: #5B7373;       /* 次墨色 - 典雅沉稳 */
-  --text-tertiary: #8B9D9D;        /* 淡墨色 - 水墨晕染 */
-  --text-inverse: #FFFFFF;         /* 反白色 */
+  --text-primary: #2C3E3E; /* 主墨色 - 深邃内敛 */
+  --text-secondary: #5B7373; /* 次墨色 - 典雅沉稳 */
+  --text-tertiary: #8B9D9D; /* 淡墨色 - 水墨晕染 */
+  --text-inverse: #FFFFFF; /* 反白色 */
 
   /* 边框 - 青瓷轮廓 */
-  --border-subtle: #E0E8E8;        /* 微妙青边 */
-  --border-light: #C8D8D8;         /* 淡青边框 */
-  --border-medium: #A0B8B8;        /* 中青边框 */
+  --border-subtle: #E0E8E8; /* 微妙青边 */
+  --border-light: #C8D8D8; /* 淡青边框 */
+  --border-medium: #A0B8B8; /* 中青边框 */
 
   /* 品牌色 - 青龙之色 */
-  --brand-primary: #5B8A8A;        /* 主青瓷色 - 青龙本色 */
-  --brand-hover: #3A5F5F;          /* 悬浮深青 - 龙威显现 */
-  --brand-light: #D8E8E8;          /* 淡青光晕 - 龙息扩散 */
+  --brand-primary: #5B8A8A; /* 主青瓷色 - 青龙本色 */
+  --brand-hover: #3A5F5F; /* 悬浮深青 - 龙威显现 */
+  --brand-light: #D8E8E8; /* 淡青光晕 - 龙息扩散 */
   --brand-glow: rgba(91, 138, 138, 0.2); /* 青光晕染 */
 
   /* 辅助色 - 水墨点缀 */
-  --accent-jade: #6B9A98;          /* 翠玉青 */
+  --accent-jade: #6B9A98; /* 翠玉青 */
   --accent-jade-light: #E0F0F0;
-  --accent-ink: #4A6868;           /* 墨青色 */
+  --accent-ink: #4A6868; /* 墨青色 */
   --accent-ink-light: #D0E0E0;
 
   /* 状态色 - 东方意境 */
-  --success: #52A885;              /* 翠竹绿 */
+  --success: #52A885; /* 翠竹绿 */
   --success-light: #D8F0E8;
-  --warning: #D0A048;              /* 秋叶金 */
+  --warning: #D0A048; /* 秋叶金 */
   --warning-light: #F8F0D8;
-  --error: #C85A5A;                /* 朱砂红 */
+  --error: #C85A5A; /* 朱砂红 */
   --error-light: #F8E0E0;
-  --info: #5B8A8A;                 /* 青瓷信息色 */
+  --info: #5B8A8A; /* 青瓷信息色 */
   --info-light: #D8E8E8;
 
   /* 间距 */
@@ -1361,6 +1655,9 @@ onUnmounted(() => {
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 5rem;
+  --space-5xl: 6rem;
 
   /* 字体 */
   --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
@@ -1400,14 +1697,14 @@ onUnmounted(() => {
   --message-spacing: 1.2rem;
   --message-padding: 1.25rem;
   --message-radius: 0.875rem;
-  --message-bg: #FEFEFE;                    /* 瓷白背景 */
+  --message-bg: #FEFEFE; /* 瓷白背景 */
   --message-shadow: rgba(91, 138, 138, 0.08);
-  --message-text: #2C3E3E;                  /* 主墨色 */
+  --message-text: #2C3E3E; /* 主墨色 */
   --message-border-width: 3px;
 
   /* 消息头部 */
-  --message-header-text: #5B7373;           /* 次墨色 */
-  --message-sender-text: #3A5F5F;           /* 深青色 */
+  --message-header-text: #5B7373; /* 次墨色 */
+  --message-sender-text: #3A5F5F; /* 深青色 */
 
   /* 用户消息 - 淡青瓷 */
   --message-user-bg: #F8FCFC;
@@ -1416,12 +1713,12 @@ onUnmounted(() => {
 
   /* Thinking 消息 - 琥珀青 */
   --message-thinking-bg: #F8F8F0;
-  --message-thinking-border: #D0A048;        /* 秋叶金 */
+  --message-thinking-border: #D0A048; /* 秋叶金 */
   --message-thinking-text: #8B7536;
 
   /* Action 消息 - 翠竹青 */
   --message-action-bg: #F0F8F4;
-  --message-action-border: #52A885;          /* 翠竹绿 */
+  --message-action-border: #52A885; /* 翠竹绿 */
   --message-action-text: #3A7860;
 
   /* Observing 消息 - 紫砂青 */
@@ -1450,69 +1747,33 @@ onUnmounted(() => {
   --message-warning-text: #A08038;
 }
 
-/* ============= 🐉 青龙动效关键帧 - Dragon Animations ============= */
+/* ============= 🐉 青龙动效系统 - 已全部迁移至 GSAP ============= */
 
-/* 涟漪扩散 - 水面波纹 */
-@keyframes dragonRipple {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 0;
-  }
-}
+/*
+  所有关键帧动画已迁移至 GSAP 专业动效库，便于统一管理和维护：
 
-/* 青光脉动 - 龙息律动 */
-@keyframes dragonPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 var(--brand-glow),
-                var(--shadow-soft);
-  }
-  50% {
-    box-shadow: 0 0 0 8px transparent,
-                var(--shadow-medium);
-  }
-}
+  ✅ dragonRipple → setupToolbarAdvancedAnimations() + createRippleEffect()
+  ✅ dragonPulse → createPulseEffect()
+  ✅ shimmer → setupAttachmentAdvancedAnimations()
+  ✅ spinRipple → createRippleEffect() with rotation
+  ✅ dragonGlaze → setupInputContainerAdvancedAnimations()
+  ✅ jadeShimmer → setupInputContainerAdvancedAnimations()
+  ✅ dragonJadeBreathing → setupInputContainerAdvancedAnimations()
+  ✅ dragonJadeRotation → setupInputContainerAdvancedAnimations()
+  ✅ textareaJadeGlow → setupTextareaAdvancedAnimations()
+  ✅ sendButtonJadeBreathing → setupSendButtonAdvancedAnimations()
+  ✅ jadeInnerFlow → setupSendButtonAdvancedAnimations()
 
-/* 🐉 以下动画已由 GSAP 接管，CSS 定义已删除 */
-/* dragonRise - 由 animateMessageEntry() 实现 */
-/* dragonScale - 由 GSAP hover 效果实现 */
-
-/* 波光粼粼 - 水面反光 */
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
-/* 旋转涟漪 */
-@keyframes spinRipple {
-  0% {
-    transform: rotate(0deg) scale(1);
-    opacity: 0.6;
-  }
-  100% {
-    transform: rotate(360deg) scale(1.3);
-    opacity: 0;
-  }
-}
+  详见：<script> 中的"高级 GSAP 动画系统"部分
+*/
 
 /* ============= BASE LAYOUT ============= */
 .react-plus-app {
   /* 青花瓷底纹背景 */
   background: linear-gradient(180deg,
-    var(--bg-primary) 0%,
-    #F0F4F4 50%,
-    var(--bg-primary) 100%
+      var(--bg-primary) 0%,
+      #F0F4F4 50%,
+      var(--bg-primary) 100%
   );
   font-family: var(--font-sans);
   color: var(--text-primary);
@@ -1527,9 +1788,8 @@ onUnmounted(() => {
     content: '';
     position: fixed;
     inset: 0;
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(91, 138, 138, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(91, 138, 138, 0.03) 0%, transparent 50%);
+    background-image: radial-gradient(circle at 20% 30%, rgba(91, 138, 138, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(91, 138, 138, 0.03) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
@@ -1576,10 +1836,6 @@ onUnmounted(() => {
     text-transform: uppercase;
   }
 
-  .status-right {
-    display: flex;
-    gap: var(--space-sm);
-  }
 
   .action-btn {
     position: relative;
@@ -1633,6 +1889,9 @@ onUnmounted(() => {
     align-items: center;
     gap: var(--space-md);
   }
+  .progress-icon {
+    position: relative;
+  }
 
   .progress-indicator {
     position: relative;
@@ -1642,22 +1901,21 @@ onUnmounted(() => {
 
   .pulse-ring {
     position: absolute;
-    inset: -4px;
+    inset: -8px;
     border: 2px solid var(--brand-primary);
     border-radius: 50%;
-    animation: dragonRing 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     opacity: 0.8;
     box-shadow: 0 0 12px var(--brand-glow);
   }
 
   .pulse-dot {
     position: absolute;
-    inset: 6px;
+    inset: -10px;
+    z-index: 99;
     background: var(--brand-primary);
     border-radius: 50%;
-    animation: dragonCore 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     box-shadow: 0 0 16px var(--brand-primary),
-                0 0 32px var(--brand-glow);
+    0 0 32px var(--brand-glow);
   }
 
   .progress-text {
@@ -1700,8 +1958,8 @@ onUnmounted(() => {
 
     &::-webkit-scrollbar-thumb {
       background: linear-gradient(180deg,
-        var(--brand-primary),
-        var(--brand-hover)
+          var(--brand-primary),
+          var(--brand-hover)
       );
       border-radius: var(--radius-full);
       transition: all var(--transition-fast);
@@ -1757,9 +2015,9 @@ onUnmounted(() => {
       width: 50%;
       height: 100%;
       background: linear-gradient(90deg,
-        transparent,
-        rgba(91, 138, 138, 0.08),
-        transparent
+          transparent,
+          rgba(91, 138, 138, 0.08),
+          transparent
       );
       transition: left var(--transition-slow);
       pointer-events: none;
@@ -1772,32 +2030,32 @@ onUnmounted(() => {
     /* 不同类型消息的青龙光晕 */
     &.thinking:hover {
       box-shadow: 0 4px 16px rgba(208, 160, 72, 0.2),
-                  0 2px 8px rgba(208, 160, 72, 0.1);
+      0 2px 8px rgba(208, 160, 72, 0.1);
     }
 
     &.action:hover {
       box-shadow: 0 4px 16px rgba(82, 168, 133, 0.2),
-                  0 2px 8px rgba(82, 168, 133, 0.1);
+      0 2px 8px rgba(82, 168, 133, 0.1);
     }
 
     &.observing:hover {
       box-shadow: 0 4px 16px rgba(139, 123, 168, 0.2),
-                  0 2px 8px rgba(139, 123, 168, 0.1);
+      0 2px 8px rgba(139, 123, 168, 0.1);
     }
 
     &.tool:hover {
       box-shadow: 0 4px 16px rgba(107, 154, 184, 0.2),
-                  0 2px 8px rgba(107, 154, 184, 0.1);
+      0 2px 8px rgba(107, 154, 184, 0.1);
     }
 
     &.error:hover {
       box-shadow: 0 4px 16px rgba(200, 90, 90, 0.2),
-                  0 2px 8px rgba(200, 90, 90, 0.1);
+      0 2px 8px rgba(200, 90, 90, 0.1);
     }
 
     &.user:hover {
       box-shadow: 0 4px 16px rgba(91, 138, 138, 0.15),
-                  0 2px 8px rgba(91, 138, 138, 0.08);
+      0 2px 8px rgba(91, 138, 138, 0.08);
     }
 
     /* 发送者名称下划线动效 */
@@ -1829,739 +2087,893 @@ onUnmounted(() => {
 }
 
 /* ============= LOADING INDICATOR ============= */
-.react-plus-app .loading-indicator {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  animation: dragonRise var(--transition-slow);
-}
-
-.react-plus-app .loading-dots {
-  display: flex;
-  gap: var(--space-sm);
-  position: relative;
-}
-
-/* 青花瓷加载点 */
-.react-plus-app .loading-dots span {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--brand-primary);
-  /* 🐉 波动动画由 GSAP setupLoadingDotsAnimation() 处理 */
-  box-shadow: 0 0 8px var(--brand-glow);
-}
-
-.react-plus-app .loading-dots span::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid var(--brand-primary);
-  opacity: 0;
-  animation: dragonDotRing 1.6s ease-in-out infinite;
-}
-
-.react-plus-app .loading-dots span:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.react-plus-app .loading-dots span:nth-child(1)::after {
-  animation-delay: 0s;
-}
-
-.react-plus-app .loading-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.react-plus-app .loading-dots span:nth-child(2)::after {
-  animation-delay: 0.2s;
-}
-
-.react-plus-app .loading-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-.react-plus-app .loading-dots span:nth-child(3)::after {
-  animation-delay: 0.4s;
-}
-
-/* 🐉 以下动画已由 GSAP 接管 */
-/* dragonDotPulse - 由 setupLoadingDotsAnimation() 实现 */
-/* dragonDotRing - 由 GSAP 实现 */
-
-.react-plus-app .loading-text {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
-  background: linear-gradient(90deg,
-    var(--text-secondary),
-    var(--brand-primary),
-    var(--text-secondary)
-  );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-/* ============= SCROLL TO BOTTOM BUTTON ============= */
-.react-plus-app .scroll-to-bottom {
-  position: fixed;
-  bottom: 200px;
-  right: var(--space-xl);
-  z-index: 40;
-  animation: dragonRise var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.react-plus-app .scroll-to-bottom button {
-  position: relative;
-  background: var(--bg-secondary) !important;
-  border: 2px solid var(--border-light) !important;
-  box-shadow: var(--shadow-medium) !important;
-  transition: all var(--transition-spring) !important;
-  overflow: visible;
-}
-
-/* 青龙光环 */
-.react-plus-app .scroll-to-bottom button::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    var(--brand-primary),
-    var(--accent-jade),
-    var(--brand-primary)
-  );
-  opacity: 0;
-  animation: spinRipple 3s linear infinite;
-  transition: opacity var(--transition-normal);
-}
-
-.react-plus-app .scroll-to-bottom button:hover {
-  background: var(--brand-primary) !important;
-  border-color: var(--brand-primary) !important;
-  transform: translateY(-4px) scale(1.1) !important;
-  box-shadow: var(--shadow-large), var(--shadow-glow) !important;
-}
-
-.react-plus-app .scroll-to-bottom button:hover::before {
-  opacity: 0.6;
-}
-
-.react-plus-app .scroll-to-bottom button:active {
-  transform: translateY(-2px) scale(1.05) !important;
-  transition: all 100ms !important;
-}
-
-/* Vue Transition 动效增强 */
-.react-plus-app .fade-enter-active {
-  animation: dragonRise var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.react-plus-app .fade-leave-active {
-  transition: all var(--transition-normal);
-}
-
-.react-plus-app .fade-enter-from,
-.react-plus-app .fade-leave-to {
-  opacity: 0;
-  transform: translateY(20px) scale(0.9);
-}
-
-/* ============= INPUT ZONE ============= */
-.react-plus-app .input-zone {
-  position: sticky;
-  bottom: 0;
-  background: var(--bg-primary);
-  border-top: 1px solid var(--border-subtle);
-  padding: var(--space-xl) var(--space-lg);
-  z-index: 30;
-  transition: all var(--transition-normal);
-}
-
-/* ============= ATTACHMENTS PREVIEW ============= */
-.react-plus-app .attachments-preview {
-  max-width: 800px;
-  margin: 0 auto var(--space-md);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
-.react-plus-app .attachment-chip {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  transition: all var(--transition-normal);
-  animation: dragonScale var(--transition-spring);
-  overflow: hidden;
-}
-
-/* 青瓷纹理 */
-.react-plus-app .attachment-chip::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg,
-    transparent 30%,
-    var(--brand-glow) 50%,
-    transparent 70%
-  );
-  background-size: 200% 200%;
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-}
-
-.react-plus-app .attachment-chip:hover {
-  border-color: var(--brand-primary);
-  box-shadow: var(--shadow-soft), 0 0 16px var(--brand-glow);
-  transform: translateY(-2px) scale(1.02);
-}
-
-.react-plus-app .attachment-chip:hover::before {
-  opacity: 1;
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-.react-plus-app .attachment-icon {
-  color: var(--text-secondary);
-  font-size: var(--font-size-base);
-}
-
-.react-plus-app .attachment-name {
-  color: var(--text-primary);
-  font-weight: 500;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.react-plus-app .attachment-size {
-  color: var(--text-tertiary);
-  font-size: var(--font-size-xs);
-}
-
-.react-plus-app .remove-btn {
-  color: var(--text-tertiary) !important;
-  padding: 0 !important;
-  min-width: 20px !important;
-  height: 20px !important;
-  border-radius: 50% !important;
-  transition: all var(--transition-fast) !important;
-}
-
-.react-plus-app .remove-btn:hover {
-  color: var(--error) !important;
-  background: var(--bg-hover) !important;
-}
-
-/* ============= INPUT CONTAINER ============= */
-.react-plus-app .input-container {
-  position: relative;
-  max-width: 800px;
-  margin: 0 auto;
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: all var(--transition-spring);
-  box-shadow: var(--shadow-soft);
-}
-
-/* 青瓷釉质光泽 */
-.react-plus-app .input-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent,
-    var(--brand-primary),
-    var(--accent-jade),
-    transparent
-  );
-  transition: left var(--transition-slow);
-}
-
-.react-plus-app .input-container:hover {
-  border-color: var(--border-medium);
-  box-shadow: var(--shadow-medium);
-  transform: translateY(-2px);
-}
-
-.react-plus-app .input-container:hover::before {
-  left: 100%;
-}
-
-.react-plus-app .input-focused {
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 4px var(--brand-light),
-              var(--shadow-large),
-              0 0 32px var(--brand-glow);
-  transform: translateY(-3px) scale(1.01);
-  animation: dragonPulse 3s ease-in-out infinite;
-}
-
-/* 聚焦时的青龙气息 */
-.react-plus-app .input-focused::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from 0deg,
-    var(--brand-primary) 0deg,
-    var(--accent-jade) 90deg,
-    var(--brand-primary) 180deg,
-    var(--accent-jade) 270deg,
-    var(--brand-primary) 360deg
-  );
-  z-index: -1;
-  opacity: 0.15;
-  animation: spinRipple 4s linear infinite;
-}
-
-/* ============= INPUT TOOLBAR ============= */
-.react-plus-app .input-toolbar {
-  display: flex;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--border-subtle);
-  background: linear-gradient(to right, transparent, var(--brand-glow), transparent);
-  background-size: 200% 100%;
-  background-position: 0% center;
-  transition: background-position var(--transition-slow);
-}
-
-.react-plus-app .input-container:hover .input-toolbar {
-  background-position: 100% center;
-}
-
-.react-plus-app .input-toolbar button {
-  position: relative;
-  color: var(--text-secondary) !important;
-  transition: all var(--transition-normal) !important;
-  border-radius: var(--radius-sm) !important;
-  overflow: hidden;
-}
-
-.react-plus-app .input-toolbar button::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: 0;
-  background: radial-gradient(circle at center, var(--brand-light) 0%, transparent 70%);
-  transform: scale(0);
-  transition: all var(--transition-normal);
-}
-
-.react-plus-app .input-toolbar button:hover {
-  color: var(--brand-primary) !important;
-  background: var(--bg-hover) !important;
-  transform: scale(1.08);
-  box-shadow: 0 0 12px var(--brand-glow);
-}
-
-.react-plus-app .input-toolbar button:hover::after {
-  opacity: 1;
-  transform: scale(1);
-  animation: dragonRipple 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.react-plus-app .input-toolbar button:active {
-  transform: scale(0.95);
-  transition: all 100ms;
-}
-
-/* ============= INPUT FIELD ============= */
-.react-plus-app .input-field {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-md);
-  padding: var(--space-md);
-}
-
-.react-plus-app .input-field textarea {
-  flex: 1;
-  background: var(--bg-secondary) !important;  /* 修复：使用瓷白背景，不透明 */
-  border: none !important;
-  color: var(--text-primary) !important;
-  font-size: var(--font-size-base) !important;
-  line-height: var(--line-height-relaxed) !important;
-  resize: none !important;
-  outline: none !important;
-  font-family: var(--font-sans) !important;
-  padding: var(--space-xs) 0 !important;      /* 添加适当内边距 */
-}
-
-.react-plus-app .input-field textarea::placeholder {
-  color: var(--text-tertiary) !important;
-  opacity: 0.6;
-}
-
-.react-plus-app .send-button {
-  position: relative;
-  flex-shrink: 0;
-  height: 40px;
-  padding: 0 var(--space-lg) !important;
-  background: var(--brand-primary) !important;
-  border: none !important;
-  border-radius: var(--radius-md) !important;
-  color: var(--text-inverse) !important;
-  font-weight: 600 !important;
-  font-size: var(--font-size-sm) !important;
-  transition: all var(--transition-normal) !important;
-  box-shadow: var(--shadow-subtle) !important;
-  overflow: hidden;
-}
-
-/* 青龙气息环绕 */
-.react-plus-app .send-button::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(45deg,
-    var(--brand-primary),
-    var(--accent-jade),
-    var(--brand-primary),
-    var(--accent-jade)
-  );
-  background-size: 300% 300%;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  animation: shimmer 3s ease-in-out infinite;
-  transition: opacity var(--transition-normal);
-}
-
-/* 内部光晕 */
-.react-plus-app .send-button::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
-  opacity: 0;
-  transform: scale(0);
-  transition: all var(--transition-normal);
-}
-
-.react-plus-app .send-button:hover:not(:disabled) {
-  background: var(--brand-hover) !important;
-  transform: translateY(-2px) scale(1.02) !important;
-  box-shadow: var(--shadow-large), var(--shadow-glow) !important;
-  animation: dragonPulse 2s ease-in-out infinite;
-}
-
-.react-plus-app .send-button:hover:not(:disabled)::before {
-  opacity: 1;
-}
-
-.react-plus-app .send-button:hover:not(:disabled)::after {
-  opacity: 1;
-  transform: scale(1);
-  animation: dragonRipple 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.react-plus-app .send-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.98) !important;
-  transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1) !important;
-  animation: none !important;
-}
-
-.react-plus-app .send-button:disabled {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-tertiary) !important;
-  cursor: not-allowed !important;
-  opacity: 0.5 !important;
-  transform: none !important;
-  animation: none !important;
-}
-
-/* ============= QUICK ACTIONS ============= */
-.react-plus-app .quick-actions {
-  max-width: 800px;
-  margin: var(--space-lg) auto 0;
-  display: flex;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-}
-
-.react-plus-app .quick-action-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  animation: dragonRise var(--transition-slow) cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-
-/* 青瓷釉光效果 */
-.react-plus-app .quick-action-btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: var(--brand-glow);
-  transform: translate(-50%, -50%);
-  transition: width var(--transition-slow), height var(--transition-slow);
-}
-
-.react-plus-app .quick-action-btn:hover {
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
-  background: var(--brand-light);
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: var(--shadow-medium), 0 0 20px var(--brand-glow);
-}
-
-.react-plus-app .quick-action-btn:hover::before {
-  width: 200%;
-  height: 200%;
-}
-
-.react-plus-app .quick-action-btn:active {
-  transform: translateY(-1px) scale(0.98);
-  transition: all 120ms;
-}
-
-.react-plus-app .quick-action-btn .anticon {
-  font-size: var(--font-size-base);
-  transition: all var(--transition-normal);
-  z-index: 1;
-}
-
-.react-plus-app .quick-action-btn:hover .anticon {
-  transform: rotate(10deg) scale(1.15);
-  filter: drop-shadow(0 0 8px var(--brand-primary));
-}
-
-/* 分批入场动画 */
-.react-plus-app .quick-action-btn:nth-child(1) {
-  animation-delay: 0ms;
-}
-.react-plus-app .quick-action-btn:nth-child(2) {
-  animation-delay: 100ms;
-}
-.react-plus-app .quick-action-btn:nth-child(3) {
-  animation-delay: 200ms;
-}
-
-/* ============= RIGHT PANEL - 暂时不需要 ============= */
-/* .react-plus-app .right-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 320px;
-  height: 100vh;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-subtle);
-  transform: translateX(0);
-  transition: transform var(--transition-normal);
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-large);
-}
-
-.react-plus-app .right-panel.collapsed {
-  transform: translateX(100%);
-}
-
-.react-plus-app .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.react-plus-app .panel-header h4 {
-  margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.react-plus-app .panel-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-lg);
-}
-
-.react-plus-app .tool-section {
-  margin-bottom: var(--space-xl);
-}
-
-.react-plus-app .tool-section h5 {
-  margin: 0 0 var(--space-md);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.react-plus-app .template-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.react-plus-app .template-item {
-  padding: var(--space-md);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.react-plus-app .template-item:hover {
-  border-color: var(--brand-primary);
-  background: var(--brand-light);
-  color: var(--brand-primary);
-  transform: translateX(4px);
-} */
-
-/* ============= RESPONSIVE DESIGN ============= */
-/* @media (max-width: 1024px) {
-  .react-plus-app .right-panel {
-    width: 280px;
+.react-plus-app {
+  .loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    animation: dragonRise var(--transition-slow);
   }
-} */
 
-@media (max-width: 768px) {
-  .react-plus-app .top-status-bar {
+  .loading-dots {
+    display: flex;
+    gap: var(--space-sm);
+    position: relative;
+  }
+
+  /* 青花瓷加载点 */
+  .loading-dots span {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    /* 🐉 波动动画由 GSAP setupLoadingDotsAnimation() 处理 */
+    box-shadow: 0 0 8px var(--brand-glow);
+  }
+
+  .loading-dots span::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--brand-primary);
+    opacity: 0;
+    animation: dragonDotRing 1.6s ease-in-out infinite;
+  }
+
+  .loading-dots span:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .loading-dots span:nth-child(1)::after {
+    animation-delay: 0s;
+  }
+
+  .loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dots span:nth-child(2)::after {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .loading-dots span:nth-child(3)::after {
+    animation-delay: 0.4s;
+  }
+
+  /* 🐉 以下动画已由 GSAP 接管 */
+  /* dragonDotPulse - 由 setupLoadingDotsAnimation() 实现 */
+  /* dragonDotRing - 由 GSAP 实现 */
+
+  .loading-text {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: linear-gradient(90deg,
+        var(--text-secondary),
+        var(--brand-primary),
+        var(--text-secondary)
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  /* ============= SCROLL TO BOTTOM BUTTON ============= */
+  .scroll-to-bottom {
+    position: fixed;
+    bottom: 200px;
+    right: var(--space-xl);
+    z-index: 40;
+    animation: dragonRise var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .scroll-to-bottom button {
+    position: relative;
+    background: var(--bg-secondary) !important;
+    border: 2px solid var(--border-light) !important;
+    box-shadow: var(--shadow-medium) !important;
+    transition: all var(--transition-spring) !important;
+    overflow: visible;
+  }
+
+  /* 青龙光环 */
+  .scroll-to-bottom button::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(
+            from 0deg,
+            var(--brand-primary),
+            var(--accent-jade),
+            var(--brand-primary)
+    );
+    opacity: 0;
+    animation: spinRipple 3s linear infinite;
+    transition: opacity var(--transition-normal);
+  }
+
+  .scroll-to-bottom button:hover {
+    background: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    transform: translateY(-4px) scale(1.1) !important;
+    box-shadow: var(--shadow-large), var(--shadow-glow) !important;
+  }
+
+  .scroll-to-bottom button:hover::before {
+    opacity: 0.6;
+  }
+
+  .scroll-to-bottom button:active {
+    transform: translateY(-2px) scale(1.05) !important;
+    transition: all 100ms !important;
+  }
+
+  /* Vue Transition 动效增强 */
+  .fade-enter-active {
+    animation: dragonRise var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .fade-leave-active {
+    transition: all var(--transition-normal);
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+
+  /* ============= INPUT AREA - 汉白玉龙泉青瓷输入区域 ============= */
+  .input-container {
+    position: sticky;
+    bottom: 5px;
+    z-index: 30;
+    width: 1000px;
+    margin: 0 auto;
+    /* 汉白玉底纹 - 温润如玉的渐变 */
+    background: linear-gradient(180deg,
+        rgba(253, 253, 253, 0.96) 0%,
+        rgba(250, 252, 252, 0.98) 15%,
+        rgba(248, 254, 254, 0.99) 35%,
+        rgba(255, 255, 255, 1) 55%,
+        rgba(252, 254, 254, 1) 75%,
+        rgba(250, 253, 253, 0.98) 90%,
+        rgba(248, 252, 252, 0.96) 100%
+    );
+
+    /* 使用 border + box-shadow 替代 border-image（兼容圆角） */
+    border: 2px solid rgba(107, 154, 152, 0.15);
+    border-radius: var(--radius-2xl, 1.5rem);
+    backdrop-filter: blur(24px) saturate(1.3) contrast(1.1);
+
+    /* 龙泉青瓷上缘光晕（模拟 border-image）+ 汉白玉深层质感阴影 */
+    box-shadow: /* 顶部青瓷光晕（模拟渐变边框） */
+        0 -2px 0 0 rgba(107, 154, 152, 0.4),
+        0 -4px 0 0 rgba(91, 138, 138, 0.2),
+          /* 深层阴影 */
+        0 -12px 48px rgba(91, 138, 138, 0.06),
+        0 -8px 32px rgba(91, 138, 138, 0.08),
+        0 -4px 16px rgba(255, 255, 255, 0.5),
+        0 -2px 8px rgba(255, 255, 255, 0.3),
+          /* 内部高光 */
+        inset 0 2px 0 rgba(255, 255, 255, 0.9),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 0 rgba(107, 154, 152, 0.08),
+        inset 0 -2px 0 rgba(107, 154, 152, 0.02);
+
+    // transition: all var(--transition-spring);
+    overflow: hidden;
+
+
+
+
+
+ 
+
+ 
+  }
+
+  /* 已迁移至 GSAP: setupInputContainerAdvancedAnimations() */
+
+  /* ============= ATTACHMENTS PREVIEW - 汉白玉雕琢 ============= */
+  .attachments-preview {
+    max-width: 800px;
+    margin: 0 auto var(--space-lg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    padding: var(--space-md);
+
+    /* 汉白玉底座 */
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(250, 254, 254, 0.95) 50%,
+        rgba(255, 255, 255, 0.9) 100%
+    );
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(107, 154, 152, 0.15);
+    backdrop-filter: blur(12px);
+
+    /* 龙泉青瓷光晕 */
+    box-shadow: 0 4px 16px rgba(91, 138, 138, 0.06),
+    0 2px 8px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+    transition: all var(--transition-spring);
+
+    /* 玉石纹理 */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(91, 138, 138, 0.12),
+      0 4px 12px rgba(255, 255, 255, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 0 24px rgba(107, 154, 152, 0.1);
+    }
+  }
+
+  .attachment-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
     padding: var(--space-md) var(--space-lg);
+
+    /* 汉白玉切片质感 */
+    background: linear-gradient(145deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(248, 254, 254, 0.9) 30%,
+        rgba(250, 252, 252, 0.95) 70%,
+        rgba(255, 255, 255, 0.9) 100%
+    );
+
+    /* 使用 border + box-shadow 替代 border-image（兼容圆角） */
+    border: 1px solid rgba(107, 154, 152, 0.2);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-spring);
+    overflow: hidden;
+
+    /* 龙泉青瓷边框光晕（模拟 border-image）+ 玉石内光 */
+    box-shadow: /* 渐变边框效果 */
+        0 0 0 1px rgba(91, 138, 138, 0.15),
+          /* 基础阴影 */
+        0 2px 8px rgba(91, 138, 138, 0.08),
+        0 1px 4px rgba(255, 255, 255, 0.4),
+          /* 内部高光 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 0 rgba(91, 138, 138, 0.05);
+
+    /* 龙泉青瓷釉质流光 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(107, 154, 152, 0.15),
+          rgba(91, 138, 138, 0.1),
+          transparent
+      );
+      transition: left var(--transition-slow);
+      pointer-events: none;
+    }
+
+    /* 汉白玉微妙纹理 */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 1.25em;
+
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--transition-normal);
+    }
+
+    &:hover {
+      transform: translateY(-3px) scale(1.02) rotateY(2deg);
+      border-color: var(--brand-primary);
+
+      /* 龙泉青瓷光华绽放 */
+      box-shadow: 0 8px 24px rgba(91, 138, 138, 0.15),
+      0 4px 12px rgba(255, 255, 255, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(91, 138, 138, 0.1),
+      0 0 32px rgba(107, 154, 152, 0.2);
+
+      &::before {
+        left: 100%;
+      }
+
+      &::after {
+        opacity: 1;
+      }
+    }
+
+    &:active {
+      transform: translateY(-1px) scale(0.98);
+      transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
   }
 
-  .react-plus-app .chat-container {
-    padding: var(--space-xl) var(--space-md);
+  .attachment-icon {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
   }
 
-  .react-plus-app .input-zone {
-    padding: var(--space-lg) var(--space-md);
+  .attachment-name {
+    color: var(--text-primary);
+    font-weight: 500;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .react-plus-app .scroll-to-bottom {
-    right: var(--space-lg);
-    bottom: 180px;
+  .attachment-size {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
   }
 
-  /* .react-plus-app .right-panel {
+  .remove-btn {
+    color: var(--text-tertiary) !important;
+    padding: 0 !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    transition: all var(--transition-fast) !important;
+  }
+
+  .remove-btn:hover {
+    color: var(--error) !important;
+    background: var(--bg-hover) !important;
+  }
+
+  /* ============= INPUT CONTAINER - 汉白玉龙泉青瓷极致融合 ============= */
+
+  /* 聚焦时的龙泉青瓷气息环绕 */
+  .input-focused::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: conic-gradient(
+            from 0deg,
+            rgba(91, 138, 138, 0.3) 0deg,
+            rgba(107, 154, 152, 0.2) 90deg,
+            rgba(255, 255, 255, 0.4) 180deg,
+            rgba(107, 154, 152, 0.2) 270deg,
+            rgba(91, 138, 138, 0.3) 360deg
+    );
+    z-index: -1;
+    opacity: 0.6;
+    /* 动画已迁移至 GSAP: setupInputContainerAdvancedAnimations() */
+  }
+
+
+
+  /* ============= INPUT TOOLBAR FLOATING - 浮动工具栏（绝对定位于输入框左下角外部）============= */
+
+
+
+  /* ============= MODE SELECTOR - 模式选择器 ============= */
+  .mode-selector {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-xl);
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(248, 252, 252, 0.85) 100%
+    );
+    border-bottom: 1px solid rgba(107, 154, 152, 0.08);
+  }
+
+  .mode-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    border: 1px solid rgba(107, 154, 152, 0.15);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(145deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(248, 254, 254, 0.9) 100%
+    );
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: 0 2px 4px rgba(91, 138, 138, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+    &:hover {
+      border-color: rgba(107, 154, 152, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(91, 138, 138, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    &.active {
+      background: linear-gradient(145deg,
+          rgba(91, 138, 138, 0.98) 0%,
+          rgba(107, 154, 152, 0.95) 100%
+      );
+      color: rgba(255, 255, 255, 0.98);
+      border-color: rgba(107, 154, 152, 0.6);
+      box-shadow: 0 4px 12px rgba(91, 138, 138, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    span {
+      white-space: nowrap;
+    }
+  }
+
+  /* ============= INPUT AREA - 汉白玉龙泉青瓷输入区域 ============= */
+  .input-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-lg) 150px var(--space-md) var(--space-xl);
+    
+    /* 汉白玉书写面 - 温润如玉 */
+    background: linear-gradient(145deg,
+        rgba(255, 255, 255, 0.98) 0%,
+        rgba(250, 254, 254, 0.95) 30%,
+        rgba(248, 252, 252, 0.98) 70%,
+        rgba(255, 255, 255, 0.98) 100%
+    );
+
+    /* 边框与圆角 */
+    border-top: 1px solid rgba(107, 154, 152, 0.08);
+    width: 100%;
+
+    /* 平滑过渡 */
+    transition: all var(--transition-spring);
+
+ 
+
+    /* 悬浮时的汉白玉温润感 */
+    &:hover:not(:focus-within) {
+      border-top-color: rgba(107, 154, 152, 0.16);
+      background: linear-gradient(145deg,
+          rgba(255, 255, 255, 0.99) 0%,
+          rgba(250, 254, 254, 0.97) 35%,
+          rgba(248, 252, 252, 0.99) 70%,
+          rgba(255, 255, 255, 0.99) 100%
+      );
+    }
+
+    /* ===== Textarea 样式 ===== */
+    textarea {
+        width: 100%;
+        flex: 1;
+        height: 100%;
+        min-height: 52px;
+
+        /* 继承父容器背景，实现视觉统一 */
+        background: transparent;
+
+        /* 文本样式 */
+        color: var(--text-primary) !important;
+        font-size: var(--font-size-base) !important;
+        line-height: var(--line-height-relaxed) !important;
+        font-family: var(--font-sans) !important;
+        font-weight: 500 !important;
+
+        /* 移除所有默认样式，让焦点效果完全由父容器控制 */
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        resize: none !important;
+
+        /* Placeholder 样式 */
+        &::placeholder {
+          color: rgba(139, 157, 157, 0.6);
+          opacity: 0.8;
+          font-weight: 400;
+          font-style: italic;
+        }
+      }
+
+    /* 🎨 焦点效果已由父容器 :focus-within 统一控制 */
+
+    /* ===== Send Button 样式 ===== */
+    .send-button {
+      position: absolute;
+      right: var(--space-2xl);
+      top: 50%;
+      transform: translateY(-50%);
+      height: 44px;
+      min-width: 100px;
+      padding: 0 var(--space-lg) !important;
+      border-radius: var(--radius-lg) !important;
+      font-weight: 600 !important;
+      font-size: var(--font-size-sm) !important;
+      letter-spacing: 0.5px;
+      overflow: hidden;
+      border: none !important;
+      outline: none !important;
+
+      /* 汉白玉龙泉青瓷按钮主体 - 深度质感 */
+      background: linear-gradient(145deg,
+            rgba(91, 138, 138, 0.98) 0%,
+            rgba(107, 154, 152, 0.95) 15%,
+            rgba(91, 138, 138, 1) 30%,
+            rgba(107, 154, 152, 0.97) 45%,
+            rgba(91, 138, 138, 0.99) 55%,
+            rgba(107, 154, 152, 0.96) 70%,
+            rgba(91, 138, 138, 0.98) 85%,
+            rgba(107, 154, 152, 0.95) 100%
+        ) !important;
+
+        color: rgba(255, 255, 255, 0.98) !important;
+
+        /* 使用 box-shadow 模拟渐变边框（兼容圆角）+ 汉白玉按钮深层阴影系统 */
+        border: none !important;
+        box-shadow: /* 青瓷边缘光晕（模拟 border-image） */
+            0 0 0 1px rgba(255, 255, 255, 0.3),
+            0 0 0 2px rgba(107, 154, 152, 0.4),
+              /* 深层阴影 */
+            0 8px 32px rgba(91, 138, 138, 0.35),
+            0 4px 16px rgba(91, 138, 138, 0.25),
+            0 2px 8px rgba(255, 255, 255, 0.4),
+              /* 内部高光 */
+            inset 0 2px 0 rgba(255, 255, 255, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            inset 0 -1px 0 rgba(58, 95, 95, 0.2),
+            inset 0 -2px 0 rgba(58, 95, 95, 0.15) !important;
+
+        transition: all var(--transition-spring) !important;
+
+
+        /* 汉白玉外围能量环 */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          background: conic-gradient(
+                  from 0deg,
+                  rgba(91, 138, 138, 0.4) 0deg,
+                  rgba(107, 154, 152, 0.2) 60deg,
+                  rgba(255, 255, 255, 0.3) 120deg,
+                  rgba(107, 154, 152, 0.25) 180deg,
+                  rgba(91, 138, 138, 0.3) 240deg,
+                  rgba(255, 255, 255, 0.2) 300deg,
+                  rgba(91, 138, 138, 0.4) 360deg
+          );
+          z-index: -1;
+          opacity: 0;
+          transform: scale(0.95);
+          transition: all var(--transition-normal);
+          filter: blur(1px);
+        }
+
+        &:hover:not(:disabled) {
+          transform: translateY(-50%) scale(1.05) !important;
+
+          /* 龙泉青瓷觉醒状态 */
+          background: linear-gradient(145deg,
+              rgba(58, 95, 95, 1) 0%,
+              rgba(74, 104, 104, 0.98) 15%,
+              rgba(58, 95, 95, 1) 30%,
+              rgba(74, 104, 104, 0.99) 45%,
+              rgba(58, 95, 95, 1) 55%,
+              rgba(74, 104, 104, 0.98) 70%,
+              rgba(58, 95, 95, 1) 85%,
+              rgba(74, 104, 104, 0.98) 100%
+          ) !important;
+
+          /* 使用 box-shadow 模拟龙泉青瓷觉醒边缘（兼容圆角）+ 汉白玉龙泉青瓷神韵四射 */
+          box-shadow: /* 青瓷觉醒边缘光晕（模拟 border-image） */
+              0 0 0 1px rgba(255, 255, 255, 0.5),
+              0 0 0 2px rgba(107, 154, 152, 0.6),
+              0 0 0 3px rgba(255, 255, 255, 0.3),
+                /* 深层阴影加强 */
+              0 16px 48px rgba(91, 138, 138, 0.45),
+              0 12px 32px rgba(91, 138, 138, 0.35),
+              0 8px 24px rgba(91, 138, 138, 0.25),
+              0 4px 16px rgba(255, 255, 255, 0.5),
+                /* 内部高光 */
+              inset 0 2px 0 rgba(255, 255, 255, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4),
+              inset 0 -1px 0 rgba(58, 95, 95, 0.3),
+              inset 0 -2px 0 rgba(58, 95, 95, 0.2),
+                /* 青瓷光晕 */
+              0 0 48px rgba(107, 154, 152, 0.3),
+              0 0 24px rgba(91, 138, 138, 0.4) !important;
+
+          /* 动画已迁移至 GSAP: setupSendButtonAdvancedAnimations() */
+
+          &::before {
+            opacity: 1;
+            /* 动画已迁移至 GSAP */
+          }
+
+          &::after {
+            opacity: 0.9;
+            transform: scale(1.02);
+            /* 动画已迁移至 GSAP */
+          }
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(-2px) scale(1.01) !important;
+          transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+          /* 汉白玉按压深度质感 */
+          box-shadow: 0 6px 24px rgba(91, 138, 138, 0.3),
+          0 3px 12px rgba(91, 138, 138, 0.2),
+          inset 0 3px 6px rgba(58, 95, 95, 0.4),
+          inset 0 2px 4px rgba(58, 95, 95, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+
+          animation: none !important;
+        }
+
+        &:disabled {
+          background: linear-gradient(145deg,
+              rgba(139, 157, 157, 0.4) 0%,
+              rgba(155, 175, 175, 0.3) 25%,
+              rgba(139, 157, 157, 0.35) 50%,
+              rgba(155, 175, 175, 0.3) 75%,
+              rgba(139, 157, 157, 0.4) 100%
+          ) !important;
+          color: rgba(139, 157, 157, 0.7) !important;
+          cursor: not-allowed !important;
+          transform: none !important;
+          animation: none !important;
+
+          /* 使用 box-shadow 模拟边框（兼容圆角） */
+          box-shadow: /* 灰色边缘 */
+              0 0 0 1px rgba(155, 175, 175, 0.15),
+                /* 基础阴影 */
+              0 2px 8px rgba(139, 157, 157, 0.15),
+                /* 内部高光 */
+              inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+
+          &::before,
+          &::after {
+            opacity: 0 !important;
+          }
+      }
+    }
+
+    /* ===== Input Toolbar 样式 ===== */
+    .input-toolbar {
+      display: flex;
+      align-self: self-start;
+      gap: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      
+      /* 汉白玉雕刻质感 */
+      background: linear-gradient(180deg,
+          rgba(248, 252, 252, 0.98) 0%,
+          rgba(250, 254, 254, 0.95) 50%,
+          rgba(255, 255, 255, 0.98) 100%
+      );
+
+      border-radius: var(--space-lg);
+      border: 1px solid rgba(107, 154, 152, 0.12);
+
+      box-shadow: 
+        /* 汉白玉内光 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -1px 0 rgba(107, 154, 152, 0.05),
+        /* 外部阴影 */
+        0 4px 12px rgba(91, 138, 138, 0.08),
+        0 2px 6px rgba(0, 0, 0, 0.04);
+
+      transition: all var(--transition-normal);
+      backdrop-filter: blur(8px);
+
+      button {
+        position: relative;
+        color: var(--text-secondary) !important;
+        transition: all var(--transition-spring) !important;
+        border-radius: var(--radius-lg) !important;
+        overflow: hidden;
+
+        /* 汉白玉按钮质感 */
+        background: linear-gradient(145deg,
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(250, 254, 254, 0.7) 50%,
+            rgba(255, 255, 255, 0.8) 100%
+        ) !important;
+
+        border: 1px solid rgba(107, 154, 152, 0.1) !important;
+
+        box-shadow: 
+          0 2px 6px rgba(91, 138, 138, 0.05),
+          0 1px 3px rgba(255, 255, 255, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+
+        /* 龙泉青瓷内光 */
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: radial-gradient(circle at center,
+              rgba(107, 154, 152, 0.1) 0%,
+              transparent 60%
+          );
+          opacity: 0;
+          transform: scale(0);
+          transition: all var(--transition-normal);
+        }
+
+        /* 汉白玉光晕扩散 */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          background: linear-gradient(135deg,
+              rgba(255, 255, 255, 0.4),
+              rgba(107, 154, 152, 0.05),
+              rgba(255, 255, 255, 0.4)
+          );
+          opacity: 0;
+          transition: all var(--transition-normal);
+        }
+
+        &:hover {
+          color: var(--brand-primary) !important;
+          transform: translateY(-2px) scale(1.05) !important;
+
+          /* 龙泉青瓷光华绽放 */
+          background: linear-gradient(145deg,
+              rgba(255, 255, 255, 0.95) 0%,
+              rgba(248, 254, 254, 0.9) 30%,
+              rgba(250, 252, 252, 0.95) 70%,
+              rgba(255, 255, 255, 0.95) 100%
+          ) !important;
+
+          border-color: rgba(91, 138, 138, 0.2) !important;
+
+          box-shadow: 
+            0 6px 18px rgba(91, 138, 138, 0.12),
+            0 3px 9px rgba(255, 255, 255, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8),
+            0 0 20px rgba(107, 154, 152, 0.15) !important;
+
+          &::before {
+            opacity: 1;
+            transform: scale(1);
+          }
+
+          &::after {
+            opacity: 0.6;
+          }
+        }
+
+        &:active {
+          transform: translateY(-1px) scale(1.02) !important;
+          transition: all 100ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+          /* 汉白玉按压质感 */
+          box-shadow: 
+            0 2px 8px rgba(91, 138, 138, 0.08),
+            inset 0 2px 4px rgba(91, 138, 138, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+        }
+      }
+    }
+  }
+
+  /* ============= RESPONSIVE - 响应式适配 ============= */
+  @media (max-width: 768px) {
+    .react-plus-app .top-status-bar {
+      padding: var(--space-md) var(--space-lg);
+    }
+
+    .react-plus-app .chat-container {
+      padding: var(--space-xl) var(--space-md);
+    }
+
+    .react-plus-app .input-container {
+      padding: var(--space-lg) var(--space-md);
+    }
+
+    .react-plus-app .scroll-to-bottom {
+      right: var(--space-lg);
+      bottom: 180px;
+    }
+
+    /* .react-plus-app .right-panel {
     width: 100%;
   } */
 
-  .react-plus-app .quick-actions {
-    flex-direction: column;
+    .react-plus-app .quick-actions {
+      flex-direction: column;
+    }
+
+
   }
 
-  .react-plus-app .quick-action-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
+  @media (max-width: 480px) {
+    .react-plus-app .chat-container {
+      padding: var(--space-lg) var(--space-sm);
+    }
 
-@media (max-width: 480px) {
-  .react-plus-app .chat-container {
-    padding: var(--space-lg) var(--space-sm);
-  }
+    .react-plus-app .input-container {
+      padding: var(--space-md);
+    }
 
-  .react-plus-app .input-zone {
-    padding: var(--space-md);
-  }
+    .react-plus-app .send-button {
+      height: 40px !important;
+      min-width: 80px !important;
+      font-size: var(--font-size-xs) !important;
+      padding: 0 var(--space-md) !important;
+      right: var(--space-md);
+    }
 
-  .react-plus-app .input-field {
-    flex-direction: column;
-    align-items: stretch;
-  }
+    .react-plus-app .input-area textarea {
+      padding: var(--space-md) 100px var(--space-md) var(--space-md) !important;
+    }
 
-  .react-plus-app .send-button {
-    width: 100% !important;
-    height: 44px !important;
-  }
+    .react-plus-app .mode-btn span {
+      display: none;
+    }
 
-  .react-plus-app .attachments-preview {
-    flex-direction: column;
-  }
+    .react-plus-app .attachments-preview {
+      flex-direction: column;
+    }
 
-  .react-plus-app .attachment-chip {
-    width: 100%;
-  }
-}
-
-/* ============= ACCESSIBILITY ============= */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Focus visible for keyboard navigation */
-.react-plus-app *:focus-visible {
-  outline: 2px solid var(--brand-primary);
-  outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: more) {
-  .react-plus-app .input-container,
-  .react-plus-app .attachment-chip,
-  .react-plus-app .quick-action-btn {
-    border-width: 2px;
-  }
-}
-
-/* ============= PRINT STYLES ============= */
-@media print {
-  .react-plus-app .top-status-bar,
-  .react-plus-app .input-zone,
-  .react-plus-app .scroll-to-bottom,
-  .react-plus-app .right-panel {
-    display: none !important;
+    .react-plus-app .attachment-chip {
+      width: 100%;
+    }
   }
 
-  .react-plus-app .chat-container {
+  /* ============= ACCESSIBILITY ============= */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 
-    flex: 1;
-    overflow-y: auto;
+  /* Focus visible for keyboard navigation */
+  .react-plus-app *:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: more) {
+    .react-plus-app .input-container,
+    .react-plus-app .attachment-chip {
+      border-width: 2px;
+    }
   }
 }
 
