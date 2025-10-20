@@ -26,7 +26,7 @@ export enum MessageType {
 
 export interface BaseEventItem {
   sessionId?: string
-  traceId?: string
+  turnId?: string
   startTime: Date
   endTime?: Date
   spanId?: string
@@ -50,7 +50,7 @@ export interface UIMessage {
   // identity & tracing
   nodeId?: string
   sessionId?: string
-  traceId?: string
+  turnId?: string
 
   // categorization
   type: MessageType

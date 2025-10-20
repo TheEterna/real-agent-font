@@ -9,6 +9,13 @@ const routes: RouteRecordRaw[] = [
       sider: () => import('@/pages/chat/ChatSider.vue')
     }
   },
+  {
+    path: '/chat/geek',
+    components: {
+      default: () => import('@/pages/chat/Geek.vue'),
+      sider: () => import('@/pages/chat/ChatSider.vue')
+    }
+  },
   { path: '/dashboard', component: () => import('@/pages/Dashboard.vue') },
   { path: '/tools', component: () => import('@/pages/Tools.vue') },
   { path: '/agents', component: () => import('@/pages/Agents.vue') },

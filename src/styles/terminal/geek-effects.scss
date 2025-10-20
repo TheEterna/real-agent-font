@@ -1,0 +1,332 @@
+// 极客模式终端样式
+// 矩阵效果、扫描线、CRT效果等视觉特效
+
+.geek-terminal-effects {
+  position: relative;
+  overflow: hidden;
+
+  // 矩阵雨效果
+  &.matrix-enabled {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(0, 255, 0, 0.03) 50%,
+          transparent 100%
+        );
+      animation: matrix-sweep 3s infinite linear;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    &::after {
+      content: '01001001 01001111 01010100 01000101 01001100 01001100';
+      position: absolute;
+      top: -100%;
+      left: 0;
+      right: 0;
+      height: 200%;
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      color: rgba(0, 255, 0, 0.1);
+      white-space: pre-wrap;
+      overflow: hidden;
+      animation: matrix-rain 10s infinite linear;
+      pointer-events: none;
+      z-index: 0;
+    }
+  }
+
+  // 扫描线效果
+  &.scanlines-enabled {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 0, 0.03) 2px,
+        rgba(0, 255, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    // 动态扫描线
+    &::after {
+      content: '';
+      position: absolute;
+      top: -100%;
+      left: 0;
+      right: 0;
+      height: 100px;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 255, 0, 0.1) 50%,
+        transparent 100%
+      );
+      animation: scanline-sweep 2s infinite ease-in-out;
+      pointer-events: none;
+      z-index: 3;
+    }
+  }
+
+  // CRT效果
+  &.crt-enabled {
+    border-radius: 10px;
+    box-shadow:
+      inset 0 0 50px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(0, 255, 0, 0.3);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 5%;
+      left: 5%;
+      right: 5%;
+      bottom: 5%;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 30%,
+        rgba(0, 0, 0, 0.1) 70%
+      );
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    // 边缘暗化效果
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 60%,
+        rgba(0, 0, 0, 0.3) 100%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+  }
+
+  // 发光效果
+  &.glow-enabled {
+    box-shadow:
+      0 0 10px rgba(0, 255, 0, 0.5),
+      0 0 20px rgba(0, 255, 0, 0.3),
+      0 0 30px rgba(0, 255, 0, 0.2);
+
+    .xterm-viewport {
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+    }
+  }
+
+  // 文字闪烁效果
+  &.flicker-enabled {
+    .xterm-viewport {
+      animation: text-flicker 0.15s infinite linear alternate;
+    }
+  }
+
+  // 噪点效果
+  &.noise-enabled {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs><filter id="noise"><feTurbulence baseFrequency="0.9"/></filter></defs><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.03"/></svg>');
+      pointer-events: none;
+      z-index: 1;
+    }
+  }
+}
+
+// 动画定义
+@keyframes matrix-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes matrix-rain {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes scanline-sweep {
+  0%, 20% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes text-flicker {
+  0% { opacity: 1; }
+  98% { opacity: 1; }
+  99% { opacity: 0.98; }
+  100% { opacity: 1; }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .geek-terminal-effects {
+    &.matrix-enabled::after {
+      font-size: 6px;
+    }
+  }
+}
+
+// 终端光标增强
+.geek-cursor-enhanced {
+  .xterm-cursor {
+    background: #00ff00 !important;
+    box-shadow:
+      0 0 5px #00ff00,
+      0 0 10px #00ff00,
+      0 0 15px #00ff00;
+    animation: cursor-pulse 1s infinite;
+  }
+}
+
+@keyframes cursor-pulse {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.7; }
+}
+
+// 选择文本增强
+.geek-selection-enhanced {
+  .xterm-selection {
+    background: rgba(0, 255, 0, 0.3) !important;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  }
+}
+
+// 滚动条样式增强
+.geek-scrollbar-enhanced {
+  .xterm-viewport::-webkit-scrollbar {
+    width: 12px;
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  .xterm-viewport::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 255, 0, 0.8),
+      rgba(0, 255, 0, 0.4),
+      rgba(0, 255, 0, 0.8)
+    );
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 0, 0.2);
+    box-shadow:
+      inset 0 0 3px rgba(0, 255, 0, 0.5),
+      0 0 5px rgba(0, 255, 0, 0.3);
+  }
+
+  .xterm-viewport::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 255, 0, 1),
+      rgba(0, 255, 0, 0.6),
+      rgba(0, 255, 0, 1)
+    );
+    box-shadow:
+      inset 0 0 3px rgba(0, 255, 0, 0.8),
+      0 0 8px rgba(0, 255, 0, 0.5);
+  }
+
+  .xterm-viewport::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 0, 0.1);
+  }
+}
+
+// 终端边框增强
+.geek-border-enhanced {
+  border: 2px solid rgba(0, 255, 0, 0.5);
+  border-radius: 8px;
+  box-shadow:
+    0 0 10px rgba(0, 255, 0, 0.3),
+    inset 0 0 10px rgba(0, 255, 0, 0.1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+      45deg,
+      rgba(0, 255, 0, 0.5),
+      transparent 30%,
+      transparent 70%,
+      rgba(0, 255, 0, 0.5)
+    );
+    border-radius: 10px;
+    z-index: -1;
+    animation: border-glow 3s infinite ease-in-out;
+  }
+}
+
+@keyframes border-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+// 字体增强效果
+.geek-font-enhanced {
+  .xterm-viewport {
+    font-family: 'JetBrains Mono', 'Courier New', 'Consolas', monospace;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+// 主题切换动画
+.geek-theme-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+// 启动动画
+.geek-startup-animation {
+  animation: terminal-startup 2s ease-out;
+}
+
+@keyframes terminal-startup {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: brightness(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95);
+    filter: brightness(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}

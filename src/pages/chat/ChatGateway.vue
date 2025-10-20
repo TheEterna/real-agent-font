@@ -8,6 +8,7 @@ import CeladonVideoLoading from '@/components/loading/CeladonVideoLoading.vue'
 // 动态导入Agent组件
 import ReAct from './ReAct.vue'
 import ReActPlus from './ReActPlus.vue'
+import Geek from './Geek.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -31,13 +32,15 @@ const agentComponentMap: Record<AgentType, any> = {
   [AgentType.ReAct]: ReAct,
   [AgentType.ReAct_Plus]: ReActPlus,
   [AgentType.Coding]: ReAct, // todo 暂时使用ReAct作为placeholder
+  [AgentType.Geek]: Geek,
 }
 
 // Agent名称映射
 const agentNameMap: Record<AgentType, string> = {
   [AgentType.ReAct]: 'ReAct',
   [AgentType.ReAct_Plus]: 'ReAct+',
-  [AgentType.Coding]: 'Coding'
+  [AgentType.Coding]: 'Coding',
+  [AgentType.Geek]: 'Geek'
 }
 
 // 获取当前session

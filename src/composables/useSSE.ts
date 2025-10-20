@@ -1,7 +1,7 @@
 import {ref, nextTick} from 'vue'
 import {UIMessage, EventType, BaseEventItem} from '../types/events'
 import {MessageType} from '@/types/events'
-import {MessageTypeMap, SenderLabel} from '../constants/ui'
+import {MessageTypeMap} from '../constants/ui'
 import {ConnectionStatus, TaskStatus, ProgressInfo} from '@/types/status'
 import {TypeFlags} from 'typescript'
 import {NotificationType} from '@/types/notification'
@@ -39,7 +39,8 @@ export function useSSE(options?: {
     }
 
     const getSenderByEventType = (event: BaseEventItem): string => {
-        return SenderLabel[event.agentId] || 'Agent'
+        console.log(event.agentId)
+        return event.agentId || "Agent"
 
     }
 
@@ -88,7 +89,10 @@ export function useSSE(options?: {
             })
             return
         } else if (eventType === EventType.COMPLETED) {
-            // COMPLETED 为流结束信号，不写入消息列表
+            // COMPLETED 为流结束信号，不写入消息列表，但需要更新状态
+            connectionStatus.value.set('disconnected')
+            taskStatus.value.set('completed')
+            progress.value = null // 清空进度信息
             closeSource(source)
             return
         }
@@ -166,6 +170,81 @@ export function useSSE(options?: {
             }
         }
 
+    }
+
+    // 执行极客模式，支持命令行式交互
+    const executeGeek = async (text: string, sessionId: string) => {
+        return new Promise<void>((resolve, reject) => {
+            import('sse.js')
+                .then(({SSE}) => {
+                    currentTaskTitle.value = text || ''
+                    progress.value = null
+
+                    // 检查是否是命令
+                    const isCommand = text.startsWith('/')
+                    const endpoint = isCommand ? '/api/agent/chat/geek/command/stream' : '/api/agent/chat/geek/stream'
+
+                    const source = new SSE(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'text/event-stream',
+                            'Cache-Control': 'no-cache',
+                        },
+                        payload: JSON.stringify({
+                            message: text,
+                            userId: 'user-001',
+                            sessionId,
+                            agentType: 'Geek',
+                            isCommand,
+                        }),
+                    })
+
+                    const closeAndResolve = () => {
+                        closeSource(source)
+                        resolve()
+                    }
+
+                    source.addEventListener('open', () => {
+                        connectionStatus.value.set('connected')
+                        taskStatus.value.set('running')
+                        scrollToBottom()
+                    })
+
+                    source.addEventListener('message', (event: MessageEvent) => {
+                        if (!event?.data) return
+                        const data = JSON.parse(event.data) as BaseEventItem
+                        handleEvent(data, source)
+                    })
+
+                    source.addEventListener('error', (err: any) => {
+                        connectionStatus.value.set('error')
+                        taskStatus.value.set('error')
+                        closeSource(source)
+                        messages.value.push({
+                            nodeId: 'error',
+                            timestamp: new Date(),
+                            eventType: EventType.ERROR,
+                            data: err,
+                            sessionId: sessionId,
+                            type: MessageType.Error,
+                            sender: 'System Error',
+                            message: '❌ 极客模式连接失败，请检查后端服务。' + err?.message
+                        })
+                        scrollToBottom()
+                        reject(new Error('极客模式SSE连接失败: ' + (err?.message || err?.type || '未知错误')))
+                    })
+
+                    try {
+                        (source as any).stream()
+                    } catch (e: any) {
+                        reject(new Error('启动极客模式SSE流失败: ' + (e?.message || '未知错误')))
+                    }
+                })
+                .catch((e) => {
+                    reject(new Error('未能加载 sse.js: ' + (e as Error).message))
+                })
+        })
     }
 
     // 执行 ReAct，使用 sse.js 的 POST 方式
@@ -248,6 +327,7 @@ export function useSSE(options?: {
         taskStatus,
         progress,
         executeReAct,
+        executeGeek,
         // executeCoding,
         handleEvent,
     }

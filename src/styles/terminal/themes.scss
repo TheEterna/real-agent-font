@@ -1,0 +1,294 @@
+// 极客模式终端主题样式
+// 不同主题的颜色方案和视觉效果
+
+// Matrix Green 主题（默认）
+.theme-matrix-green {
+  --terminal-bg: #0a0e0a;
+  --terminal-fg: #00ff00;
+  --terminal-cursor: #00ff00;
+  --terminal-selection: rgba(0, 255, 0, 0.3);
+
+  --terminal-black: #000000;
+  --terminal-red: #ff5555;
+  --terminal-green: #00ff00;
+  --terminal-yellow: #ffff55;
+  --terminal-blue: #5555ff;
+  --terminal-magenta: #ff55ff;
+  --terminal-cyan: #55ffff;
+  --terminal-white: #ffffff;
+
+  --terminal-bright-black: #555555;
+  --terminal-bright-red: #ff8888;
+  --terminal-bright-green: #88ff88;
+  --terminal-bright-yellow: #ffff88;
+  --terminal-bright-blue: #8888ff;
+  --terminal-bright-magenta: #ff88ff;
+  --terminal-bright-cyan: #88ffff;
+  --terminal-bright-white: #ffffff;
+
+  --effect-glow-color: rgba(0, 255, 0, 0.5);
+  --effect-border-color: rgba(0, 255, 0, 0.3);
+  --effect-shadow-color: rgba(0, 255, 0, 0.2);
+
+  background: linear-gradient(135deg, #0a0e0a 0%, #0f1f0f 100%);
+
+  .geek-terminal-effects {
+    &.matrix-enabled::after {
+      color: rgba(0, 255, 0, 0.1);
+    }
+  }
+}
+
+// Matrix Blue 主题
+.theme-matrix-blue {
+  --terminal-bg: #0a0a1e;
+  --terminal-fg: #00aaff;
+  --terminal-cursor: #00aaff;
+  --terminal-selection: rgba(0, 170, 255, 0.3);
+
+  --terminal-black: #000000;
+  --terminal-red: #ff5555;
+  --terminal-green: #55ff55;
+  --terminal-yellow: #ffff55;
+  --terminal-blue: #00aaff;
+  --terminal-magenta: #ff55ff;
+  --terminal-cyan: #55ffff;
+  --terminal-white: #ffffff;
+
+  --terminal-bright-black: #555555;
+  --terminal-bright-red: #ff8888;
+  --terminal-bright-green: #88ff88;
+  --terminal-bright-yellow: #ffff88;
+  --terminal-bright-blue: #55aaff;
+  --terminal-bright-magenta: #ff88ff;
+  --terminal-bright-cyan: #88ffff;
+  --terminal-bright-white: #ffffff;
+
+  --effect-glow-color: rgba(0, 170, 255, 0.5);
+  --effect-border-color: rgba(0, 170, 255, 0.3);
+  --effect-shadow-color: rgba(0, 170, 255, 0.2);
+
+  background: linear-gradient(135deg, #0a0a1e 0%, #0f0f2f 100%);
+
+  .geek-terminal-effects {
+    &.matrix-enabled::after {
+      color: rgba(0, 170, 255, 0.1);
+    }
+  }
+}
+
+// Cyberpunk 主题
+.theme-cyberpunk {
+  --terminal-bg: #1a0a1a;
+  --terminal-fg: #ff00ff;
+  --terminal-cursor: #ff00ff;
+  --terminal-selection: rgba(255, 0, 255, 0.3);
+
+  --terminal-black: #000000;
+  --terminal-red: #ff0055;
+  --terminal-green: #55ff00;
+  --terminal-yellow: #ffaa00;
+  --terminal-blue: #0055ff;
+  --terminal-magenta: #ff00ff;
+  --terminal-cyan: #00ffff;
+  --terminal-white: #ffffff;
+
+  --terminal-bright-black: #555555;
+  --terminal-bright-red: #ff5588;
+  --terminal-bright-green: #88ff55;
+  --terminal-bright-yellow: #ffaa55;
+  --terminal-bright-blue: #5588ff;
+  --terminal-bright-magenta: #ff55ff;
+  --terminal-bright-cyan: #55ffff;
+  --terminal-bright-white: #ffffff;
+
+  --effect-glow-color: rgba(255, 0, 255, 0.5);
+  --effect-border-color: rgba(255, 0, 255, 0.3);
+  --effect-shadow-color: rgba(255, 0, 255, 0.2);
+
+  background: linear-gradient(135deg, #1a0a1a 0%, #2f0f2f 100%);
+
+  .geek-terminal-effects {
+    &.matrix-enabled::after {
+      color: rgba(255, 0, 255, 0.1);
+    }
+  }
+}
+
+// Hacker Gold 主题
+.theme-hacker-gold {
+  --terminal-bg: #1a1a0a;
+  --terminal-fg: #ffaa00;
+  --terminal-cursor: #ffaa00;
+  --terminal-selection: rgba(255, 170, 0, 0.3);
+
+  --terminal-black: #000000;
+  --terminal-red: #ff5500;
+  --terminal-green: #aaff00;
+  --terminal-yellow: #ffaa00;
+  --terminal-blue: #0055ff;
+  --terminal-magenta: #ff5500;
+  --terminal-cyan: #55ffaa;
+  --terminal-white: #ffffff;
+
+  --terminal-bright-black: #555555;
+  --terminal-bright-red: #ff8855;
+  --terminal-bright-green: #aaff55;
+  --terminal-bright-yellow: #ffaa55;
+  --terminal-bright-blue: #5588ff;
+  --terminal-bright-magenta: #ff8855;
+  --terminal-bright-cyan: #88ffaa;
+  --terminal-bright-white: #ffffff;
+
+  --effect-glow-color: rgba(255, 170, 0, 0.5);
+  --effect-border-color: rgba(255, 170, 0, 0.3);
+  --effect-shadow-color: rgba(255, 170, 0, 0.2);
+
+  background: linear-gradient(135deg, #1a1a0a 0%, #2f2f0f 100%);
+
+  .geek-terminal-effects {
+    &.matrix-enabled::after {
+      color: rgba(255, 170, 0, 0.1);
+    }
+  }
+}
+
+// Terminal Classic 主题
+.theme-terminal-classic {
+  --terminal-bg: #000000;
+  --terminal-fg: #ffffff;
+  --terminal-cursor: #ffffff;
+  --terminal-selection: rgba(255, 255, 255, 0.3);
+
+  --terminal-black: #000000;
+  --terminal-red: #cc0000;
+  --terminal-green: #00cc00;
+  --terminal-yellow: #cccc00;
+  --terminal-blue: #0000cc;
+  --terminal-magenta: #cc00cc;
+  --terminal-cyan: #00cccc;
+  --terminal-white: #cccccc;
+
+  --terminal-bright-black: #555555;
+  --terminal-bright-red: #ff0000;
+  --terminal-bright-green: #00ff00;
+  --terminal-bright-yellow: #ffff00;
+  --terminal-bright-blue: #0000ff;
+  --terminal-bright-magenta: #ff00ff;
+  --terminal-bright-cyan: #00ffff;
+  --terminal-bright-white: #ffffff;
+
+  --effect-glow-color: rgba(255, 255, 255, 0.3);
+  --effect-border-color: rgba(255, 255, 255, 0.2);
+  --effect-shadow-color: rgba(255, 255, 255, 0.1);
+
+  background: #000000;
+
+  .geek-terminal-effects {
+    &.matrix-enabled::after {
+      color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+// 通用主题样式
+.terminal-theme-base {
+  .xterm {
+    background-color: var(--terminal-bg) !important;
+    color: var(--terminal-fg) !important;
+  }
+
+  .xterm-cursor {
+    background-color: var(--terminal-cursor) !important;
+    color: var(--terminal-bg) !important;
+  }
+
+  .xterm-selection {
+    background-color: var(--terminal-selection) !important;
+  }
+
+  // ANSI 颜色应用
+  .xterm-color-0 { color: var(--terminal-black) !important; }
+  .xterm-color-1 { color: var(--terminal-red) !important; }
+  .xterm-color-2 { color: var(--terminal-green) !important; }
+  .xterm-color-3 { color: var(--terminal-yellow) !important; }
+  .xterm-color-4 { color: var(--terminal-blue) !important; }
+  .xterm-color-5 { color: var(--terminal-magenta) !important; }
+  .xterm-color-6 { color: var(--terminal-cyan) !important; }
+  .xterm-color-7 { color: var(--terminal-white) !important; }
+
+  .xterm-color-8 { color: var(--terminal-bright-black) !important; }
+  .xterm-color-9 { color: var(--terminal-bright-red) !important; }
+  .xterm-color-10 { color: var(--terminal-bright-green) !important; }
+  .xterm-color-11 { color: var(--terminal-bright-yellow) !important; }
+  .xterm-color-12 { color: var(--terminal-bright-blue) !important; }
+  .xterm-color-13 { color: var(--terminal-bright-magenta) !important; }
+  .xterm-color-14 { color: var(--terminal-bright-cyan) !important; }
+  .xterm-color-15 { color: var(--terminal-bright-white) !important; }
+
+  // 背景色
+  .xterm-bg-color-0 { background-color: var(--terminal-black) !important; }
+  .xterm-bg-color-1 { background-color: var(--terminal-red) !important; }
+  .xterm-bg-color-2 { background-color: var(--terminal-green) !important; }
+  .xterm-bg-color-3 { background-color: var(--terminal-yellow) !important; }
+  .xterm-bg-color-4 { background-color: var(--terminal-blue) !important; }
+  .xterm-bg-color-5 { background-color: var(--terminal-magenta) !important; }
+  .xterm-bg-color-6 { background-color: var(--terminal-cyan) !important; }
+  .xterm-bg-color-7 { background-color: var(--terminal-white) !important; }
+}
+
+// 主题切换动画
+.theme-transition {
+  transition: all 0.3s ease-in-out;
+
+  .xterm {
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+
+  .xterm-cursor {
+    transition: background-color 0.3s ease-in-out;
+  }
+}
+
+// 响应式主题调整
+@media (max-width: 768px) {
+  .terminal-theme-base {
+    .xterm {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .terminal-theme-base {
+    .xterm {
+      font-size: 11px;
+    }
+  }
+}
+
+// 高对比度模式
+@media (prefers-contrast: high) {
+  .terminal-theme-base {
+    --effect-glow-color: transparent;
+    filter: contrast(1.2);
+  }
+}
+
+// 减少动画模式
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition {
+    transition: none;
+  }
+
+  .geek-terminal-effects {
+    .matrix-enabled,
+    .scanlines-enabled,
+    .crt-enabled {
+      &::before,
+      &::after {
+        animation: none;
+      }
+    }
+  }
+}

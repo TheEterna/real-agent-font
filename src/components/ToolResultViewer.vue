@@ -7,7 +7,7 @@
             <a-badge :status="statusBadge.status" :text="statusBadge.text" />
           </a-descriptions-item>
           <a-descriptions-item :label="t('tools.result.toolName')">{{ toolName || '-' }}</a-descriptions-item>
-          <a-descriptions-item :label="'traceId'">{{ norm.traceId || '-' }}</a-descriptions-item>
+          <a-descriptions-item :label="'turnId'">{{ norm.turnId || '-' }}</a-descriptions-item>
           <a-descriptions-item :label="t('tools.result.duration')">{{ norm.timing?.durationMs ?? '-' }} ms</a-descriptions-item>
           <a-descriptions-item :label="t('tools.result.message')">{{ norm.message || '-' }}</a-descriptions-item>
         </a-descriptions>
@@ -62,12 +62,12 @@ interface NormalizedResult {
   result?: { type: 'text'|'json'|'binary'|'unknown', value: unknown }
   logs?: Array<{ level?: string; message: string; ts?: string }>
   metrics?: Record<string, unknown>
-  traceId?: string
+  turnId?: string
   timing?: { startTime?: string; endTime?: string; durationMs?: number }
   rawData?: unknown
 }
 
-const props = defineProps<{ 
+const props = defineProps<{
   toolName?: string
   args?: unknown
   raw: unknown
@@ -92,7 +92,7 @@ function normalize(raw: unknown): NormalizedResult{
     const anyBody = body as Record<string, unknown>
     if ('ok' in anyBody) norm.ok = Boolean((anyBody as any).ok)
     if ('message' in anyBody) norm.message = String((anyBody as any).message ?? '')
-    if ('traceId' in anyBody) norm.traceId = String((anyBody as any).traceId ?? '')
+    if ('turnId' in anyBody) norm.turnId = String((anyBody as any).turnId ?? '')
     const start = (anyBody as any).startTime || (anyBody as any).start || undefined
     const end = (anyBody as any).endTime || (anyBody as any).end || undefined
     const dur = (anyBody as any).durationMs || (anyBody as any).duration || undefined

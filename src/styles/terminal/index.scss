@@ -1,0 +1,369 @@
+// 极客模式终端主样式文件
+// 整合所有终端相关样式
+
+@import './themes.scss';
+@import './geek-effects.scss';
+@import './animations.scss';
+
+// 全局终端容器样式
+.real-agent-terminal {
+  font-family: 'JetBrains Mono', 'Courier New', 'Consolas', 'Monaco', monospace;
+  background: var(--terminal-bg, #000000);
+  color: var(--terminal-fg, #ffffff);
+  overflow: hidden;
+  position: relative;
+
+  // 基础终端样式
+  .xterm {
+    padding: 16px;
+    height: 100%;
+    background: transparent !important;
+
+    .xterm-viewport {
+      background: transparent !important;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .xterm-screen {
+      background: transparent !important;
+    }
+
+    // 光标样式
+    .xterm-cursor-layer .xterm-cursor {
+      background: var(--terminal-cursor, #ffffff) !important;
+      color: var(--terminal-bg, #000000) !important;
+      border: none !important;
+    }
+
+    // 选择文本样式
+    .xterm-selection-layer .xterm-selection {
+      background: var(--terminal-selection, rgba(255, 255, 255, 0.3)) !important;
+    }
+
+    // 链接样式
+    .xterm-link {
+      color: var(--terminal-cyan, #00ffff);
+      text-decoration: underline;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--terminal-bright-cyan, #88ffff);
+        text-shadow: 0 0 5px var(--terminal-cyan, #00ffff);
+      }
+    }
+  }
+
+  // 滚动条样式
+  .xterm-viewport::-webkit-scrollbar {
+    width: 8px;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .xterm-viewport::-webkit-scrollbar-thumb {
+    background: var(--effect-glow-color, rgba(255, 255, 255, 0.3));
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--terminal-fg, #ffffff);
+    }
+  }
+
+  .xterm-viewport::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+}
+
+// 终端容器增强
+.terminal-container-enhanced {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 40px var(--effect-shadow-color, rgba(255, 255, 255, 0.1));
+
+  // 终端头部
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+    border-bottom: 1px solid var(--effect-border-color, rgba(255, 255, 255, 0.2));
+    backdrop-filter: blur(10px);
+
+    .terminal-controls {
+      display: flex;
+      gap: 8px;
+
+      .control-button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.close {
+          background: #ff5f56;
+          &:hover { background: #ff3333; box-shadow: 0 0 8px #ff3333; }
+        }
+
+        &.minimize {
+          background: #ffbd2e;
+          &:hover { background: #ffaa00; box-shadow: 0 0 8px #ffaa00; }
+        }
+
+        &.maximize {
+          background: #27ca3f;
+          &:hover { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        }
+      }
+    }
+
+    .terminal-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--terminal-fg, #ffffff);
+      font-weight: 600;
+      font-size: 14px;
+      text-shadow: 0 0 8px var(--effect-glow-color, rgba(255, 255, 255, 0.5));
+
+      .terminal-icon {
+        font-size: 16px;
+        animation: pulse 2s infinite ease-in-out;
+      }
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+
+      &.connected {
+        color: #00ff00;
+        text-shadow: 0 0 5px #00ff00;
+
+        &::before {
+          content: '';
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #00ff00;
+          box-shadow: 0 0 5px #00ff00;
+          animation: pulse 2s infinite;
+        }
+      }
+
+      &.disconnected {
+        color: #ff4444;
+
+        &::before {
+          content: '';
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #ff4444;
+        }
+      }
+
+      &.error {
+        color: #ff6666;
+        animation: error-flash 0.5s infinite;
+      }
+    }
+  }
+
+  // 终端主体
+  .terminal-body {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--terminal-bg, #000000);
+  }
+
+  // 终端底部状态栏
+  .terminal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+    border-top: 1px solid var(--effect-border-color, rgba(255, 255, 255, 0.2));
+    font-size: 12px;
+    color: var(--terminal-fg, #ffffff);
+    backdrop-filter: blur(10px);
+
+    .status-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        opacity: 0.8;
+      }
+    }
+
+    .terminal-controls-mini {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .control-btn {
+        padding: 4px 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--effect-border-color, rgba(255, 255, 255, 0.2));
+        border-radius: 4px;
+        color: var(--terminal-fg, #ffffff);
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          box-shadow: 0 0 8px var(--effect-glow-color, rgba(255, 255, 255, 0.3));
+        }
+
+        &.active {
+          background: var(--effect-glow-color, rgba(255, 255, 255, 0.3));
+          border-color: var(--terminal-fg, #ffffff);
+        }
+      }
+    }
+  }
+}
+
+// 特殊消息样式
+.terminal-message {
+  .system-message {
+    color: var(--terminal-bright-blue, #5588ff);
+    font-style: italic;
+  }
+
+  .error-message {
+    color: var(--terminal-bright-red, #ff8888);
+    background: rgba(255, 0, 0, 0.1);
+    padding: 4px 8px;
+    border-left: 4px solid var(--terminal-red, #ff0000);
+    margin: 4px 0;
+  }
+
+  .success-message {
+    color: var(--terminal-bright-green, #88ff88);
+    background: rgba(0, 255, 0, 0.1);
+    padding: 4px 8px;
+    border-left: 4px solid var(--terminal-green, #00ff00);
+    margin: 4px 0;
+  }
+
+  .warning-message {
+    color: var(--terminal-bright-yellow, #ffff88);
+    background: rgba(255, 255, 0, 0.1);
+    padding: 4px 8px;
+    border-left: 4px solid var(--terminal-yellow, #ffff00);
+    margin: 4px 0;
+  }
+
+  .command-message {
+    color: var(--terminal-cyan, #00ffff);
+    font-weight: 600;
+
+    &::before {
+      content: '$ ';
+      color: var(--terminal-green, #00ff00);
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .terminal-container-enhanced {
+    .terminal-header {
+      padding: 8px 12px;
+      font-size: 12px;
+
+      .terminal-title {
+        font-size: 12px;
+      }
+
+      .connection-status {
+        font-size: 10px;
+      }
+    }
+
+    .terminal-footer {
+      padding: 6px 12px;
+      font-size: 10px;
+
+      .terminal-controls-mini {
+        .control-btn {
+          padding: 2px 6px;
+          font-size: 10px;
+        }
+      }
+    }
+  }
+
+  .real-agent-terminal {
+    .xterm {
+      padding: 12px;
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .terminal-container-enhanced {
+    .terminal-header {
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .terminal-footer {
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  .real-agent-terminal {
+    .xterm {
+      filter: contrast(1.5);
+    }
+  }
+
+  .terminal-container-enhanced {
+    border: 2px solid var(--terminal-fg, #ffffff);
+    box-shadow: none;
+  }
+}
+
+// 深色模式优化
+@media (prefers-color-scheme: dark) {
+  .real-agent-terminal {
+    // 深色模式下已经是最佳状态，无需额外调整
+  }
+}
+
+// 浅色模式适配（如果需要）
+@media (prefers-color-scheme: light) {
+  .theme-terminal-classic {
+    --terminal-bg: #f8f8f8;
+    --terminal-fg: #333333;
+    --terminal-cursor: #333333;
+    --terminal-selection: rgba(51, 51, 51, 0.3);
+  }
+}

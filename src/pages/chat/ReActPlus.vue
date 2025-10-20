@@ -9,6 +9,7 @@ import CollapsibleThinking from '@/components/messages/CollapsibleThinking.vue'
 import EnhancedToolApprovalCard from '@/components/EnhancedToolApprovalCard.vue'
 import InkModeButton from '@/components/InkModeButton.vue'
 import InkTransition from '@/components/InkTransition.vue'
+import {NeonModeButton, GeekModeButton} from '@/components/button'
 import {useSSE} from '@/composables/useSSE'
 import {notification} from 'ant-design-vue'
 import {
@@ -304,7 +305,11 @@ const handleToolTerminateRequested = (approvalId: string, reason: string) => {
   messages.value.push({
     type: MessageType.System,
     sender: 'System',
-    message: `🛑 **对话已终止**\n\n${reason}\n\n您可以开始新的对话或选择其他会话继续。`,
+    message: `🛑 **对话已终止**
+
+${reason}
+
+您可以开始新的对话或选择其他会话继续。`,
     timestamp: new Date(),
     nodeId: `terminate-${Date.now()}`
   })
@@ -525,27 +530,33 @@ const initGSAPAnimations = () => {
     )
   }
 
-  // ========== 2. 进度指示器 - 青龙呼吸 ==========
+  // ========== 2. 进度指示器 - 翡翠韵动 ==========
   const pulseRings = document.querySelectorAll('.pulse-ring')
   const pulseDots = document.querySelectorAll('.pulse-dot')
 
+  // 翡翠外环 - 温润流转
   pulseRings.forEach(ring => {
     gsap.to(ring, {
-      scale: 1.3,
-      rotation: 180,
-      opacity: 0.2,
-      duration: 2.5,
+      scale: 1.02,               // ✅ 微妙呼吸，替代激烈缩放
+      rotation: 3,               // ✅ 柔和旋转，替代大幅度转动
+      x: 1,                      // ✅ 微妙飘动
+      y: 0.5,                    // ✅ 轻柔浮动
+      filter: "hue-rotate(2deg)", // ✅ 翡翠色彩流转
+      duration: 3.8,             // ✅ 缓慢节奏
       ease: "sine.inOut",
       repeat: -1,
       yoyo: true
     })
   })
 
+  // 翡翠内核 - 静谧韵律
   pulseDots.forEach(dot => {
     gsap.to(dot, {
-      scale: 0.85,
-      opacity: 0.6,
-      duration: 2.5,
+      scale: 1.03,               // ✅ 轻微膨胀，去掉opacity变化
+      rotation: -2,              // ✅ 反向微转，营造和谐
+      x: -0.5,                   // ✅ 微妙对位移动
+      borderRadius: "52%",       // ✅ 形状微调，增加生动感
+      duration: 4.2,             // ✅ 与外环错峰
       ease: "sine.inOut",
       repeat: -1,
       yoyo: true
@@ -692,36 +703,42 @@ const setupSendButtonAnimation = () => {
   })
 }
 
-// ========== 8. 滚动到底部按钮 - 青龙盘旋 ==========
+// ========== 8. 滚动到底部按钮 - 龙泉青瓷禅意 ==========
 const setupScrollButtonAnimation = () => {
   const scrollButton = document.querySelector('.scroll-to-bottom button')
 
   if (!scrollButton) return
 
-  // 持续的脉动效果
+  // 龙泉青瓷静谧脉动 - 去掉激烈变化
   gsap.to(scrollButton, {
-    scale: 1.1,
-    boxShadow: '0 0 24px rgba(91, 138, 138, 0.4)',
-    duration: 1.5,
+    scale: 1.03,                          // ✅ 微妙呼吸
+    y: -1,                                // ✅ 轻柔浮动
+    filter: "hue-rotate(1deg)",          // ✅ 青瓷色彩微调
+    borderRadius: "52%",                 // ✅ 形状微变
+    duration: 3.5,                       // ✅ 缓慢禅意节奏
     ease: "sine.inOut",
     repeat: -1,
     yoyo: true
   })
 
-  // Hover 增强
+  // Hover 增强 - 龙泉青瓷觉醒
   scrollButton.addEventListener('mouseenter', () => {
     gsap.to(scrollButton, {
-      scale: 1.15,
-      rotation: 360,
-      duration: 0.5,
-      ease: "back.out(1.5)"
+      scale: 1.08,                       // ✅ 轻度放大
+      y: -3,                             // ✅ 上浮
+      rotation: 8,                       // ✅ 微旋，替代激烈360度
+      filter: "hue-rotate(3deg) brightness(1.05)", // ✅ 青瓷光华
+      duration: 0.6,
+      ease: "back.out(1.3)"
     })
   })
 
   scrollButton.addEventListener('mouseleave', () => {
     gsap.to(scrollButton, {
       rotation: 0,
-      duration: 0.5,
+      y: -1,                             // ✅ 回到浮动状态
+      filter: "hue-rotate(1deg) brightness(1)",
+      duration: 0.6,
       ease: "power2.out"
     })
   })
@@ -745,19 +762,35 @@ const animateAttachmentEntry = (element: HTMLElement) => {
   )
 }
 
-// ========== 10. 加载点动画 - 青龙吐息 ==========
+// ========== 10. 加载点动画 - 白玉温润韵律 ==========
 const setupLoadingDotsAnimation = () => {
   const loadingDots = document.querySelectorAll('.loading-dots span')
 
+  // 白玉韵律 - 温润流动，去掉闪烁的opacity
   loadingDots.forEach((dot, index) => {
-    gsap.to(dot, {
-      y: -10,
-      opacity: 0.3,
-      duration: 0.6,
+    const timeline = gsap.timeline({repeat: -1})
+
+    // 上升阶段 - 白玉浮升
+    timeline.to(dot, {
+      y: -3,                    // ✅ 微妙浮动，替代过大移动
+      scale: 1.06,              // ✅ 轻微膨胀
+      rotation: 2,              // ✅ 微转
+      borderRadius: "45%",      // ✅ 形状轻柔变化
+      filter: "brightness(1.05)", // ✅ 白玉光泽
+      duration: 1.4,            // ✅ 缓慢节奏
       ease: "sine.inOut",
-      repeat: -1,
-      yoyo: true,
-      delay: index * 0.2  // 依次波动
+      delay: index * 0.35       // ✅ 延长错峰时间
+    })
+
+    // 下沉阶段 - 白玉沉静
+    .to(dot, {
+      y: 1,                     // ✅ 轻柔下沉
+      scale: 0.96,              // ✅ 微收缩
+      rotation: -1,             // ✅ 反向微转
+      borderRadius: "55%",      // ✅ 形状回归
+      filter: "brightness(0.98)", // ✅ 光泽回落
+      duration: 1.4,
+      ease: "sine.inOut"
     })
   })
 }
@@ -832,20 +865,13 @@ const setupInputContainerAdvancedAnimations = () => {
         repeat: -1
       })
 
-      // 汉白玉龙泉青瓷呼吸 - 替代 dragonJadeBreathing
+      // 汉白玉龙泉青瓷禅意呼吸 - 替代复杂阴影变化
       breathingAnimation = gsap.to(inputContainer, {
-        boxShadow: `
-          0 0 0 8px rgba(107, 154, 152, 0.2),
-          0 0 0 16px rgba(91, 138, 138, 0.12),
-          0 24px 72px rgba(91, 138, 138, 0.3),
-          0 12px 36px rgba(255, 255, 255, 0.9),
-          0 8px 24px rgba(91, 138, 138, 0.15),
-          inset 0 2px 0 rgba(255, 255, 255, 1),
-          inset 0 -2px 0 rgba(107, 154, 152, 0.2),
-          0 0 80px rgba(107, 154, 152, 0.25),
-          0 0 40px rgba(91, 138, 138, 0.4)
-        `,
-        duration: 2.5,
+        borderColor: "rgba(107, 154, 152, 0.28)",     // ✅ 边框深浅变化
+        transform: "scale(1.003) translateY(-0.8px)", // ✅ 微妙浮升
+        filter: "brightness(1.01) hue-rotate(1deg)",  // ✅ 青瓷光泽流转
+        borderRadius: "1.52rem",                      // ✅ 圆角微调
+        duration: 4.5,                                // ✅ 超缓慢禅意节奏
         ease: 'sine.inOut',
         repeat: -1,
         yoyo: true
@@ -882,18 +908,14 @@ const setupTextareaAdvancedAnimations = () => {
   let glowAnimation: gsap.core.Tween | null = null
 
   textarea.addEventListener('focus', () => {
-    // 聚焦时的龙泉青瓷光晕呼吸 - 替代 textareaJadeGlow
+    // 聚焦时的白玉温润光晕 - 替代复杂阴影
     glowAnimation = gsap.to(textarea, {
-      boxShadow: `
-        0 0 0 6px rgba(107, 154, 152, 0.12),
-        0 0 0 12px rgba(91, 138, 138, 0.08),
-        0 12px 36px rgba(91, 138, 138, 0.12),
-        0 6px 18px rgba(255, 255, 255, 0.7),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95),
-        inset 0 -1px 0 rgba(107, 154, 152, 0.08),
-        0 0 48px rgba(107, 154, 152, 0.15)
-      `,
-      duration: 2.5,
+      borderColor: "rgba(107, 154, 152, 0.2)",      // ✅ 边框轻柔变化
+      transform: "scale(1.001) translateY(-0.3px)", // ✅ 微妙浮升
+      filter: "brightness(1.02)",                   // ✅ 白玉光泽
+      borderRadius: "0.88rem",                      // ✅ 圆角微调
+      background: "rgba(255, 255, 255, 0.98)",      // ✅ 背景亮度微调
+      duration: 3.8,                                // ✅ 温润节奏
       ease: 'sine.inOut',
       repeat: -1,
       yoyo: true
@@ -919,38 +941,27 @@ const setupSendButtonAdvancedAnimations = () => {
   let innerFlowAnimation: gsap.core.Tween | null = null
 
   sendButton.addEventListener('mouseenter', () => {
-    // 发送按钮呼吸动画 - 替代 sendButtonJadeBreathing
+    // 发送按钮青瓷觉醒 - 替代复杂阴影呼吸
     breathingAnimation = gsap.to(sendButton, {
-      boxShadow: `
-        0 20px 60px rgba(91, 138, 138, 0.5),
-        0 16px 40px rgba(91, 138, 138, 0.4),
-        0 12px 32px rgba(91, 138, 138, 0.3),
-        0 6px 20px rgba(255, 255, 255, 0.6),
-        inset 0 2px 0 rgba(255, 255, 255, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.5),
-        inset 0 -1px 0 rgba(58, 95, 95, 0.4),
-        inset 0 -2px 0 rgba(58, 95, 95, 0.3),
-        0 0 64px rgba(107, 154, 152, 0.4),
-        0 0 32px rgba(91, 138, 138, 0.5)
-      `,
-      duration: 2.5,
+      borderColor: "rgba(107, 154, 152, 0.6)",       // ✅ 边框觉醒
+      transform: "scale(1.04) translateY(-1px)",      // ✅ 微妙浮升放大
+      filter: "brightness(1.08) hue-rotate(2deg)",    // ✅ 青瓷光华
+      borderRadius: "0.92rem",                        // ✅ 圆角微调
+      background: "linear-gradient(145deg, rgba(74, 104, 104, 1), rgba(91, 138, 138, 0.98))", // ✅ 渐变微调
+      duration: 3.2,                                  // ✅ 青瓷节奏
       ease: 'sine.inOut',
       repeat: -1,
       yoyo: true
     })
 
-    // 龙泉青瓷内在流光 - 替代 jadeInnerFlow
-    const beforeElement = sendButton.querySelector('::before')
-    if (beforeElement) {
-      innerFlowAnimation = gsap.to(beforeElement, {
-        backgroundPosition: '100% 100%',
-        opacity: 1,
-        duration: 5,
-        ease: 'sine.inOut',
-        repeat: -1,
-        yoyo: true
-      })
-    }
+    // 简化内在流光 - 按钮整体微韵动
+    innerFlowAnimation = gsap.to(sendButton, {
+      boxShadow: "0 4px 16px rgba(91, 138, 138, 0.25)", // ✅ 简化阴影
+      duration: 4,                                       // ✅ 缓慢流动
+      ease: 'sine.inOut',
+      repeat: -1,
+      yoyo: true
+    })
   })
 
   sendButton.addEventListener('mouseleave', () => {
@@ -1433,20 +1444,7 @@ onUnmounted(() => {
     <div class="main-content">
       <!-- 顶部状态栏 -->
       <div class="top-status-bar">
-        <div class="status-left">
-          <StatusIndicator :status="taskStatus.value"/>
-        </div>
-
-      </div>
-      <!-- 全局进度指示器 -->
-      <div class="global-progress">
-        <div class="progress-content">
-          <div class="progress-icon">
-            <div class="pulse-ring"></div>
-            <div class="pulse-dot"></div>
-          </div>
-          <div class="progress-text">11</div>
-        </div>
+          <StatusIndicator status='running'/>
       </div>
 
       <!-- 对话区域 -->
@@ -1510,22 +1508,19 @@ onUnmounted(() => {
       >
         <!-- 🎭 模式选择器 -->
         <div class="mode-selector">
-          <button
-              class="mode-btn"
-              :class="{ active: currentMode === 'geek' }"
+          <GeekModeButton
+              :active="currentMode === 'geek'"
+              :icon="RobotOutlined"
+              label="极客模式"
               @click="currentMode = 'geek'"
-          >
-            <RobotOutlined/>
-            <span>极客模式</span>
-          </button>
-          <button
-              class="mode-btn"
-              :class="{ active: currentMode === 'multimodal' }"
+          />
+          <NeonModeButton
+              :active="currentMode === 'multimodal'"
+              :icon="ThunderboltOutlined"
+              label="多模态模式"
+              variant="multimodal"
               @click="currentMode = 'multimodal'"
-          >
-            <ThunderboltOutlined/>
-            <span>多模态模式</span>
-          </button>
+          />
         </div>
 
         <!-- 📎 附件预览 -->
@@ -1814,19 +1809,15 @@ onUnmounted(() => {
     z-index: 50;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-subtle);
-    padding: var(--space-md) var(--space-xl);
+    padding-top: var(--space-md);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     backdrop-filter: blur(12px);
     transition: all var(--transition-normal);
   }
 
-  .status-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-  }
+
 
   .agent-label {
     font-size: var(--font-size-sm);
@@ -1889,6 +1880,7 @@ onUnmounted(() => {
     align-items: center;
     gap: var(--space-md);
   }
+
   .progress-icon {
     position: relative;
   }
@@ -2275,12 +2267,6 @@ onUnmounted(() => {
     overflow: hidden;
 
 
-
-
-
- 
-
- 
   }
 
   /* 已迁移至 GSAP: setupInputContainerAdvancedAnimations() */
@@ -2474,14 +2460,13 @@ onUnmounted(() => {
   }
 
 
-
   /* ============= INPUT TOOLBAR FLOATING - 浮动工具栏（绝对定位于输入框左下角外部）============= */
-
 
 
   /* ============= MODE SELECTOR - 模式选择器 ============= */
   .mode-selector {
     display: flex;
+    align-items: center; /* 确保按钮垂直对齐 */
     gap: var(--space-md);
     padding: var(--space-md) var(--space-xl);
     background: linear-gradient(180deg,
@@ -2489,44 +2474,7 @@ onUnmounted(() => {
         rgba(248, 252, 252, 0.85) 100%
     );
     border-bottom: 1px solid rgba(107, 154, 152, 0.08);
-  }
 
-  .mode-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-lg);
-    border: 1px solid rgba(107, 154, 152, 0.15);
-    border-radius: var(--radius-lg);
-    background: linear-gradient(145deg,
-        rgba(255, 255, 255, 0.95) 0%,
-        rgba(248, 254, 254, 0.9) 100%
-    );
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    box-shadow: 0 2px 4px rgba(91, 138, 138, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-
-    &:hover {
-      border-color: rgba(107, 154, 152, 0.25);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(91, 138, 138, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    }
-
-    &.active {
-      background: linear-gradient(145deg,
-          rgba(91, 138, 138, 0.98) 0%,
-          rgba(107, 154, 152, 0.95) 100%
-      );
-      color: rgba(255, 255, 255, 0.98);
-      border-color: rgba(107, 154, 152, 0.6);
-      box-shadow: 0 4px 12px rgba(91, 138, 138, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
 
     span {
       white-space: nowrap;
@@ -2540,7 +2488,7 @@ onUnmounted(() => {
     flex-direction: column;
     justify-content: space-between;
     padding: var(--space-lg) 150px var(--space-md) var(--space-xl);
-    
+
     /* 汉白玉书写面 - 温润如玉 */
     background: linear-gradient(145deg,
         rgba(255, 255, 255, 0.98) 0%,
@@ -2556,7 +2504,6 @@ onUnmounted(() => {
     /* 平滑过渡 */
     transition: all var(--transition-spring);
 
- 
 
     /* 悬浮时的汉白玉温润感 */
     &:hover:not(:focus-within) {
@@ -2571,35 +2518,35 @@ onUnmounted(() => {
 
     /* ===== Textarea 样式 ===== */
     textarea {
-        width: 100%;
-        flex: 1;
-        height: 100%;
-        min-height: 52px;
+      width: 100%;
+      flex: 1;
+      height: 100%;
+      min-height: 52px;
 
-        /* 继承父容器背景，实现视觉统一 */
-        background: transparent;
+      /* 继承父容器背景，实现视觉统一 */
+      background: transparent;
 
-        /* 文本样式 */
-        color: var(--text-primary) !important;
-        font-size: var(--font-size-base) !important;
-        line-height: var(--line-height-relaxed) !important;
-        font-family: var(--font-sans) !important;
-        font-weight: 500 !important;
+      /* 文本样式 */
+      color: var(--text-primary) !important;
+      font-size: var(--font-size-base) !important;
+      line-height: var(--line-height-relaxed) !important;
+      font-family: var(--font-sans) !important;
+      font-weight: 500 !important;
 
-        /* 移除所有默认样式，让焦点效果完全由父容器控制 */
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        resize: none !important;
+      /* 移除所有默认样式，让焦点效果完全由父容器控制 */
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      resize: none !important;
 
-        /* Placeholder 样式 */
-        &::placeholder {
-          color: rgba(139, 157, 157, 0.6);
-          opacity: 0.8;
-          font-weight: 400;
-          font-style: italic;
-        }
+      /* Placeholder 样式 */
+      &::placeholder {
+        color: rgba(139, 157, 157, 0.6);
+        opacity: 0.8;
+        font-weight: 400;
+        font-style: italic;
       }
+    }
 
     /* 🎨 焦点效果已由父容器 :focus-within 统一控制 */
 
@@ -2622,145 +2569,145 @@ onUnmounted(() => {
 
       /* 汉白玉龙泉青瓷按钮主体 - 深度质感 */
       background: linear-gradient(145deg,
-            rgba(91, 138, 138, 0.98) 0%,
-            rgba(107, 154, 152, 0.95) 15%,
-            rgba(91, 138, 138, 1) 30%,
-            rgba(107, 154, 152, 0.97) 45%,
-            rgba(91, 138, 138, 0.99) 55%,
-            rgba(107, 154, 152, 0.96) 70%,
-            rgba(91, 138, 138, 0.98) 85%,
-            rgba(107, 154, 152, 0.95) 100%
+          rgba(91, 138, 138, 0.98) 0%,
+          rgba(107, 154, 152, 0.95) 15%,
+          rgba(91, 138, 138, 1) 30%,
+          rgba(107, 154, 152, 0.97) 45%,
+          rgba(91, 138, 138, 0.99) 55%,
+          rgba(107, 154, 152, 0.96) 70%,
+          rgba(91, 138, 138, 0.98) 85%,
+          rgba(107, 154, 152, 0.95) 100%
+      ) !important;
+
+      color: rgba(255, 255, 255, 0.98) !important;
+
+      /* 使用 box-shadow 模拟渐变边框（兼容圆角）+ 汉白玉按钮深层阴影系统 */
+      border: none !important;
+      box-shadow: /* 青瓷边缘光晕（模拟 border-image） */
+          0 0 0 1px rgba(255, 255, 255, 0.3),
+          0 0 0 2px rgba(107, 154, 152, 0.4),
+            /* 深层阴影 */
+          0 8px 32px rgba(91, 138, 138, 0.35),
+          0 4px 16px rgba(91, 138, 138, 0.25),
+          0 2px 8px rgba(255, 255, 255, 0.4),
+            /* 内部高光 */
+          inset 0 2px 0 rgba(255, 255, 255, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          inset 0 -1px 0 rgba(58, 95, 95, 0.2),
+          inset 0 -2px 0 rgba(58, 95, 95, 0.15) !important;
+
+      transition: all var(--transition-spring) !important;
+
+
+      /* 汉白玉外围能量环 */
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        background: conic-gradient(
+                from 0deg,
+                rgba(91, 138, 138, 0.4) 0deg,
+                rgba(107, 154, 152, 0.2) 60deg,
+                rgba(255, 255, 255, 0.3) 120deg,
+                rgba(107, 154, 152, 0.25) 180deg,
+                rgba(91, 138, 138, 0.3) 240deg,
+                rgba(255, 255, 255, 0.2) 300deg,
+                rgba(91, 138, 138, 0.4) 360deg
+        );
+        z-index: -1;
+        opacity: 0;
+        transform: scale(0.95);
+        transition: all var(--transition-normal);
+        filter: blur(1px);
+      }
+
+      &:hover:not(:disabled) {
+        transform: translateY(-50%) scale(1.05) !important;
+
+        /* 龙泉青瓷觉醒状态 */
+        background: linear-gradient(145deg,
+            rgba(58, 95, 95, 1) 0%,
+            rgba(74, 104, 104, 0.98) 15%,
+            rgba(58, 95, 95, 1) 30%,
+            rgba(74, 104, 104, 0.99) 45%,
+            rgba(58, 95, 95, 1) 55%,
+            rgba(74, 104, 104, 0.98) 70%,
+            rgba(58, 95, 95, 1) 85%,
+            rgba(74, 104, 104, 0.98) 100%
         ) !important;
 
-        color: rgba(255, 255, 255, 0.98) !important;
-
-        /* 使用 box-shadow 模拟渐变边框（兼容圆角）+ 汉白玉按钮深层阴影系统 */
-        border: none !important;
-        box-shadow: /* 青瓷边缘光晕（模拟 border-image） */
-            0 0 0 1px rgba(255, 255, 255, 0.3),
-            0 0 0 2px rgba(107, 154, 152, 0.4),
-              /* 深层阴影 */
-            0 8px 32px rgba(91, 138, 138, 0.35),
-            0 4px 16px rgba(91, 138, 138, 0.25),
-            0 2px 8px rgba(255, 255, 255, 0.4),
+        /* 使用 box-shadow 模拟龙泉青瓷觉醒边缘（兼容圆角）+ 汉白玉龙泉青瓷神韵四射 */
+        box-shadow: /* 青瓷觉醒边缘光晕（模拟 border-image） */
+            0 0 0 1px rgba(255, 255, 255, 0.5),
+            0 0 0 2px rgba(107, 154, 152, 0.6),
+            0 0 0 3px rgba(255, 255, 255, 0.3),
+              /* 深层阴影加强 */
+            0 16px 48px rgba(91, 138, 138, 0.45),
+            0 12px 32px rgba(91, 138, 138, 0.35),
+            0 8px 24px rgba(91, 138, 138, 0.25),
+            0 4px 16px rgba(255, 255, 255, 0.5),
               /* 内部高光 */
-            inset 0 2px 0 rgba(255, 255, 255, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3),
-            inset 0 -1px 0 rgba(58, 95, 95, 0.2),
-            inset 0 -2px 0 rgba(58, 95, 95, 0.15) !important;
+            inset 0 2px 0 rgba(255, 255, 255, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -1px 0 rgba(58, 95, 95, 0.3),
+            inset 0 -2px 0 rgba(58, 95, 95, 0.2),
+              /* 青瓷光晕 */
+            0 0 48px rgba(107, 154, 152, 0.3),
+            0 0 24px rgba(91, 138, 138, 0.4) !important;
 
-        transition: all var(--transition-spring) !important;
+        /* 动画已迁移至 GSAP: setupSendButtonAdvancedAnimations() */
 
+        &::before {
+          opacity: 1;
+          /* 动画已迁移至 GSAP */
+        }
 
-        /* 汉白玉外围能量环 */
         &::after {
-          content: '';
-          position: absolute;
-          inset: -4px;
-          background: conic-gradient(
-                  from 0deg,
-                  rgba(91, 138, 138, 0.4) 0deg,
-                  rgba(107, 154, 152, 0.2) 60deg,
-                  rgba(255, 255, 255, 0.3) 120deg,
-                  rgba(107, 154, 152, 0.25) 180deg,
-                  rgba(91, 138, 138, 0.3) 240deg,
-                  rgba(255, 255, 255, 0.2) 300deg,
-                  rgba(91, 138, 138, 0.4) 360deg
-          );
-          z-index: -1;
-          opacity: 0;
-          transform: scale(0.95);
-          transition: all var(--transition-normal);
-          filter: blur(1px);
+          opacity: 0.9;
+          transform: scale(1.02);
+          /* 动画已迁移至 GSAP */
         }
+      }
 
-        &:hover:not(:disabled) {
-          transform: translateY(-50%) scale(1.05) !important;
+      &:active:not(:disabled) {
+        transform: translateY(-2px) scale(1.01) !important;
+        transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 
-          /* 龙泉青瓷觉醒状态 */
-          background: linear-gradient(145deg,
-              rgba(58, 95, 95, 1) 0%,
-              rgba(74, 104, 104, 0.98) 15%,
-              rgba(58, 95, 95, 1) 30%,
-              rgba(74, 104, 104, 0.99) 45%,
-              rgba(58, 95, 95, 1) 55%,
-              rgba(74, 104, 104, 0.98) 70%,
-              rgba(58, 95, 95, 1) 85%,
-              rgba(74, 104, 104, 0.98) 100%
-          ) !important;
+        /* 汉白玉按压深度质感 */
+        box-shadow: 0 6px 24px rgba(91, 138, 138, 0.3),
+        0 3px 12px rgba(91, 138, 138, 0.2),
+        inset 0 3px 6px rgba(58, 95, 95, 0.4),
+        inset 0 2px 4px rgba(58, 95, 95, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 
-          /* 使用 box-shadow 模拟龙泉青瓷觉醒边缘（兼容圆角）+ 汉白玉龙泉青瓷神韵四射 */
-          box-shadow: /* 青瓷觉醒边缘光晕（模拟 border-image） */
-              0 0 0 1px rgba(255, 255, 255, 0.5),
-              0 0 0 2px rgba(107, 154, 152, 0.6),
-              0 0 0 3px rgba(255, 255, 255, 0.3),
-                /* 深层阴影加强 */
-              0 16px 48px rgba(91, 138, 138, 0.45),
-              0 12px 32px rgba(91, 138, 138, 0.35),
-              0 8px 24px rgba(91, 138, 138, 0.25),
-              0 4px 16px rgba(255, 255, 255, 0.5),
-                /* 内部高光 */
-              inset 0 2px 0 rgba(255, 255, 255, 0.5),
-              inset 0 1px 0 rgba(255, 255, 255, 0.4),
-              inset 0 -1px 0 rgba(58, 95, 95, 0.3),
-              inset 0 -2px 0 rgba(58, 95, 95, 0.2),
-                /* 青瓷光晕 */
-              0 0 48px rgba(107, 154, 152, 0.3),
-              0 0 24px rgba(91, 138, 138, 0.4) !important;
+        animation: none !important;
+      }
 
-          /* 动画已迁移至 GSAP: setupSendButtonAdvancedAnimations() */
+      &:disabled {
+        background: linear-gradient(145deg,
+            rgba(139, 157, 157, 0.4) 0%,
+            rgba(155, 175, 175, 0.3) 25%,
+            rgba(139, 157, 157, 0.35) 50%,
+            rgba(155, 175, 175, 0.3) 75%,
+            rgba(139, 157, 157, 0.4) 100%
+        ) !important;
+        color: rgba(139, 157, 157, 0.7) !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+        animation: none !important;
 
-          &::before {
-            opacity: 1;
-            /* 动画已迁移至 GSAP */
-          }
+        /* 使用 box-shadow 模拟边框（兼容圆角） */
+        box-shadow: /* 灰色边缘 */
+            0 0 0 1px rgba(155, 175, 175, 0.15),
+              /* 基础阴影 */
+            0 2px 8px rgba(139, 157, 157, 0.15),
+              /* 内部高光 */
+            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 
-          &::after {
-            opacity: 0.9;
-            transform: scale(1.02);
-            /* 动画已迁移至 GSAP */
-          }
+        &::before,
+        &::after {
+          opacity: 0 !important;
         }
-
-        &:active:not(:disabled) {
-          transform: translateY(-2px) scale(1.01) !important;
-          transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1) !important;
-
-          /* 汉白玉按压深度质感 */
-          box-shadow: 0 6px 24px rgba(91, 138, 138, 0.3),
-          0 3px 12px rgba(91, 138, 138, 0.2),
-          inset 0 3px 6px rgba(58, 95, 95, 0.4),
-          inset 0 2px 4px rgba(58, 95, 95, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-
-          animation: none !important;
-        }
-
-        &:disabled {
-          background: linear-gradient(145deg,
-              rgba(139, 157, 157, 0.4) 0%,
-              rgba(155, 175, 175, 0.3) 25%,
-              rgba(139, 157, 157, 0.35) 50%,
-              rgba(155, 175, 175, 0.3) 75%,
-              rgba(139, 157, 157, 0.4) 100%
-          ) !important;
-          color: rgba(139, 157, 157, 0.7) !important;
-          cursor: not-allowed !important;
-          transform: none !important;
-          animation: none !important;
-
-          /* 使用 box-shadow 模拟边框（兼容圆角） */
-          box-shadow: /* 灰色边缘 */
-              0 0 0 1px rgba(155, 175, 175, 0.15),
-                /* 基础阴影 */
-              0 2px 8px rgba(139, 157, 157, 0.15),
-                /* 内部高光 */
-              inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-
-          &::before,
-          &::after {
-            opacity: 0 !important;
-          }
       }
     }
 
@@ -2770,7 +2717,7 @@ onUnmounted(() => {
       align-self: self-start;
       gap: var(--space-md);
       padding: var(--space-sm) var(--space-md);
-      
+
       /* 汉白玉雕刻质感 */
       background: linear-gradient(180deg,
           rgba(248, 252, 252, 0.98) 0%,
@@ -2781,13 +2728,12 @@ onUnmounted(() => {
       border-radius: var(--space-lg);
       border: 1px solid rgba(107, 154, 152, 0.12);
 
-      box-shadow: 
-        /* 汉白玉内光 */
-        inset 0 1px 0 rgba(255, 255, 255, 0.8),
-        inset 0 -1px 0 rgba(107, 154, 152, 0.05),
-        /* 外部阴影 */
-        0 4px 12px rgba(91, 138, 138, 0.08),
-        0 2px 6px rgba(0, 0, 0, 0.04);
+      box-shadow: /* 汉白玉内光 */
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          inset 0 -1px 0 rgba(107, 154, 152, 0.05),
+            /* 外部阴影 */
+          0 4px 12px rgba(91, 138, 138, 0.08),
+          0 2px 6px rgba(0, 0, 0, 0.04);
 
       transition: all var(--transition-normal);
       backdrop-filter: blur(8px);
@@ -2808,10 +2754,9 @@ onUnmounted(() => {
 
         border: 1px solid rgba(107, 154, 152, 0.1) !important;
 
-        box-shadow: 
-          0 2px 6px rgba(91, 138, 138, 0.05),
-          0 1px 3px rgba(255, 255, 255, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+        box-shadow: 0 2px 6px rgba(91, 138, 138, 0.05),
+        0 1px 3px rgba(255, 255, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 
         /* 龙泉青瓷内光 */
         &::before {
@@ -2857,11 +2802,10 @@ onUnmounted(() => {
 
           border-color: rgba(91, 138, 138, 0.2) !important;
 
-          box-shadow: 
-            0 6px 18px rgba(91, 138, 138, 0.12),
-            0 3px 9px rgba(255, 255, 255, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8),
-            0 0 20px rgba(107, 154, 152, 0.15) !important;
+          box-shadow: 0 6px 18px rgba(91, 138, 138, 0.12),
+          0 3px 9px rgba(255, 255, 255, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          0 0 20px rgba(107, 154, 152, 0.15) !important;
 
           &::before {
             opacity: 1;
@@ -2878,10 +2822,9 @@ onUnmounted(() => {
           transition: all 100ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 
           /* 汉白玉按压质感 */
-          box-shadow: 
-            0 2px 8px rgba(91, 138, 138, 0.08),
-            inset 0 2px 4px rgba(91, 138, 138, 0.05),
-            inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+          box-shadow: 0 2px 8px rgba(91, 138, 138, 0.08),
+          inset 0 2px 4px rgba(91, 138, 138, 0.05),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
         }
       }
     }

@@ -1,20 +1,6 @@
 import { EventType, MessageType } from '../types/events'
 
-// Labels for sender names per event type
-export const SenderLabel: Record<string, string> = {
-  [EventType.STARTED]: 'System',
-  [EventType.PROGRESS]: 'System',
-  [EventType.THINKING]: 'AI思考',
-  [EventType.ACTION]: 'AI行动',
-  [EventType.OBSERVING]: 'AI观察',
-  [EventType.EXECUTING]: 'AI执行',
-  [EventType.DONE]: 'Task Completed',
-  [EventType.DONEWITHWARNING]: 'Task Completed (Warning)',
-  [EventType.COMPLETED]: 'Task Completed',
-  [EventType.TOOL]: 'Tool',
-  [EventType.TOOL_APPROVAL]: 'Approval',
-  [EventType.ERROR]: 'System Error',
-}
+
 
 // Map EventType => MessageType used by UI renderer
 export const MessageTypeMap: Record<string, MessageType> = {

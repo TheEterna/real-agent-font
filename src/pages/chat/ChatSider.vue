@@ -40,6 +40,13 @@ const agentTags = [
     disabled: true,
     tipColor: getRandomTooltipColor()
   },
+  {
+    label: 'Geek',
+    value: AgentType.Geek,
+    description: '极客模式 - 终端风格命令行交互',
+    disabled: false,
+    tipColor: getRandomTooltipColor()
+  },
 ]
 
 const isActive = (id: string) => {
@@ -88,7 +95,8 @@ const getAgentColor = (agentType: AgentType): string => {
   const colors = {
     [AgentType.ReAct]: '#1677ff',
     [AgentType.ReAct_Plus]: '#52c41a',
-    [AgentType.Coding]: '#fa8c16'
+    [AgentType.Coding]: '#fa8c16',
+    [AgentType.Geek]: '#00ff00'
   }
   return colors[agentType] || '#666'
 }
