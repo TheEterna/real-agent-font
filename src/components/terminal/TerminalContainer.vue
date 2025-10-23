@@ -209,14 +209,14 @@ defineExpose({
       />
     </div>
 
-    <!-- 全屏时的退出提示 -->
-    <div v-if="isFullscreen" class="fullscreen-hint">
-      <span>按 ESC 或点击此处退出全屏</span>
-    </div>
+
+
   </div>
 </template>
 
 <style scoped lang="scss">
+@import '@/styles/terminal/index.scss';
+
 .terminal-container {
   display: flex;
   flex-direction: column;
@@ -427,6 +427,136 @@ defineExpose({
   50% { opacity: 1; }
 }
 
+
+
+// 终端容器样式
+.geek-terminal-container {
+  @extend .terminal-container-enhanced;
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px;
+
+  // 终端头部的极客模式样式
+  :deep(.terminal-header) {
+    background: linear-gradient(135deg, #0f1f0f 0%, #1a2f1a 100%);
+    border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+    color: #00ff00;
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+
+    .terminal-controls {
+      .control-button {
+        &.close { background: #ff5f56; }
+        &.minimize { background: #ffbd2e; }
+        &.maximize { background: #27ca3f; }
+      }
+    }
+
+    .terminal-title {
+      color: #00ff00;
+      font-weight: bold;
+    }
+
+    .connection-status {
+      &.connected { color: #00ff00; }
+      &.disconnected { color: #ff4444; }
+      &.error { color: #ff6666; }
+    }
+  }
+}
+
+// 终端实例样式
+.geek-terminal {
+  @extend .real-agent-terminal;
+  @extend .theme-matrix-green;
+  @extend .terminal-theme-base;
+  @extend .geek-terminal-effects;
+  @extend .geek-cursor-enhanced;
+  @extend .geek-selection-enhanced;
+  @extend .geek-scrollbar-enhanced;
+  @extend .geek-border-enhanced;
+  @extend .geek-font-enhanced;
+
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+
+  // 启动动画
+  &.terminal-starting {
+    @extend .geek-startup-animation;
+  }
+
+  // 主题切换过渡
+  &.theme-transitioning {
+    @extend .geek-theme-transition;
+  }
+
+  // 特效状态
+  &.matrix-active {
+    @extend .matrix-enabled;
+  }
+
+  &.scanlines-active {
+    @extend .scanlines-enabled;
+  }
+
+  &.crt-active {
+    @extend .crt-enabled;
+  }
+
+  &.glow-active {
+    @extend .glow-enabled;
+  }
+
+  &.flicker-active {
+    @extend .flicker-enabled;
+  }
+
+  &.noise-active {
+    @extend .noise-enabled;
+  }
+}
+
+// 终端加载状态
+.terminal-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 16px 24px;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 8px;
+  color: #00ff00;
+  text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+// 响应式设计
+@media (max-width: 768px) {
+  .geek-mode-container {
+    .geek-terminal-container {
+      margin: 4px;
+    }
+
+  }
+
+}
+
+
 // 响应式设计
 @media (max-width: 768px) {
   .terminal-header {
@@ -466,4 +596,5 @@ defineExpose({
     height: 10px;
   }
 }
+
 </style>

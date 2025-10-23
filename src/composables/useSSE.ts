@@ -211,11 +211,32 @@ export function useSSE(options?: {
                         scrollToBottom()
                     })
 
-                    source.addEventListener('message', (event: MessageEvent) => {
+                    // 通用事件处理函数
+                    const handleSSEEvent = (event: MessageEvent) => {
                         if (!event?.data) return
                         const data = JSON.parse(event.data) as BaseEventItem
                         handleEvent(data, source)
-                    })
+                    }
+
+                    // 监听所有可能的事件类型
+                    source.addEventListener('message', handleSSEEvent)
+                    source.addEventListener('STARTED', handleSSEEvent)
+                    source.addEventListener('PROGRESS', handleSSEEvent)
+                    source.addEventListener('AGENT_SELECTED', handleSSEEvent)
+                    source.addEventListener('THINKING', handleSSEEvent)
+                    source.addEventListener('ACTION', handleSSEEvent)
+                    source.addEventListener('ACTING', handleSSEEvent)
+                    source.addEventListener('OBSERVING', handleSSEEvent)
+                    source.addEventListener('COLLABORATING', handleSSEEvent)
+                    source.addEventListener('PARTIAL_RESULT', handleSSEEvent)
+                    source.addEventListener('DONE', handleSSEEvent)
+                    source.addEventListener('EXECUTING', handleSSEEvent)
+                    source.addEventListener('ERROR', handleSSEEvent)
+                    source.addEventListener('TOOL', handleSSEEvent)
+                    source.addEventListener('DONEWITHWARNING', handleSSEEvent)
+                    source.addEventListener('TOOL_APPROVAL', handleSSEEvent)
+                    source.addEventListener('INTERACTION', handleSSEEvent)
+                    source.addEventListener('COMPLETED', handleSSEEvent)
 
                     source.addEventListener('error', (err: any) => {
                         connectionStatus.value.set('error')
@@ -283,12 +304,32 @@ export function useSSE(options?: {
 
                     })
 
-                    source.addEventListener('message', (event: MessageEvent) => {
+                    // 通用事件处理函数
+                    const handleSSEEvent = (event: MessageEvent) => {
                         if (!event?.data) return
                         const data = JSON.parse(event.data) as BaseEventItem
                         handleEvent(data, source)
+                    }
 
-                    })
+                    // 监听所有可能的事件类型
+                    source.addEventListener('message', handleSSEEvent)
+                    source.addEventListener('STARTED', handleSSEEvent)
+                    source.addEventListener('PROGRESS', handleSSEEvent)
+                    source.addEventListener('AGENT_SELECTED', handleSSEEvent)
+                    source.addEventListener('THINKING', handleSSEEvent)
+                    source.addEventListener('ACTION', handleSSEEvent)
+                    source.addEventListener('ACTING', handleSSEEvent)
+                    source.addEventListener('OBSERVING', handleSSEEvent)
+                    source.addEventListener('COLLABORATING', handleSSEEvent)
+                    source.addEventListener('PARTIAL_RESULT', handleSSEEvent)
+                    source.addEventListener('DONE', handleSSEEvent)
+                    source.addEventListener('EXECUTING', handleSSEEvent)
+                    source.addEventListener('ERROR', handleSSEEvent)
+                    source.addEventListener('TOOL', handleSSEEvent)
+                    source.addEventListener('DONEWITHWARNING', handleSSEEvent)
+                    source.addEventListener('TOOL_APPROVAL', handleSSEEvent)
+                    source.addEventListener('INTERACTION', handleSSEEvent)
+                    source.addEventListener('COMPLETED', handleSSEEvent)
 
                     source.addEventListener('error', (err: any) => {
                         connectionStatus.value.set('error')

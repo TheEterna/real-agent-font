@@ -50,7 +50,7 @@ const handleClick = () => {
         duration: 0.1,
         ease: "power2.in",
         onComplete: () => {
-          gsap.to(buttonRef.value, {
+          gsap.to(buttonRef.value || null, {
             scale: 1,
             duration: 0.2,
             ease: "back.out(1.7)"

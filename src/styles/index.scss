@@ -1,6 +1,9 @@
 @use "./_variables.scss" as *;
 @use "./_mixins.scss" as mixins;
 
+/* Import Tailwind CSS */
+@import "tailwindcss";
+
 /* Global base styles (optional) */
 :root {
   /* bridge SCSS tokens to CSS custom props if needed later */

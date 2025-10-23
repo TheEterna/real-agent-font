@@ -11,7 +11,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   active: false,
-  label: '启动!',
+  label: 'label',
   disabled: false
 })
 
@@ -34,50 +34,31 @@ let scanlineAnimation: gsap.core.Tween | null = null
 let cursorAnimation: gsap.core.Tween | null = null
 let codeAnimations: gsap.core.Timeline[] = []
 
-// 随机字符数组
 const codeChars = ['{', '}', '<', '>', '/', '\\', '=', ';', '(', ')', '[', ']', '$', '#', '@', '&', '*', '+', '-', '~', '`', '|', '0', '1']
 const hackTexts = ['sudo', 'npm', 'git', 'vim', 'cd', 'ls', 'cat', 'grep', 'ssh', 'curl', '>', '$', '#']
 
+// 点击处理
 const handleClick = () => {
-  if (props.disabled || !buttonRef.value) return
+  if (props.disabled) return
 
-  const button = buttonRef.value
-  // åå»ºéªå±ææ
-  const flash = document.createElement('div')
-  flash.className = 'terminal-flash'
-  button.appendChild(flash)
-
-  gsap.fromTo(flash,
-    { opacity: 0 },
-    {
-      opacity: 1,
-      duration: 0.05,
-      onComplete: () => {
-        gsap.to(flash, {
-          opacity: 0,
-          duration: 0.2,
-          onComplete: () => flash.remove()
-        })
-      }
-    }
-  )
-
-  // æé®åä¸ææ
-  gsap.fromTo(button,
-    { scale: 1 },
-    {
-      scale: 0.95,
-      duration: 0.1,
-      ease: "power2.in",
-      onComplete: () => {
-        gsap.to(button, {
-          scale: 1,
-          duration: 0.2,
-          ease: "back.out(1.7)"
-        })
-      }
-    }
-  )
+  // 点击波纹效果
+  if (buttonRef.value) {
+    gsap.fromTo(buttonRef.value,
+        { scale: 1 },
+        {
+          scale: 0.95,
+          duration: 0.1,
+          ease: "power2.in",
+          onComplete: () => {
+            gsap.to(buttonRef.value || null, {
+              scale: 1,
+              duration: 0.2,
+              ease: "back.out(1.7)"
+            })
+          }
+        }
+    )
+  }
 
   emit('click')
 }
@@ -95,7 +76,6 @@ const createFlyingChars = () => {
     char.textContent = codeChars[Math.floor(Math.random() * codeChars.length)]
     codeCharsRef.value.appendChild(char)
 
-    // 位置计算
     const angle = (i * 45) + Math.random() * 20 - 10
     const radius = 35 + Math.random() * 15
     const x = Math.cos(angle * Math.PI / 180) * radius
@@ -312,7 +292,7 @@ watch(() => props.active, (newVal) => {
   border-radius: 0.375rem;
   background: transparent;
   cursor: pointer;
-  font-family: 'Courier New', 'JetBrains Mono', monospace; /* 字体设置 */
+  font-family: 'Courier New', 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   font-weight: 600;
   color: #00ff00;
@@ -389,7 +369,6 @@ watch(() => props.active, (newVal) => {
     }
   }
 
-  // 	按钮内容
   .button-content {
     position: relative;
     display: flex;
@@ -410,7 +389,7 @@ watch(() => props.active, (newVal) => {
   }
 
   .terminal-cursor {
-    animation: none; /* GSAP 控制 */
+    animation: none;
     margin-left: 2px;
     color: #00ff00;
   }
@@ -450,7 +429,6 @@ watch(() => props.active, (newVal) => {
     }
   }
 
-  // æ¬æµ®ç¶æå¢å¼º
   &:hover:not(&--disabled) {
     .terminal-border {
       border-color: rgba(0, 255, 0, 0.5);
@@ -480,62 +458,68 @@ watch(() => props.active, (newVal) => {
     color: #00ff00;
     text-shadow: 0 0 12px #00ff00;
 
+    /* 增强的活跃状态背景 */
     &::before {
       background: linear-gradient(145deg,
-        rgba(0, 30, 0, 0.98) 0%,
-        rgba(5, 50, 5, 0.95) 50%,
-        rgba(0, 30, 0, 0.98) 100%
+        rgba(0, 50, 0, 0.98) 0%,
+        rgba(10, 80, 10, 0.95) 50%,
+        rgba(0, 50, 0, 0.98) 100%
       );
-      box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+      box-shadow:
+        inset 0 0 20px rgba(0, 255, 0, 0.15),
+        0 0 20px rgba(0, 255, 0, 0.2);
     }
 
     .terminal-border {
-      border-color: rgba(0, 255, 0, 0.8);
+      border-color: rgba(0, 255, 0, 0.9);
       box-shadow:
-        0 0 16px rgba(0, 255, 0, 0.3),
-        inset 0 0 8px rgba(0, 255, 0, 0.1);
+        0 0 20px rgba(0, 255, 0, 0.4),
+        inset 0 0 12px rgba(0, 255, 0, 0.15);
 
       &::before {
-        border-color: rgba(0, 255, 0, 0.3);
+        border-color: rgba(0, 255, 0, 0.4);
       }
 
       &::after {
         border-left-color: rgba(0, 255, 0, 0.9);
         border-top-color: rgba(0, 255, 0, 0.9);
-        box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
-        width: 8px;
-        height: 8px;
+        box-shadow: 0 0 12px rgba(0, 255, 0, 0.7);
+        width: 10px;
+        height: 10px;
       }
     }
 
     .matrix-bg {
-      opacity: 0.9;
+      opacity: 1;
       background: linear-gradient(
         0deg,
         transparent 0%,
-        rgba(0, 255, 0, 0.08) 20%,
-        rgba(0, 255, 0, 0.12) 40%,
-        rgba(0, 255, 0, 0.08) 60%,
+        rgba(0, 255, 0, 0.12) 20%,
+        rgba(0, 255, 0, 0.18) 40%,
+        rgba(0, 255, 0, 0.12) 60%,
         transparent 100%
       );
     }
 
     .scanline {
-      opacity: 0.5;
+      opacity: 0.7;
     }
 
+    /* 增强的发光外边框 */
     &::after {
       content: '';
       position: absolute;
-      inset: -2px;
+      inset: -3px;
       border-radius: inherit;
       background: linear-gradient(45deg,
-        rgba(0, 255, 0, 0.1) 0%,
-        transparent 50%,
-        rgba(0, 255, 0, 0.1) 100%
+        rgba(0, 255, 0, 0.2) 0%,
+        transparent 25%,
+        rgba(0, 255, 0, 0.15) 50%,
+        transparent 75%,
+        rgba(0, 255, 0, 0.2) 100%
       );
       background-size: 200% 200%;
-      animation: terminalActiveGlow 3s ease-in-out infinite;
+      animation: terminalActiveGlow 2s ease-in-out infinite;
       z-index: 0;
       pointer-events: none;
     }

@@ -13,6 +13,56 @@ $muted-color: #666;
 $section-height-mcp: 360px;
 $section-height-system: 360px;
 
+$jelly-pink-light: #ffebee;
+$jelly-pink: #fce4ec;
+$jelly-pink-deep: #f3bddb;
+
+$jelly-purple-light: #f3e5f5;
+$jelly-purple: #e1bee7;
+$jelly-purple-deep: #d1c4e9;
+
+$jelly-blue-light: #e3f2fd;
+$jelly-blue: #bbdefb;
+$jelly-blue-deep: #90caf9;
+
+$jelly-green-light: #e8f5e9;
+$jelly-green: #c8e6c9;
+$jelly-green-deep: #a5d6a7;
+
+$jelly-yellow-light: #fff8e1;
+$jelly-yellow: #ffeeba;
+$jelly-yellow-deep: #ffe082;
+
+$jelly-orange-light: #fff3e0;
+$jelly-orange: #ffe0b2;
+$jelly-orange-deep: #ffcc80;
+
+$jelly-cyan-light: #e0f7fa;
+$jelly-cyan: #b2ebf2;
+$jelly-cyan-deep: #80d8f0;
+
+$jelly-sky-light: #e3f2fd;
+$jelly-sky: #bbdefb;
+$jelly-sky-deep: #90caf9;
+
+
+$jelly-magenta-light: #fce4ec;
+$jelly-magenta: #f0bbdb;
+$jelly-magenta-deep: #e59ed6;
+
+$jelly-teal-light: #e0f2f1;
+$jelly-teal: #b2dfdb;
+$jelly-teal-deep: #80cbc4;
+
+$jelly-lavender-light: #f3e5f5;
+$jelly-lavender: #d1c4e9;
+$jelly-lavender-deep: #b39ddb;
+
+$jelly-rose-light: #ffebee;
+$jelly-rose: #f4cdd9;
+$jelly-rose-deep: #f0a6b7;
+
+
 // Scrollbar (optional)
 @mixin pretty-scrollbar {
   scrollbar-width: thin;
@@ -21,3 +71,4 @@ $section-height-system: 360px;
   &::-webkit-scrollbar-thumb { background: #c5cbd3; border-radius: 6px; }
   &::-webkit-scrollbar-track { background: transparent; }
 }
+

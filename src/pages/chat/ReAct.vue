@@ -85,7 +85,7 @@ const pushFilesWithValidation = (files: File[]) => {
   }
   if (added.length) attachments.value.push(...added)
 }
-const isLoading = ref(false)
+const isLoading = computed(() => taskStatus.value.status === 'running')
 const chatContent = ref<HTMLElement>()
 const showScrollButton = ref(false)
 // 发送可用状态（控制"亮起"）
@@ -228,7 +228,6 @@ const sendMessage = async () => {
   messages.value.push(userMessage)
   const currentMessage = inputMessage.value
   inputMessage.value = ''
-  isLoading.value = true
 
   // 滚动到底部
   await nextTick()
@@ -245,12 +244,9 @@ const sendMessage = async () => {
       message: '发送失败: ' + (error as Error).message,
       timestamp: new Date()
     })
+    // 出错时手动设置任务状态
+    taskStatus.value.set('error')
   } finally {
-    isLoading.value = false
-    connectionStatus.value.set('disconnected')
-    if (taskStatus.value.is('running')) {
-      taskStatus.value.set('error')
-    }
     // 清空已发送的附件
     attachments.value = []
   }

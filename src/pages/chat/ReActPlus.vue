@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {ref, onMounted, onUnmounted, nextTick, computed, h, watch} from 'vue'
+import {useModeSwitch} from '@/composables/useModeSwitch'
 import {UIMessage, MessageType, EventType} from '@/types/events'
 import {AgentType} from '@/types/session'
 import {useChatStore} from '@/stores/chatStore'
@@ -51,17 +52,48 @@ import 'highlight.js/styles/atom-one-light.css'
 import 'katex/dist/katex.min.css'
 import {NotificationType} from '@/types/notification'
 import {useMessageConfig} from '@/composables/useMessageConfig'
+import TerminalContainer from '@/components/terminal/TerminalContainer.vue'
 import {MessageStyle} from '@/types/messageConfig'
 import {ProgressInfo} from "@/types/status";
+import {useRoute, useRouter} from "vue-router";
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
 const inputMessage = ref('')
 const attachments = ref<Attachment[]>([])
+const router = useRouter()
+const route = useRoute()
+// 🎭 模式切换功能
+const {
+  currentMode,
+  currentModeConfig,
+  currentThemeClass,
+  isGeekMode,
+  isMultimodalMode,
+  isCommandMode,
+  switchMode
+} = useModeSwitch()
 
-// 🎭 输入模式状态
-type InputMode = 'geek' | 'multimodal' | 'command'
-const currentMode = ref<InputMode>('geek')
+// 🖥️ 终端界面状态管理
+const terminalRef = ref<InstanceType<typeof TerminalContainer>>()
+const terminalReady = ref(false)
+
+// 终端事件处理
+const handleTerminalReady = (terminal: any) => {
+  terminalReady.value = true
+  console.log('Terminal ready:', terminal)
+}
+
+const handleTerminalData = (data: string) => {
+  // 处理终端输入数据
+  console.log('Terminal data:', data)
+  // 这里可以处理终端命令，发送到后端等
+}
+
+const handleTerminalKey = (event: { key: string; domEvent: KeyboardEvent }) => {
+  // 处理特殊按键
+  console.log('Terminal key:', event)
+}
 
 // 消息配置 - 使用 ChatGPT 风格
 const {getMessageConfig, shouldCollapse} = useMessageConfig(MessageStyle.CHATGPT)
@@ -71,7 +103,7 @@ const pendingApprovals = ref<Map<string, any>>(new Map())
 const approvalResults = ref<Map<string, any>>(new Map())
 
 // UI状态管理
-const isLoading = ref(false)
+const isLoading = computed(() => taskStatus.value.is('running'))
 const chatContent = ref<HTMLElement>()
 const showScrollButton = ref(false)
 const rightPanelCollapsed = ref(false)
@@ -350,7 +382,6 @@ const sendMessage = async () => {
   messages.value.push(userMessage)
   const currentMessage = inputMessage.value
   inputMessage.value = ''
-  isLoading.value = true
 
   // 滚动到底部
   await nextTick()
@@ -367,12 +398,9 @@ const sendMessage = async () => {
       message: '发送失败: ' + (error as Error).message,
       timestamp: new Date()
     })
+    // 出错时手动设置任务状态
+    taskStatus.value.set('error')
   } finally {
-    isLoading.value = false
-    connectionStatus.value.set('disconnected')
-    if (taskStatus.value.is('running')) {
-      taskStatus.value.set('error')
-    }
     // 清空已发送的附件
     attachments.value = []
   }
@@ -408,6 +436,32 @@ watch(messages, (val, oldVal) => {
     })
   }
 }, {deep: true})
+
+// 根据当前路由设置模式状态
+const syncModeFromRoute = () => {
+  const path = route.path
+  const queryMode = route.query.mode as InputMode
+
+  // 优先使用 URL 查询参数中的模式
+  if (queryMode && ['geek', 'multimodal', 'command'].includes(queryMode)) {
+    currentMode.value = queryMode
+    return
+  }
+
+  // 根据路径推断模式
+  if (path === '/chat/geek') {
+    currentMode.value = 'geek'
+  } else if (path === '/chat') {
+    currentMode.value = 'multimodal'
+  } else {
+    currentMode.value = 'multimodal' // 默认
+  }
+}
+
+// 监听路由变化同步模式
+watch(route, () => {
+  syncModeFromRoute()
+}, { immediate: true })
 
 // 输入区工具栏
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -514,61 +568,59 @@ const md = new MarkdownIt({
     .use(resolvePlugin(anchor))
     .use(resolvePlugin(mkatex))
 
-// 🐉 GSAP 动画系统 - 青龙之力全面接管
+// 🐉 GSAP 动画系统 - 性能优化版
 const initGSAPAnimations = () => {
   // ========== 1. 页面初始化动画 ==========
   if (appContainer.value) {
-    // 页面淡入 + 青龙觉醒效果
+    // 页面淡入效果 - 只在初始化时执行一次
     gsap.fromTo(appContainer.value,
         {opacity: 0, y: 20},
         {
           opacity: 1,
           y: 0,
-          duration: 0.8,
+          duration: 0.6,
           ease: "power3.out"
         }
     )
   }
 
-  // ========== 2. 进度指示器 - 翡翠韵动 ==========
+  // ========== 2. 进度指示器 - 优化版 ==========
   const pulseRings = document.querySelectorAll('.pulse-ring')
   const pulseDots = document.querySelectorAll('.pulse-dot')
 
-  // 翡翠外环 - 温润流转
-  pulseRings.forEach(ring => {
-    gsap.to(ring, {
-      scale: 1.02,               // ✅ 微妙呼吸，替代激烈缩放
-      rotation: 3,               // ✅ 柔和旋转，替代大幅度转动
-      x: 1,                      // ✅ 微妙飘动
-      y: 0.5,                    // ✅ 轻柔浮动
-      filter: "hue-rotate(2deg)", // ✅ 翡翠色彩流转
-      duration: 3.8,             // ✅ 缓慢节奏
-      ease: "sine.inOut",
-      repeat: -1,
-      yoyo: true
+  // 如果元素存在才执行动画，避免无效的查询
+  if (pulseRings.length > 0) {
+    pulseRings.forEach(ring => {
+      gsap.to(ring, {
+        scale: 1.01,
+        rotation: 2,
+        duration: 3,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true
+      })
     })
-  })
+  }
 
-  // 翡翠内核 - 静谧韵律
-  pulseDots.forEach(dot => {
-    gsap.to(dot, {
-      scale: 1.03,               // ✅ 轻微膨胀，去掉opacity变化
-      rotation: -2,              // ✅ 反向微转，营造和谐
-      x: -0.5,                   // ✅ 微妙对位移动
-      borderRadius: "52%",       // ✅ 形状微调，增加生动感
-      duration: 4.2,             // ✅ 与外环错峰
-      ease: "sine.inOut",
-      repeat: -1,
-      yoyo: true
+  if (pulseDots.length > 0) {
+    pulseDots.forEach(dot => {
+      gsap.to(dot, {
+        scale: 1.02,
+        rotation: -1,
+        duration: 3.5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true
+      })
     })
-  })
+  }
 }
 
 // ========== 3. 消息出现动画 - 青龙升腾 ==========
 const animateMessageEntry = (element: HTMLElement) => {
   gsap.fromTo(element,
       {
-        opacity: 0,
+        opacity: 0.9,
         y: 20,
         scale: 0.98
       },
@@ -629,168 +681,60 @@ const setupMessageHoverEffects = () => {
   })
 }
 
-// ========== 5. 输入框聚焦动效 - 青龙觉醒 ==========
-const setupInputAnimations = () => {
-  const inputContainer = document.querySelector('.input-container')
+// ========== 5. 输入框聚焦动效 - 已移除，使用高级版本 ==========
+// 已合并到 setupInputContainerAdvancedAnimations() 和 setupTextareaAdvancedAnimations()
 
-  if (!inputContainer) return
+// ========== 6. 发送按钮动效 - 已移除，使用高级版本 ==========
+// 已合并到 setupSendButtonAdvancedAnimations()
 
-  const textarea = inputContainer.querySelector('textarea')
-
-  if (textarea) {
-    textarea.addEventListener('focus', () => {
-      gsap.to(inputContainer, {
-        y: -3,
-        scale: 1.01,
-        boxShadow: '0 0 0 4px rgba(91, 138, 138, 0.15), 0 8px 32px rgba(91, 138, 138, 0.12), 0 0 32px rgba(91, 138, 138, 0.2)',
-        duration: 0.4,
-        ease: "back.out(1.5)"
-      })
-    })
-
-    textarea.addEventListener('blur', () => {
-      gsap.to(inputContainer, {
-        y: 0,
-        scale: 1,
-        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
-        duration: 0.3,
-        ease: "power2.out"
-      })
-    })
-  }
-}
-
-// ========== 6. 发送按钮动效 - 青龙之力爆发 ==========
-const setupSendButtonAnimation = () => {
-  const sendButton = document.querySelector('.send-button')
-
-  if (!sendButton) return
-
-  // 按钮 hover 效果
-  sendButton.addEventListener('mouseenter', () => {
-    gsap.to(sendButton, {
-      scale: 1.05,
-      boxShadow: '0 0 24px rgba(91, 138, 138, 0.4), 0 0 48px rgba(91, 138, 138, 0.2)',
-      duration: 0.3,
-      ease: "back.out(1.5)"
-    })
-  })
-
-  sendButton.addEventListener('mouseleave', () => {
-    gsap.to(sendButton, {
-      scale: 1,
-      boxShadow: '0 4px 12px rgba(91, 138, 138, 0.2)',
-      duration: 0.3,
-      ease: "power2.out"
-    })
-  })
-
-  // 按钮点击效果
-  sendButton.addEventListener('mousedown', () => {
-    gsap.to(sendButton, {
-      scale: 0.95,
-      duration: 0.1,
-      ease: "power2.in"
-    })
-  })
-
-  sendButton.addEventListener('mouseup', () => {
-    gsap.to(sendButton, {
-      scale: 1.05,
-      duration: 0.2,
-      ease: "back.out(2)"
-    })
-  })
-}
-
-// ========== 8. 滚动到底部按钮 - 龙泉青瓷禅意 ==========
+// ========== 8. 滚动到底部按钮 - 简化版 ==========
 const setupScrollButtonAnimation = () => {
   const scrollButton = document.querySelector('.scroll-to-bottom button')
 
   if (!scrollButton) return
 
-  // 龙泉青瓷静谧脉动 - 去掉激烈变化
+  // 简化的呼吸效果
   gsap.to(scrollButton, {
-    scale: 1.03,                          // ✅ 微妙呼吸
-    y: -1,                                // ✅ 轻柔浮动
-    filter: "hue-rotate(1deg)",          // ✅ 青瓷色彩微调
-    borderRadius: "52%",                 // ✅ 形状微变
-    duration: 3.5,                       // ✅ 缓慢禅意节奏
+    scale: 1.02,
+    duration: 2,
     ease: "sine.inOut",
     repeat: -1,
     yoyo: true
   })
 
-  // Hover 增强 - 龙泉青瓷觉醒
+  // 简化的 Hover 效果
   scrollButton.addEventListener('mouseenter', () => {
     gsap.to(scrollButton, {
-      scale: 1.08,                       // ✅ 轻度放大
-      y: -3,                             // ✅ 上浮
-      rotation: 8,                       // ✅ 微旋，替代激烈360度
-      filter: "hue-rotate(3deg) brightness(1.05)", // ✅ 青瓷光华
-      duration: 0.6,
-      ease: "back.out(1.3)"
+      scale: 1.05,
+      y: -2,
+      duration: 0.3,
+      ease: "power2.out"
     })
   })
 
   scrollButton.addEventListener('mouseleave', () => {
     gsap.to(scrollButton, {
-      rotation: 0,
-      y: -1,                             // ✅ 回到浮动状态
-      filter: "hue-rotate(1deg) brightness(1)",
-      duration: 0.6,
+      scale: 1.02,
+      y: 0,
+      duration: 0.3,
       ease: "power2.out"
     })
   })
 }
 
-// ========== 9. 附件预览动画 ==========
-const animateAttachmentEntry = (element: HTMLElement) => {
-  gsap.fromTo(element,
-      {
-        opacity: 0,
-        scale: 0.8,
-        y: -10
-      },
-      {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.3,
-        ease: "back.out(1.5)"
-      }
-  )
-}
-
-// ========== 10. 加载点动画 - 白玉温润韵律 ==========
+// ========== 10. 加载点动画 - 简化版 ==========
 const setupLoadingDotsAnimation = () => {
   const loadingDots = document.querySelectorAll('.loading-dots span')
 
-  // 白玉韵律 - 温润流动，去掉闪烁的opacity
+  // 简化的加载点动画
   loadingDots.forEach((dot, index) => {
-    const timeline = gsap.timeline({repeat: -1})
-
-    // 上升阶段 - 白玉浮升
-    timeline.to(dot, {
-      y: -3,                    // ✅ 微妙浮动，替代过大移动
-      scale: 1.06,              // ✅ 轻微膨胀
-      rotation: 2,              // ✅ 微转
-      borderRadius: "45%",      // ✅ 形状轻柔变化
-      filter: "brightness(1.05)", // ✅ 白玉光泽
-      duration: 1.4,            // ✅ 缓慢节奏
-      ease: "sine.inOut",
-      delay: index * 0.35       // ✅ 延长错峰时间
-    })
-
-    // 下沉阶段 - 白玉沉静
-    .to(dot, {
-      y: 1,                     // ✅ 轻柔下沉
-      scale: 0.96,              // ✅ 微收缩
-      rotation: -1,             // ✅ 反向微转
-      borderRadius: "55%",      // ✅ 形状回归
-      filter: "brightness(0.98)", // ✅ 光泽回落
-      duration: 1.4,
-      ease: "sine.inOut"
+    gsap.to(dot, {
+      y: -4,
+      duration: 0.6,
+      ease: "power2.inOut",
+      repeat: -1,
+      yoyo: true,
+      delay: index * 0.2
     })
   })
 }
@@ -799,268 +743,195 @@ const setupLoadingDotsAnimation = () => {
 // ========== 🎨 高级 GSAP 动画系统 - 替代 CSS keyframes ==========
 
 /**
- * 输入容器汉白玉龙泉青瓷动画
- * 替代: dragonGlaze, jadeShimmer, dragonJadeBreathing, dragonJadeRotation
+ * 输入容器简化动画
+ * 移除复杂的背景位置动画，保留基本的聚焦效果
  */
 const setupInputContainerAdvancedAnimations = () => {
   const inputContainer = document.querySelector('.input-container')
   if (!inputContainer) return
 
-  const beforeElement = inputContainer
-  const afterElement = inputContainer
-
-  // 1. 龙泉青瓷顶部流光动画 (::after) - 替代 dragonGlaze
-  gsap.to(afterElement, {
-    backgroundPosition: '200% center',
-    duration: 6,
-    ease: 'none',
-    repeat: -1,
-    yoyo: true
-  })
-
-  // 2. 汉白玉深层纹理流动动画 (::before) - 替代 jadeShimmer
-  const shimmerTimeline = gsap.timeline({repeat: -1, yoyo: false})
-  shimmerTimeline.to(beforeElement, {
-    backgroundPosition: '25% 25%, 75% 75%, 25% 75%, 75% 25%, 75% 75%, 25% 25%, 75% 75%',
-    opacity: 0.8,
-    duration: 2,
-    ease: 'sine.inOut'
-  })
-  shimmerTimeline.to(beforeElement, {
-    backgroundPosition: '50% 50%, 50% 50%, 50% 50%, 50% 50%, 100% 100%, 50% 50%, 50% 50%',
-    opacity: 1,
-    duration: 2,
-    ease: 'sine.inOut'
-  })
-  shimmerTimeline.to(beforeElement, {
-    backgroundPosition: '75% 75%, 25% 25%, 75% 25%, 25% 75%, 25% 25%, 75% 75%, 25% 25%',
-    opacity: 0.8,
-    duration: 2,
-    ease: 'sine.inOut'
-  })
-  shimmerTimeline.to(beforeElement, {
-    backgroundPosition: '100% 100%, 0% 0%, 100% 0%, 0% 100%, 0% 0%, 100% 100%, 0% 0%',
-    opacity: 0.6,
-    duration: 2,
-    ease: 'sine.inOut'
-  })
-
-  // 监听聚焦状态，启动汉白玉龙泉青瓷呼吸动效
   const textarea = inputContainer.querySelector('textarea')
   if (textarea) {
-    let breathingAnimation: gsap.core.Tween | null = null
+    let focusAnimation: gsap.core.Tween | null = null
 
     textarea.addEventListener('focus', () => {
-      // 青龙旋转光环 - 替代 dragonJadeRotation
-      const rotationElement = document.createElement('div')
-      rotationElement.className = 'dragon-jade-rotation-ring'
-      inputContainer.appendChild(rotationElement)
-
-      gsap.to(rotationElement, {
-        rotation: 360,
-        scale: 1.02,
-        opacity: 0.7,
-        duration: 6,
-        ease: 'none',
-        repeat: -1
-      })
-
-      // 汉白玉龙泉青瓷禅意呼吸 - 替代复杂阴影变化
-      breathingAnimation = gsap.to(inputContainer, {
-        borderColor: "rgba(107, 154, 152, 0.28)",     // ✅ 边框深浅变化
-        transform: "scale(1.003) translateY(-0.8px)", // ✅ 微妙浮升
-        filter: "brightness(1.01) hue-rotate(1deg)",  // ✅ 青瓷光泽流转
-        borderRadius: "1.52rem",                      // ✅ 圆角微调
-        duration: 4.5,                                // ✅ 超缓慢禅意节奏
-        ease: 'sine.inOut',
-        repeat: -1,
-        yoyo: true
+      // 简化的聚焦效果
+      focusAnimation = gsap.to(inputContainer, {
+        borderColor: "rgba(107, 154, 152, 0.3)",
+        y: -1,
+        duration: 0.3,
+        ease: 'power2.out'
       })
     })
 
     textarea.addEventListener('blur', () => {
-      // 停止呼吸动画
-      if (breathingAnimation) {
-        breathingAnimation.kill()
+      if (focusAnimation) {
+        focusAnimation.kill()
       }
 
-      // 移除旋转光环
-      const rotationRing = inputContainer.querySelector('.dragon-jade-rotation-ring')
-      if (rotationRing) {
-        gsap.to(rotationRing, {
-          opacity: 0,
-          duration: 0.3,
-          onComplete: () => rotationRing.remove()
-        })
-      }
+      gsap.to(inputContainer, {
+        borderColor: "rgba(107, 154, 152, 0.15)",
+        y: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+      })
     })
   }
 }
 
 /**
- * Textarea 龙泉青瓷光晕动画
- * 替代: textareaJadeGlow
+ * Textarea 简化动画
+ * 移除复杂的光晕效果，保留基本交互反馈
  */
 const setupTextareaAdvancedAnimations = () => {
   const textarea = document.querySelector('.input-area textarea')
   if (!textarea) return
 
-  let glowAnimation: gsap.core.Tween | null = null
+  let focusAnimation: gsap.core.Tween | null = null
 
   textarea.addEventListener('focus', () => {
-    // 聚焦时的白玉温润光晕 - 替代复杂阴影
-    glowAnimation = gsap.to(textarea, {
-      borderColor: "rgba(107, 154, 152, 0.2)",      // ✅ 边框轻柔变化
-      transform: "scale(1.001) translateY(-0.3px)", // ✅ 微妙浮升
-      filter: "brightness(1.02)",                   // ✅ 白玉光泽
-      borderRadius: "0.88rem",                      // ✅ 圆角微调
-      background: "rgba(255, 255, 255, 0.98)",      // ✅ 背景亮度微调
-      duration: 3.8,                                // ✅ 温润节奏
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true
+    // 简化的聚焦效果
+    focusAnimation = gsap.to(textarea, {
+      scale: 1.001,
+      duration: 0.2,
+      ease: 'power2.out'
     })
   })
 
   textarea.addEventListener('blur', () => {
-    if (glowAnimation) {
-      glowAnimation.kill()
+    if (focusAnimation) {
+      focusAnimation.kill()
     }
+
+    gsap.to(textarea, {
+      scale: 1,
+      duration: 0.2,
+      ease: 'power2.out'
+    })
   })
 }
 
 /**
- * 发送按钮持续动画
- * 替代: sendButtonJadeBreathing, jadeInnerFlow
+ * 发送按钮简化动画 - 添加防抖优化
+ * 移除复杂的呼吸和流光效果，保持简洁的交互反馈
  */
 const setupSendButtonAdvancedAnimations = () => {
   const sendButton = document.querySelector('.send-button')
   if (!sendButton) return
 
-  let breathingAnimation: gsap.core.Tween | null = null
-  let innerFlowAnimation: gsap.core.Tween | null = null
+  let hoverAnimation: gsap.core.Tween | null = null
+  let isAnimating = false
 
   sendButton.addEventListener('mouseenter', () => {
-    // 发送按钮青瓷觉醒 - 替代复杂阴影呼吸
-    breathingAnimation = gsap.to(sendButton, {
-      borderColor: "rgba(107, 154, 152, 0.6)",       // ✅ 边框觉醒
-      transform: "scale(1.04) translateY(-1px)",      // ✅ 微妙浮升放大
-      filter: "brightness(1.08) hue-rotate(2deg)",    // ✅ 青瓷光华
-      borderRadius: "0.92rem",                        // ✅ 圆角微调
-      background: "linear-gradient(145deg, rgba(74, 104, 104, 1), rgba(91, 138, 138, 0.98))", // ✅ 渐变微调
-      duration: 3.2,                                  // ✅ 青瓷节奏
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true
-    })
+    // 防抖：如果正在动画中，不重复执行
+    if (isAnimating) return
 
-    // 简化内在流光 - 按钮整体微韵动
-    innerFlowAnimation = gsap.to(sendButton, {
-      boxShadow: "0 4px 16px rgba(91, 138, 138, 0.25)", // ✅ 简化阴影
-      duration: 4,                                       // ✅ 缓慢流动
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true
+    isAnimating = true
+    // 简化的发送按钮悬浮效果
+    hoverAnimation = gsap.to(sendButton, {
+      y: -1,
+      duration: 0.2,
+      ease: 'power2.out',
+      onComplete: () => { isAnimating = false }
     })
   })
 
   sendButton.addEventListener('mouseleave', () => {
-    if (breathingAnimation) breathingAnimation.kill()
-    if (innerFlowAnimation) innerFlowAnimation.kill()
+    if (hoverAnimation) hoverAnimation.kill()
+
+    gsap.to(sendButton, {
+      y: 0,
+      duration: 0.2,
+      ease: 'power2.out',
+      onComplete: () => { isAnimating = false }
+    })
   })
 }
 
 /**
- * 工具栏按钮涟漪动画
- * 替代: dragonRipple
+ * 工具栏按钮简化动画 - 添加防抖优化
+ * 移除复杂的涟漪创建，使用简单的缩放效果
  */
 const setupToolbarAdvancedAnimations = () => {
   const toolbarButtons = document.querySelectorAll('.input-toolbar button')
 
   toolbarButtons.forEach(button => {
-    button.addEventListener('mouseenter', () => {
-      // 创建涟漪元素
-      const ripple = document.createElement('div')
-      ripple.className = 'gsap-ripple-effect'
-      button.appendChild(ripple)
+    let isAnimating = false
 
-      // 涟漪扩散动画 - 替代 dragonRipple
-      gsap.timeline()
-          .fromTo(ripple,
-              {scale: 0.9, opacity: 0.8},
-              {scale: 1.05, opacity: 0.4, duration: 0.5, ease: 'power2.out'}
-          )
-          .to(ripple,
-              {scale: 1.15, opacity: 0, duration: 0.7, ease: 'power2.out'}
-          )
-          .then(() => ripple.remove())
+    button.addEventListener('mouseenter', () => {
+      if (isAnimating) return
+
+      isAnimating = true
+      // 简化的悬浮效果
+      gsap.to(button, {
+        scale: 1.05,
+        duration: 0.2,
+        ease: 'power2.out',
+        onComplete: () => { isAnimating = false }
+      })
+    })
+
+    button.addEventListener('mouseleave', () => {
+      gsap.to(button, {
+        scale: 1,
+        duration: 0.2,
+        ease: 'power2.out',
+        onComplete: () => { isAnimating = false }
+      })
+    })
+
+    button.addEventListener('click', () => {
+      // 简化的点击反馈 - 只在不是动画中时执行
+      if (!isAnimating) {
+        isAnimating = true
+        gsap.to(button, {
+          scale: 0.95,
+          duration: 0.1,
+          ease: 'power2.in',
+          onComplete: () => {
+            gsap.to(button, {
+              scale: 1.05,
+              duration: 0.1,
+              ease: 'power2.out',
+              onComplete: () => { isAnimating = false }
+            })
+          }
+        })
+      }
     })
   })
 }
 
 /**
- * 附件卡片光泽动画
- * 替代: shimmer
+ * 附件卡片简化动画
+ * 移除复杂的光泽流动，使用简单的悬浮效果
  */
 const setupAttachmentAdvancedAnimations = () => {
   const attachmentChips = document.querySelectorAll('.attachment-chip')
 
   attachmentChips.forEach(chip => {
     chip.addEventListener('mouseenter', () => {
-      const beforeElement = chip
+      // 简化的悬浮效果
+      gsap.to(chip, {
+        y: -2,
+        scale: 1.02,
+        duration: 0.2,
+        ease: 'power2.out'
+      })
+    })
 
-      // 斜向光泽流动 - 替代 shimmer
-      gsap.fromTo(beforeElement,
-          {backgroundPosition: '-100% center'},
-          {
-            backgroundPosition: '100% center',
-            duration: 2,
-            ease: 'power2.inOut'
-          }
-      )
+    chip.addEventListener('mouseleave', () => {
+      gsap.to(chip, {
+        y: 0,
+        scale: 1,
+        duration: 0.2,
+        ease: 'power2.out'
+      })
     })
   })
 }
 
-/**
- * 通用涟漪效果
- * 替代: dragonRipple, spinRipple
- */
-const createRippleEffect = (element: Element, config = {}) => {
-  const defaultConfig = {
-    duration: 1.2,
-    scale: 1.3,
-    rotation: 360,
-    ease: 'power2.out'
-  }
 
-  const finalConfig = {...defaultConfig, ...config}
-
-  gsap.fromTo(element,
-      {scale: 1, rotation: 0, opacity: 0.6},
-      {
-        scale: finalConfig.scale,
-        rotation: finalConfig.rotation,
-        opacity: 0,
-        duration: finalConfig.duration,
-        ease: finalConfig.ease
-      }
-  )
-}
-
-/**
- * 青光脉动效果
- * 替代: dragonPulse
- */
-const createPulseEffect = (element: Element) => {
-  return gsap.to(element, {
-    boxShadow: '0 0 0 8px var(--brand-glow), var(--shadow-large)',
-    duration: 2,
-    ease: 'sine.inOut',
-    repeat: -1,
-    yoyo: true
-  })
-}
 
 // 组件挂载
 onMounted(() => {
@@ -1389,7 +1260,7 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
     messages.value = testMessages
   }
 
-  // 🐉 初始化 GSAP 动画系统 - 青龙觉醒
+  // 🐉 初始化 GSAP 动画系统 - 简化版
   nextTick(() => {
     // 1. 页面初始化 + 进度指示器
     initGSAPAnimations()
@@ -1397,35 +1268,22 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
     // 2. 消息 hover 效果
     setupMessageHoverEffects()
 
-    // 3. 输入框动画
-    setupInputAnimations()
+    // 3. 输入相关动画（合并基础和高级动画）
+    setupInputContainerAdvancedAnimations()
+    setupTextareaAdvancedAnimations()
 
-    // 4. 发送按钮动画
-    setupSendButtonAnimation()
+    // 4. 发送按钮动画（只使用高级版本，避免重复）
+    setupSendButtonAdvancedAnimations()
 
-    // 5. 快捷操作动画
+    // 5. 工具栏和附件动画
+    setupToolbarAdvancedAnimations()
+    setupAttachmentAdvancedAnimations()
 
     // 6. 滚动按钮动画
     setupScrollButtonAnimation()
 
     // 7. 加载点动画
     setupLoadingDotsAnimation()
-
-    // ========== 🎨 高级 GSAP 动画 - 替代 CSS keyframes ==========
-    // 8. 输入容器汉白玉龙泉青瓷动画
-    setupInputContainerAdvancedAnimations()
-
-    // 9. Textarea 龙泉青瓷光晕动画
-    setupTextareaAdvancedAnimations()
-
-    // 10. 发送按钮持续动画
-    setupSendButtonAdvancedAnimations()
-
-    // 11. 工具栏按钮涟漪动画
-    setupToolbarAdvancedAnimations()
-
-    // 12. 附件卡片光泽动画
-    setupAttachmentAdvancedAnimations()
 
     // 监听滚动，控制下滑按钮显隐
     chatContent.value?.addEventListener('scroll', updateScrollButtonVisibility)
@@ -1439,7 +1297,45 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="appContainer" class="react-plus-app theme-react-plus">
+  <div ref="appContainer" :class="['react-plus-app', currentThemeClass]">
+    <!-- 🖥️ 极客模式：终端界面 -->
+    <template v-if="isGeekMode">
+
+      <div class="geek-mode-wrapper">
+        <!-- 快速模式切换栏 -->
+        <div class="geek-mode-header">
+          <div class="mode-info">
+            <span class="mode-label">🤖 极客模式</span>
+            <span class="session-info">Session: {{ sessionId }}</span>
+          </div>
+          <div class="mode-actions">
+            <button
+              class="exit-geek-btn"
+              @click="() => switchMode('multimodal')"
+              title="退出极客模式"
+            >
+              ⚡ 多模态模式
+            </button>
+          </div>
+        </div>
+
+        <TerminalContainer
+          ref="terminalRef"
+          :title="`Real Agent Terminal - Session ${sessionId}`"
+          :session-id="sessionId"
+          :enable-geek-mode="true"
+          :show-header="true"
+          :show-controls="true"
+          @terminal-ready="handleTerminalReady"
+          @data="handleTerminalData"
+          @key="handleTerminalKey"
+          class="geek-terminal-interface"
+        />
+      </div>
+    </template>
+
+    <!-- ⚡ 多模态模式：正常界面 -->
+    <template v-else>
     <!-- 主要内容区域 -->
     <div class="main-content">
       <!-- 顶部状态栏 -->
@@ -1502,41 +1398,41 @@ onUnmounted(() => {
 
       <div
           class="input-container"
-          :class="{ 'input-focused': canSend }"
           @dragover.prevent
           @drop="onDropFiles"
       >
         <!-- 🎭 模式选择器 -->
         <div class="mode-selector">
+          <!-- 📎 附件预览 -->
+          <div v-if="attachments.length" class="attachments-preview">
+            <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
+              <FileTextOutlined class="attachment-icon"/>
+              <span class="attachment-name">{{ attachment.name }}</span>
+              <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
+              <button
+                  size="small"
+                  @click="removeAttachment(attachment.name)"
+                  class="remove-btn"
+              >×
+              </button>
+            </div>
+          </div>
           <GeekModeButton
               :active="currentMode === 'geek'"
               :icon="RobotOutlined"
               label="极客模式"
-              @click="currentMode = 'geek'"
+              @click="() => switchMode('geek')"
           />
           <NeonModeButton
               :active="currentMode === 'multimodal'"
               :icon="ThunderboltOutlined"
               label="多模态模式"
               variant="multimodal"
-              @click="currentMode = 'multimodal'"
+              @click="() => switchMode('multimodal')"
           />
         </div>
 
-        <!-- 📎 附件预览 -->
-        <div v-if="attachments.length" class="attachments-preview">
-          <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
-            <FileTextOutlined class="attachment-icon"/>
-            <span class="attachment-name">{{ attachment.name }}</span>
-            <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
-            <button
-                size="small"
-                @click="removeAttachment(attachment.name)"
-                class="remove-btn"
-            >×
-            </button>
-          </div>
-        </div>
+
 
         <!-- ✍️ 输入区域（textarea + 发送按钮 + 工具栏） -->
         <div class="input-area">
@@ -1590,18 +1486,135 @@ onUnmounted(() => {
         accept=".txt,.md,.markdown,.java,.kt,.scala,.py,.go,.js,.mjs,.cjs,.ts,.tsx,.json,.yml,.yaml,.xml,.html,.css,.scss,.less,.vue,.svelte,.c,.cpp,.h,.hpp,.cs,.rs,.php,.rb,.swift,.m,.mm,.sql,.sh,.bat,.ps1,.ini,.conf,.log,.pdf,image/*"
         @change="onFileChange"
     />
-
+    </template>
 
   </div>
 </template>
 
 <style scoped lang="scss">
-/* =================================================================
-   🐉 "碧池藏龙" 青花瓷主题 - CELADON PORCELAIN THEME
-   Design Philosophy: 表面如碧水般宁静典雅，交互如青龙般蕴含力量
-   ================================================================= */
 
-/* ============= CSS VARIABLES - Design Tokens ============= */
+/* ============= 🖥️ 极客模式终端界面样式 ============= */
+.geek-mode-wrapper {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000000;
+}
+
+/* 极客模式快速切换头部 */
+.geek-mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+  border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  min-height: 40px;
+  z-index: 100;
+
+  .mode-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .mode-label {
+      font-weight: bold;
+      text-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+      letter-spacing: 1px;
+    }
+
+    .session-info {
+      color: rgba(0, 255, 0, 0.7);
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  }
+
+  .mode-actions {
+    .exit-geek-btn {
+      background: transparent;
+      border: 1px solid rgba(0, 255, 0, 0.4);
+      color: #00ff00;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+
+      &:hover {
+        background: rgba(0, 255, 0, 0.1);
+        border-color: rgba(0, 255, 0, 0.8);
+        box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+        text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+      }
+    }
+  }
+}
+
+.geek-terminal-interface {
+  flex: 1;
+  position: relative;
+
+  /* 确保终端占据剩余空间 */
+  :deep(.terminal-container) {
+    height: 100%;
+    border-radius: 0;
+
+    /* 强化极客模式的视觉效果 */
+    &.terminal-geek-mode {
+      border: 2px solid rgba(0, 255, 0, 0.4);
+      box-shadow:
+        0 0 30px rgba(0, 255, 0, 0.15),
+        inset 0 0 30px rgba(0, 255, 0, 0.08);
+
+      /* 增强矩阵背景效果 */
+      &::before {
+        background:
+          radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.04) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(0, 255, 0, 0.02) 0%, transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.01) 0%, transparent 70%);
+      }
+    }
+  }
+
+  /* 终端头部增强 */
+  :deep(.terminal-header) {
+    background: linear-gradient(135deg, #0a1a0a 0%, #1a2f1a 50%, #0f1f0f 100%);
+    border-bottom: 2px solid rgba(0, 255, 0, 0.4);
+    padding: 12px 20px;
+
+    .terminal-title {
+      .title-text {
+        font-size: 16px;
+        font-weight: bold;
+        text-shadow: 0 0 12px rgba(0, 255, 0, 0.7);
+      }
+    }
+
+    .status-indicator {
+      .status-text {
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+    }
+  }
+}
+
+/* ============= CSSVARIABLES - Design Tokens ============= */
 .react-plus-app {
   /* 🎨 青花瓷配色系统 - Celadon Color System */
   /* 背景 - 素雅瓷白 */
@@ -1742,25 +1755,6 @@ onUnmounted(() => {
   --message-warning-text: #A08038;
 }
 
-/* ============= 🐉 青龙动效系统 - 已全部迁移至 GSAP ============= */
-
-/*
-  所有关键帧动画已迁移至 GSAP 专业动效库，便于统一管理和维护：
-
-  ✅ dragonRipple → setupToolbarAdvancedAnimations() + createRippleEffect()
-  ✅ dragonPulse → createPulseEffect()
-  ✅ shimmer → setupAttachmentAdvancedAnimations()
-  ✅ spinRipple → createRippleEffect() with rotation
-  ✅ dragonGlaze → setupInputContainerAdvancedAnimations()
-  ✅ jadeShimmer → setupInputContainerAdvancedAnimations()
-  ✅ dragonJadeBreathing → setupInputContainerAdvancedAnimations()
-  ✅ dragonJadeRotation → setupInputContainerAdvancedAnimations()
-  ✅ textareaJadeGlow → setupTextareaAdvancedAnimations()
-  ✅ sendButtonJadeBreathing → setupSendButtonAdvancedAnimations()
-  ✅ jadeInnerFlow → setupSendButtonAdvancedAnimations()
-
-  详见：<script> 中的"高级 GSAP 动画系统"部分
-*/
 
 /* ============= BASE LAYOUT ============= */
 .react-plus-app {
@@ -1972,17 +1966,6 @@ onUnmounted(() => {
     gap: var(--space-lg);
   }
 
-  .message-wrapper {
-    /* 🐉 入场动画由 GSAP animateMessageEntry() 处理 */
-    transition: all var(--transition-normal);
-
-    &:hover {
-      /* 🐉 hover 动画由 GSAP setupMessageHoverEffects() 处理 */
-      .message-item {
-        box-shadow: var(--shadow-medium), -4px 0 12px var(--brand-glow);
-      }
-    }
-  }
 
   .message-item {
     transition: all var(--transition-normal);
@@ -2101,7 +2084,6 @@ onUnmounted(() => {
     height: 10px;
     border-radius: 50%;
     background: var(--brand-primary);
-    /* 🐉 波动动画由 GSAP setupLoadingDotsAnimation() 处理 */
     box-shadow: 0 0 8px var(--brand-glow);
   }
 
@@ -2138,10 +2120,6 @@ onUnmounted(() => {
   .loading-dots span:nth-child(3)::after {
     animation-delay: 0.4s;
   }
-
-  /* 🐉 以下动画已由 GSAP 接管 */
-  /* dragonDotPulse - 由 setupLoadingDotsAnimation() 实现 */
-  /* dragonDotRing - 由 GSAP 实现 */
 
   .loading-text {
     font-size: var(--font-size-sm);
@@ -2234,13 +2212,13 @@ onUnmounted(() => {
     margin: 0 auto;
     /* 汉白玉底纹 - 温润如玉的渐变 */
     background: linear-gradient(180deg,
-        rgba(253, 253, 253, 0.96) 0%,
-        rgba(250, 252, 252, 0.98) 15%,
-        rgba(248, 254, 254, 0.99) 35%,
-        rgba(255, 255, 255, 1) 55%,
-        rgba(252, 254, 254, 1) 75%,
-        rgba(250, 253, 253, 0.98) 90%,
-        rgba(248, 252, 252, 0.96) 100%
+        rgba(230, 245, 245, 0.90) 0%,
+        rgba(220, 240, 240, 0.95) 20%,
+        rgba(245, 250, 250, 0.98) 40%,
+        rgba(255, 255, 255, 1) 50%,
+        rgba(240, 248, 248, 1) 60%,
+        rgba(225, 238, 238, 0.95) 80%,
+        rgba(215, 232, 232, 0.90) 100%
     );
 
     /* 使用 border + box-shadow 替代 border-image（兼容圆角） */
@@ -2263,13 +2241,9 @@ onUnmounted(() => {
         inset 0 -1px 0 rgba(107, 154, 152, 0.08),
         inset 0 -2px 0 rgba(107, 154, 152, 0.02);
 
-    // transition: all var(--transition-spring);
     overflow: hidden;
-
-
   }
 
-  /* 已迁移至 GSAP: setupInputContainerAdvancedAnimations() */
 
   /* ============= ATTACHMENTS PREVIEW - 汉白玉雕琢 ============= */
   .attachments-preview {
@@ -2440,25 +2414,6 @@ onUnmounted(() => {
 
   /* ============= INPUT CONTAINER - 汉白玉龙泉青瓷极致融合 ============= */
 
-  /* 聚焦时的龙泉青瓷气息环绕 */
-  .input-focused::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: inherit;
-    background: conic-gradient(
-            from 0deg,
-            rgba(91, 138, 138, 0.3) 0deg,
-            rgba(107, 154, 152, 0.2) 90deg,
-            rgba(255, 255, 255, 0.4) 180deg,
-            rgba(107, 154, 152, 0.2) 270deg,
-            rgba(91, 138, 138, 0.3) 360deg
-    );
-    z-index: -1;
-    opacity: 0.6;
-    /* 动画已迁移至 GSAP: setupInputContainerAdvancedAnimations() */
-  }
-
 
   /* ============= INPUT TOOLBAR FLOATING - 浮动工具栏（绝对定位于输入框左下角外部）============= */
 
@@ -2467,14 +2422,22 @@ onUnmounted(() => {
   .mode-selector {
     display: flex;
     align-items: center; /* 确保按钮垂直对齐 */
-    gap: var(--space-md);
-    padding: var(--space-md) var(--space-xl);
+    gap: var(--space-lg); /* 增加按钮间距 */
+    padding: var(--space-lg) var(--space-xl);
     background: linear-gradient(180deg,
         rgba(255, 255, 255, 0.9) 0%,
         rgba(248, 252, 252, 0.85) 100%
     );
     border-bottom: 1px solid rgba(107, 154, 152, 0.08);
+    /* 确保按钮不被遮挡 */
+    z-index: 10;
+    position: relative;
 
+    /* 确保按钮可以接收点击事件 */
+    > * {
+      pointer-events: auto;
+      z-index: 11;
+    }
 
     span {
       white-space: nowrap;
@@ -2552,6 +2515,8 @@ onUnmounted(() => {
 
     /* ===== Send Button 样式 ===== */
     .send-button {
+      display: flex;
+      align-items: center;
       position: absolute;
       right: var(--space-2xl);
       top: 50%;
@@ -2582,7 +2547,6 @@ onUnmounted(() => {
       color: rgba(255, 255, 255, 0.98) !important;
 
       /* 使用 box-shadow 模拟渐变边框（兼容圆角）+ 汉白玉按钮深层阴影系统 */
-      border: none !important;
       box-shadow: /* 青瓷边缘光晕（模拟 border-image） */
           0 0 0 1px rgba(255, 255, 255, 0.3),
           0 0 0 2px rgba(107, 154, 152, 0.4),
@@ -2626,14 +2590,14 @@ onUnmounted(() => {
 
         /* 龙泉青瓷觉醒状态 */
         background: linear-gradient(145deg,
-            rgba(58, 95, 95, 1) 0%,
-            rgba(74, 104, 104, 0.98) 15%,
-            rgba(58, 95, 95, 1) 30%,
-            rgba(74, 104, 104, 0.99) 45%,
-            rgba(58, 95, 95, 1) 55%,
-            rgba(74, 104, 104, 0.98) 70%,
-            rgba(58, 95, 95, 1) 85%,
-            rgba(74, 104, 104, 0.98) 100%
+            rgba(89, 126, 126, 1) 0%,
+            rgba(105, 135, 135, 0.98) 15%,
+            rgba(89, 126, 126, 1) 30%,
+            rgba(105, 135, 135, 0.99) 45%,
+            rgba(89, 126, 126, 1) 55%,
+            rgba(105, 135, 135, 0.98) 70%,
+            rgba(89, 126, 126, 1) 85%,
+            rgba(105, 135, 135, 0.98) 100%
         ) !important;
 
         /* 使用 box-shadow 模拟龙泉青瓷觉醒边缘（兼容圆角）+ 汉白玉龙泉青瓷神韵四射 */
@@ -2657,16 +2621,6 @@ onUnmounted(() => {
 
         /* 动画已迁移至 GSAP: setupSendButtonAdvancedAnimations() */
 
-        &::before {
-          opacity: 1;
-          /* 动画已迁移至 GSAP */
-        }
-
-        &::after {
-          opacity: 0.9;
-          transform: scale(1.02);
-          /* 动画已迁移至 GSAP */
-        }
       }
 
       &:active:not(:disabled) {
@@ -2703,11 +2657,6 @@ onUnmounted(() => {
             0 2px 8px rgba(139, 157, 157, 0.15),
               /* 内部高光 */
             inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-
-        &::before,
-        &::after {
-          opacity: 0 !important;
-        }
       }
     }
 
