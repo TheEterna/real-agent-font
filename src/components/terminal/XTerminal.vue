@@ -96,6 +96,64 @@ const getTerminalConfig = (): TerminalConfig => {
   }
 }
 
+// 确保终端完全就绪的检查函数
+const ensureTerminalReady = async (maxWait = 3000, checkInterval = 100) => {
+  return new Promise<void>((resolve, reject) => {
+    const startTime = Date.now()
+
+    const checkReady = () => {
+      if (!terminal.value) {
+        reject(new Error('Terminal instance not available'))
+        return
+      }
+
+      try {
+        // 检查终端的基础属性是否可用
+        const hasRows = terminal.value.rows > 0
+        const hasCols = terminal.value.cols > 0
+        const hasElement = !!terminal.value.element
+
+        // 尝试一个简单的写入测试
+        const originalContent = terminal.value.buffer.active.getLine(0)?.translateToString() || ''
+
+        if (hasRows && hasCols && hasElement) {
+          console.log('✅ Terminal is fully ready:', {
+            rows: terminal.value.rows,
+            cols: terminal.value.cols,
+            hasElement,
+            originalContent: originalContent.substring(0, 20) + '...'
+          })
+          resolve()
+          return
+        }
+
+        // 检查是否超时
+        if (Date.now() - startTime > maxWait) {
+          reject(new Error(`Terminal ready check timeout after ${maxWait}ms`))
+          return
+        }
+
+        // 继续检查
+        setTimeout(checkReady, checkInterval)
+
+      } catch (error) {
+        console.warn('Terminal ready check error:', error)
+        // 检查是否超时
+        if (Date.now() - startTime > maxWait) {
+          reject(error)
+          return
+        }
+
+        // 继续尝试
+        setTimeout(checkReady, checkInterval)
+      }
+    }
+
+    // 开始检查
+    checkReady()
+  })
+}
+
 // 初始化终端
 const initTerminal = async () => {
   if (!terminalContainer.value || isDestroyed.value) {
@@ -126,6 +184,9 @@ const initTerminal = async () => {
 
     // 自适应尺寸
     fitTerminal()
+
+    // 等待终端完全就绪 - 新增全面检查
+    await ensureTerminalReady()
 
     // 设置就绪状态
     isReady.value = true

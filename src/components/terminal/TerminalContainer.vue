@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import XTerminal from './XTerminal.vue'
+import CommandSuggestions from './CommandSuggestions.vue'
 import type { GeekModeTheme } from '@/types/terminal/themes'
 import type { TerminalConfig } from '@/types/terminal'
 import { CodeOutlined, SettingOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
+import { useCommandInput } from '@/composables/terminal/useCommandInput'
+import type { ParsedCommand, CommandParseError } from '@/types/terminal/commands'
 
 // Props 定义
 interface Props {
@@ -32,6 +35,7 @@ interface Emits {
   minimize: []
   maximize: []
   settings: []
+  reconnect: []
 }
 
 const emit = defineEmits<Emits>()
@@ -40,6 +44,33 @@ const emit = defineEmits<Emits>()
 const terminalRef = ref<InstanceType<typeof XTerminal>>()
 const isFullscreen = ref(false)
 const connectionStatus = ref<'connected' | 'disconnected' | 'connecting'>('connecting')
+const currentCommandLine = ref('')
+const commandPrompt = ref('$ ')
+const connectionAttempts = ref(0)
+const maxConnectionAttempts = ref(5)
+const connectionRetryInterval = ref<NodeJS.Timeout | null>(null)
+
+// 命令输入处理
+const {
+  currentInput,
+  suggestions,
+  selectedSuggestionIndex,
+  showSuggestions,
+  isLoading,
+  parseResult,
+  handleInput,
+  handleTabComplete,
+  selectPreviousSuggestion,
+  selectNextSuggestion,
+  selectSuggestion,
+  selectPreviousHistory,
+  selectNextHistory,
+  executeCommand,
+  clearInput
+} = useCommandInput({
+  onExecute: handleCommandExecute,
+  onError: handleCommandError
+})
 
 // 计算属性
 const containerClasses = computed(() => ({
@@ -60,21 +91,296 @@ const statusColor = computed(() => {
 
 // 终端事件处理
 const handleTerminalReady = (terminal: any) => {
-  connectionStatus.value = 'connected'
   emit('terminalReady', terminal)
 
-  // 显示欢迎信息
+  // 始终显示欢迎信息,无论连接状态如何
   if (props.enableGeekMode) {
-    showWelcomeMessage()
+    showWelcomeMessageWithRetry()
+  }
+
+  // 尝试连接服务器
+  attemptServerConnection()
+
+  // 设置命令行提示符
+  nextTick(() => {
+    showPrompt()
+  })
+}
+
+// 命令执行处理
+async function handleCommandExecute(parsed: ParsedCommand) {
+  try {
+    // 在终端显示执行的命令
+    terminalRef.value?.writeln(`\r\n${commandPrompt.value}${parsed.original}`)
+
+    // 处理本地命令（不需要后端）
+    const localResult = await handleLocalCommand(parsed)
+    if (localResult.handled) {
+      if (localResult.output) {
+        terminalRef.value?.writeln(localResult.output)
+      }
+      showPrompt()
+      return
+    }
+
+    // 需要后端处理的命令
+    terminalRef.value?.writeln('⚙️ 正在处理命令...')
+
+    // TODO: 调用后端API
+    // const response = await fetch('/api/terminal/execute', {
+    //   method: 'POST',
+    //   body: JSON.stringify(parsed)
+    // })
+
+    // 模拟后端响应
+    await new Promise(resolve => setTimeout(resolve, 500))
+    terminalRef.value?.writeln('✅ 命令执行成功（模拟）')
+
+    showPrompt()
+  } catch (error) {
+    terminalRef.value?.writeln(`❌ 错误: ${error instanceof Error ? error.message : '未知错误'}`)
+    showPrompt()
   }
 }
 
+// 处理本地命令
+async function handleLocalCommand(parsed: ParsedCommand): Promise<{ handled: boolean; output?: string }> {
+  switch (parsed.command.toLowerCase()) {
+    case 'clear':
+    case 'cls':
+      terminalRef.value?.clear()
+      return { handled: true }
+
+    case 'exit':
+    case 'quit':
+      terminalRef.value?.writeln('\r\n👋 再见！')
+      // 可以触发关闭事件
+      emit('close')
+      return { handled: true }
+
+    case 'help': {
+      const helpText = generateHelpText(parsed.args[0])
+      return { handled: true, output: helpText }
+    }
+
+    case 'history': {
+      // 显示命令历史
+      const historyText = generateHistoryText()
+      return { handled: true, output: historyText }
+    }
+
+    case 'reconnect': {
+      reconnect()
+      return { handled: true }
+    }
+
+    default:
+      return { handled: false }
+  }
+}
+
+// 生成帮助文本
+function generateHelpText(commandName?: string): string {
+  if (commandName) {
+    // 显示特定命令的帮助
+    const command = useCommandInput({ onExecute: () => {}, onError: () => {} }).parser.getCommand(commandName)
+    if (!command) {
+      return `❌ 未知命令: ${commandName}`
+    }
+
+    let help = `\r\n📋 命令: /${command.name}\n`
+    if (command.aliases && command.aliases.length > 0) {
+      help += `   别名: ${command.aliases.join(', ')}\n`
+    }
+    help += `   描述: ${command.description}\n`
+    help += `   用法: ${command.usage}\n`
+
+    if (command.examples && command.examples.length > 0) {
+      help += `\n   示例:\n`
+      command.examples.forEach(ex => {
+        help += `     ${ex}\n`
+      })
+    }
+
+    if (command.parameters && command.parameters.length > 0) {
+      help += `\n   参数:\n`
+      command.parameters.forEach(param => {
+        const required = param.required ? '(必需)' : '(可选)'
+        help += `     ${param.name} ${required} - ${param.description}\n`
+      })
+    }
+
+    return help
+  }
+
+  // 显示所有命令列表
+  let help = '\r\n📖 可用命令列表:\n\n'
+
+  const categories = {
+    system: '系统控制',
+    ai: 'AI交互',
+    file: '文件操作',
+    project: '项目管理',
+    connection: '连接管理'
+  }
+
+  const commands = useCommandInput({ onExecute: () => {}, onError: () => {} }).getAllCommands()
+
+  Object.entries(categories).forEach(([cat, label]) => {
+    const catCommands = commands.filter(cmd => cmd.category === cat && cmd.enabled && !cmd.hidden)
+    if (catCommands.length > 0) {
+      help += `  ${label}:\n`
+      catCommands.forEach(cmd => {
+        help += `    /${cmd.name.padEnd(15)} - ${cmd.description}\n`
+      })
+      help += '\n'
+    }
+  })
+
+  help += '  输入 /help <命令名> 查看详细帮助\n'
+  return help
+}
+
+// 生成历史文本
+function generateHistoryText(): string {
+  // TODO: 从useCommandInput获取历史记录
+  return '\r\n📜 命令历史功能开发中...'
+}
+
+// 命令错误处理
+function handleCommandError(error: CommandParseError) {
+  let errorMsg = `\r\n❌ ${error.message}`
+  if (error.suggestion) {
+    errorMsg += `\n💡 建议: ${error.suggestion}`
+  }
+  terminalRef.value?.writeln(errorMsg)
+  showPrompt()
+}
+
+// 显示命令提示符
+function showPrompt() {
+  nextTick(() => {
+    terminalRef.value?.write(`\r\n${commandPrompt.value}`)
+    currentCommandLine.value = ''
+  })
+}
+
 const handleTerminalData = (data: string) => {
+  // 处理用户输入
+  const char = data
+
+  // 特殊键处理
+  if (char === '\r' || char === '\n') {
+    // 回车键 - 执行命令
+    handleEnter()
+    return
+  }
+
+  if (char === '\u007F' || char === '\b') {
+    // 退格键
+    handleBackspace()
+    return
+  }
+
+  if (char === '\t') {
+    // Tab键 - 补全
+    handleTab()
+    return
+  }
+
+  if (char === '\u001b[A') {
+    // 向上箭头 - 历史记录或建议选择
+    if (showSuggestions.value) {
+      selectPreviousSuggestion()
+    } else {
+      selectPreviousHistory()
+      if (currentInput.value) {
+        updateTerminalDisplay()
+      }
+    }
+    return
+  }
+
+  if (char === '\u001b[B') {
+    // 向下箭头 - 历史记录或建议选择
+    if (showSuggestions.value) {
+      selectNextSuggestion()
+    } else {
+      selectNextHistory()
+      if (currentInput.value) {
+        updateTerminalDisplay()
+      }
+    }
+    return
+  }
+
+  if (char === '\u001b') {
+    // ESC键 - 关闭建议
+    if (showSuggestions.value) {
+      clearInput()
+      updateTerminalDisplay()
+    }
+    return
+  }
+
+  // 普通字符输入
+  if (char.length === 1 && char.charCodeAt(0) >= 32) {
+    currentCommandLine.value += char
+    handleInput(currentCommandLine.value)
+    terminalRef.value?.write(char)
+  }
+
   emit('data', data)
 }
 
 const handleTerminalKey = (event: { key: string; domEvent: KeyboardEvent }) => {
   emit('key', event)
+}
+
+// 处理回车键
+function handleEnter() {
+  if (!currentCommandLine.value.trim()) {
+    showPrompt()
+    return
+  }
+
+  // 执行命令
+  handleInput(currentCommandLine.value)
+  executeCommand()
+}
+
+// 处理退格键
+function handleBackspace() {
+  if (currentCommandLine.value.length > 0) {
+    currentCommandLine.value = currentCommandLine.value.slice(0, -1)
+    handleInput(currentCommandLine.value)
+
+    // 删除终端显示的字符
+    terminalRef.value?.write('\b \b')
+  }
+}
+
+// 处理Tab键
+function handleTab() {
+  if (showSuggestions.value) {
+    const completed = handleTabComplete()
+    if (completed) {
+      // 更新显示
+      updateTerminalDisplay()
+    }
+  }
+}
+
+// 更新终端显示
+function updateTerminalDisplay() {
+  // 清除当前行
+  terminalRef.value?.write('\r\x1b[K')
+
+  // 重新显示提示符和当前输入
+  terminalRef.value?.write(commandPrompt.value + currentCommandLine.value)
+
+  // 更新当前输入到useCommandInput
+  handleInput(currentCommandLine.value)
 }
 
 // 控制按钮事件
@@ -95,51 +401,59 @@ const handleSettings = () => {
   emit('settings')
 }
 
-// 显示欢迎信息
-const showWelcomeMessage = () => {
-  if (!terminalRef.value) return
+// 尝试连接服务器
+const attemptServerConnection = async () => {
+  connectionStatus.value = 'connecting'
+  connectionAttempts.value = 0
 
-  const welcomeText = `
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║  ██████╗ ███████╗ █████╗ ██╗         █████╗  ██████╗ ███████╗███╗   ██╗████████╗ ║
-║  ██╔══██╗██╔════╝██╔══██╗██║        ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝ ║
-║  ██████╔╝█████╗  ███████║██║        ███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║    ║
-║  ██╔══██╗██╔══╝  ██╔══██║██║        ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║    ║
-║  ██║  ██║███████╗██║  ██║███████╗   ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║    ║
-║  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝    ║
-║                                                                              ║
-║                            🚀 GEEK MODE ACTIVATED 🚀                        ║
-║                                                                              ║
-║  Welcome to Real Agent Geek Terminal v1.0                                   ║
-║  Type '/help' for available commands                                         ║
-║  Session ID: ${props.sessionId || 'unknown'}                                         ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+  // 清除之前的重试定时器
+  if (connectionRetryInterval.value) {
+    clearInterval(connectionRetryInterval.value)
+    connectionRetryInterval.value = null
+  }
 
-$ Ready for commands...
-`
+  // 开始连接重试
+  connectionRetryInterval.value = setInterval(async () => {
+    connectionAttempts.value++
 
-  setTimeout(() => {
-    terminalRef.value?.writeln(welcomeText)
-  }, 500)
+    try {
+      // TODO: 实际的连接逻辑,这里模拟连接检查
+      // const response = await fetch('/api/health')
+      // if (response.ok) {
+      //   connectionStatus.value = 'connected'
+      //   clearInterval(connectionRetryInterval.value!)
+      //   terminalRef.value?.writeln('\r\n✅ 服务器连接成功!')
+      //   return
+      // }
+
+      // 模拟连接失败
+      throw new Error('Connection failed')
+
+    } catch (error) {
+      // 显示连接失败提示
+      const attemptInfo = `⚠️  连接服务器失败 (尝试 ${connectionAttempts.value}/${maxConnectionAttempts.value})`
+      terminalRef.value?.writeln(`\r${attemptInfo}`)
+
+      // 达到最大重试次数
+      if (connectionAttempts.value >= maxConnectionAttempts.value) {
+        connectionStatus.value = 'disconnected'
+        if (connectionRetryInterval.value) {
+          clearInterval(connectionRetryInterval.value)
+          connectionRetryInterval.value = null
+        }
+        terminalRef.value?.writeln('\r\n❌ 无法连接到服务器,已达到最大重试次数')
+        terminalRef.value?.writeln('💡 提示: 您仍然可以使用本地命令 (如 /help, /clear 等)')
+        showPrompt()
+      }
+    }
+  }, 2000) // 每2秒重试一次
 }
 
-// 公开方法给父组件
-const write = (data: string) => {
-  terminalRef.value?.write(data)
-}
-
-const writeln = (data: string) => {
-  terminalRef.value?.writeln(data)
-}
-
-const clear = () => {
-  terminalRef.value?.clear()
-}
-
-const focus = () => {
-  terminalRef.value?.focus()
+// 手动重新连接
+const reconnect = () => {
+  terminalRef.value?.writeln('\r\n🔄 正在重新连接服务器...')
+  attemptServerConnection()
+  emit('reconnect')
 }
 
 // 生命周期
@@ -153,6 +467,7 @@ defineExpose({
   writeln,
   clear,
   focus,
+  reconnect,
   terminal: terminalRef
 })
 </script>
@@ -198,6 +513,15 @@ defineExpose({
 
     <!-- 终端主体 -->
     <div class="terminal-body">
+      <!-- 命令建议浮层 -->
+      <CommandSuggestions
+        v-if="showSuggestions"
+        :suggestions="suggestions"
+        :selected-index="selectedSuggestionIndex"
+        @select="selectSuggestion"
+      />
+
+      <!-- XTerminal 实例 -->
       <XTerminal
         ref="terminalRef"
         :config="config"
@@ -208,8 +532,6 @@ defineExpose({
         @key="handleTerminalKey"
       />
     </div>
-
-
 
   </div>
 </template>
@@ -394,6 +716,8 @@ defineExpose({
   flex: 1;
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 // 全屏提示
