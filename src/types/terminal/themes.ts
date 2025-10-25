@@ -44,9 +44,7 @@ export interface ExtendedTerminalTheme extends TerminalTheme {
   effects: {
     animations: AnimationEffect[]
     transparency: number
-    blur: number
     glow: boolean
-    shadows: boolean
   }
 
   // 字体配置

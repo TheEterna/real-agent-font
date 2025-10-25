@@ -16,7 +16,6 @@ export const MATRIX_GREEN_THEME: GeekModeTheme = {
   // 基础颜色
   foreground: '#00ff00',
   background: '#000000',
-  cursor: '#00ff00',
   cursorAccent: '#000000',
   selection: 'rgba(0, 255, 0, 0.3)',
 
@@ -42,9 +41,7 @@ export const MATRIX_GREEN_THEME: GeekModeTheme = {
   effects: {
     animations: ['matrix-rain', 'scanlines'],
     transparency: 0.95,
-    blur: 0,
     glow: true,
-    shadows: true
   },
 
   // 字体配置
@@ -128,7 +125,6 @@ export const CYBERPUNK_THEME: GeekModeTheme = {
   // 基础颜色
   foreground: '#ff00ff',
   background: '#0a0a0a',
-  cursor: '#ff00ff',
   cursorAccent: '#0a0a0a',
   selection: 'rgba(255, 0, 255, 0.3)',
 
@@ -154,9 +150,7 @@ export const CYBERPUNK_THEME: GeekModeTheme = {
   effects: {
     animations: ['scanlines', 'bloom', 'glitch'],
     transparency: 0.9,
-    blur: 1,
     glow: true,
-    shadows: true
   },
 
   // 字体配置
@@ -240,7 +234,6 @@ export const RETRO_AMBER_THEME: GeekModeTheme = {
   // 基础颜色
   foreground: '#ffb000',
   background: '#2a1810',
-  cursor: '#ffb000',
   cursorAccent: '#2a1810',
   selection: 'rgba(255, 176, 0, 0.3)',
 
@@ -266,9 +259,7 @@ export const RETRO_AMBER_THEME: GeekModeTheme = {
   effects: {
     animations: ['crt-flicker'],
     transparency: 1,
-    blur: 0.5,
     glow: true,
-    shadows: false
   },
 
   // 字体配置

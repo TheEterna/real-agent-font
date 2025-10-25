@@ -219,7 +219,7 @@ export const initializeCommands = () => {
 }
 
 // 导出命令相关类型和工具
-export type { CommandDefinition, CommandContext }
+export type { CommandDefinition }
 export { registerCommand, getCommandDefinition, isValidCommand }
 
 // 自动初始化

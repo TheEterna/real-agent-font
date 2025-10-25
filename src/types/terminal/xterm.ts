@@ -136,8 +136,6 @@ export type {
   IBuffer,
   IBufferLine,
   IBufferCell,
-  ISelectionPosition,
   IViewportRange,
-  ILinkMatcherOptions,
   ITheme
 } from '@xterm/xterm'

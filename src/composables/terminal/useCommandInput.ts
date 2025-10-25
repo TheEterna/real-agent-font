@@ -1,17 +1,19 @@
 /**
  * 命令输入处理 Composable
- * 负责命令输入、实时提示、Tab补全等交互功能
+ * 简化版：使用 Pinia 存储，去除过度设计
  */
 
 import { ref, computed, watch } from 'vue'
-import { CommandParser } from '@/utils/terminal/CommandParser'
-import { CommandConfigManager } from '@/utils/terminal/CommandConfigManager'
-import type { Command, CommandSuggestion, ParsedCommand, CommandParseError } from '@/types/terminal/commands'
+import { useTerminalStore, type SimpleCommand, type ParsedCommand, type ParseError } from '@/stores/terminalStore'
 
 export interface UseCommandInputOptions {
   onExecute?: (parsed: ParsedCommand) => void | Promise<void>
-  onError?: (error: CommandParseError) => void
+  onError?: (error: ParseError) => void
   historySize?: number
+  // 终端写入函数
+  write?: (data: string) => void
+  writeln?: (data: string) => void
+  showPrompt?: () => void
 }
 
 export function useCommandInput(options: UseCommandInputOptions = {}) {
@@ -19,16 +21,19 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
   const {
     onExecute,
     onError,
-    historySize = 100
+    historySize = 100,
+    write,
+    writeln,
+    showPrompt
   } = options
 
-  // 核心实例
-  const parser = new CommandParser()
-  const configManager = new CommandConfigManager()
+  // 使用 Pinia store
+  const terminalStore = useTerminalStore()
 
   // 响应式状态
   const currentInput = ref('')
-  const suggestions = ref<CommandSuggestion[]>([])
+  const currentCommandLine = ref('') // 终端当前命令行
+  const suggestions = ref<SimpleCommand[]>([])
   const selectedSuggestionIndex = ref(-1)
   const commandHistory = ref<string[]>([])
   const historyIndex = ref(-1)
@@ -38,33 +43,8 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
   // 解析结果
   const parseResult = ref<{
     command?: ParsedCommand
-    error?: CommandParseError
+    error?: ParseError
   }>({})
-
-  // 初始化：注册所有命令
-  const initializeCommands = async () => {
-    try {
-      isLoading.value = true
-
-      // 加载配置管理器中的命令
-      const commands = configManager.getAllCommands()
-      parser.registerCommands(commands)
-
-      // 如果需要同步，从服务器获取最新命令
-      if (configManager.needsSync()) {
-        const syncResult = await configManager.syncFromServer()
-        if (syncResult.success && syncResult.commands) {
-          parser.registerCommands(syncResult.commands)
-        }
-      }
-
-      console.log('✅ Commands initialized:', commands.length)
-    } catch (error) {
-      console.error('❌ Failed to initialize commands:', error)
-    } finally {
-      isLoading.value = false
-    }
-  }
 
   // 计算属性：当前是否有有效输入
   const hasInput = computed(() => currentInput.value.trim().length > 0)
@@ -93,16 +73,11 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
     const query = input.slice(1).trim()
 
     if (query.length === 0) {
-      // 显示所有启用的命令
-      const allCommands = parser.getEnabledCommands()
-      suggestions.value = allCommands.map(cmd => ({
-        command: cmd,
-        score: 1.0,
-        matchType: 'exact' as const
-      }))
+      // 显示所有命令
+      suggestions.value = terminalStore.getAllCommands()
     } else {
       // 获取匹配的命令建议
-      suggestions.value = parser.getSuggestions(query)
+      suggestions.value = terminalStore.getCommandSuggestions(query)
     }
 
     showSuggestions.value = suggestions.value.length > 0
@@ -117,14 +92,17 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
     // 更新建议
     updateSuggestions(input)
 
-    // 如果输入完整命令，尝试解析
-    if (input.trim().length > 0 && input.startsWith('/')) {
-      const result = parser.parse(input)
+    // 如果输入完整命令（不只是前缀），尝试解析
+    const trimmed = input.trim()
+    if (trimmed.length > 1 && trimmed.startsWith('/')) {
+      const result = terminalStore.parseCommand(input)
       parseResult.value = result
 
-      // 如果有错误，通知外部
-      if (result.error && onError) {
-        onError(result.error)
+      // 只在有错误且不是"命令名称不能为空"时才通知
+      // "命令名称不能为空"的情况是用户正在输入，不应该立即报错
+      if (result.error && result.error.message !== '命令名称不能为空' && onError) {
+        // 不立即触发错误，等待用户执行命令时再报错
+        // onError(result.error)
       }
     } else {
       parseResult.value = {}
@@ -138,13 +116,12 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
     }
 
     const suggestion = suggestions.value[selectedSuggestionIndex.value]
-    const command = suggestion.command
 
     // 构建完整命令
-    let completedCommand = `/${command.name}`
+    let completedCommand = `/${suggestion.name}`
 
     // 如果命令有必需参数，添加占位符
-    const requiredParams = command.parameters.filter(p => p.required)
+    const requiredParams = suggestion.parameters?.filter(p => p.required) || []
     if (requiredParams.length > 0) {
       completedCommand += ' '
       // 添加第一个必需参数的占位符
@@ -234,7 +211,7 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
     }
 
     // 解析命令
-    const result = parser.parse(input)
+    const result = terminalStore.parseCommand(input)
 
     if (result.error) {
       if (onError) {
@@ -250,7 +227,6 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
         console.error('Command execution error:', error)
         if (onError) {
           onError({
-            type: 'INVALID_SYNTAX',
             message: error instanceof Error ? error.message : '命令执行失败'
           })
         }
@@ -275,13 +251,92 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
   }
 
   // 获取命令帮助信息
-  const getCommandHelp = (commandName: string): Command | undefined => {
-    return parser.getCommand(commandName)
+  const getCommandHelp = (commandName: string): SimpleCommand | undefined => {
+    return terminalStore.getCommand(commandName)
   }
 
   // 获取所有命令
-  const getAllCommands = (): Command[] => {
-    return parser.getAllCommands()
+  const getAllCommands = (): SimpleCommand[] => {
+    return terminalStore.getAllCommands()
+  }
+
+  // 更新终端显示
+  const updateDisplay = () => {
+    if (write) {
+      write('\r\x1b[K') // 清除当前行
+      write(currentCommandLine.value)
+    }
+    handleInput(currentCommandLine.value)
+  }
+
+  // 处理终端原始数据输入
+  const handleTerminalData = (data: string) => {
+    const char = data
+
+    // 回车
+    if (char === '\r' || char === '\n') {
+      if (!currentCommandLine.value.trim()) {
+        if (showPrompt) showPrompt()
+        return
+      }
+      handleInput(currentCommandLine.value)
+      executeCommand()
+      return
+    }
+
+    // 退格
+    if (char === '\u007F' || char === '\b') {
+      if (currentCommandLine.value.length > 0) {
+        currentCommandLine.value = currentCommandLine.value.slice(0, -1)
+        handleInput(currentCommandLine.value)
+        if (write) write('\b \b')
+      }
+      return
+    }
+
+    // Tab - 补全
+    if (char === '\t') {
+      if (showSuggestions.value && handleTabComplete()) {
+        currentCommandLine.value = currentInput.value
+        updateDisplay()
+      }
+      return
+    }
+
+    // 向上箭头
+    if (char === '\u001b[A') {
+      if (showSuggestions.value) {
+        selectPreviousSuggestion()
+      } else {
+        selectPreviousHistory()
+        if (currentInput.value) {
+          currentCommandLine.value = currentInput.value
+          updateDisplay()
+        }
+      }
+      return
+    }
+
+    // 向下箭头
+    if (char === '\u001b[B') {
+      if (showSuggestions.value) {
+        selectNextSuggestion()
+      } else {
+        selectNextHistory()
+        if (currentInput.value) {
+          currentCommandLine.value = currentInput.value
+          updateDisplay()
+        }
+      }
+      return
+    }
+
+    // 普通字符
+    if (char.length === 1 && char.charCodeAt(0) >= 32) {
+      currentCommandLine.value += char
+      handleInput(currentCommandLine.value)
+      if (write) write(char)
+    }
   }
 
   // 监听输入变化
@@ -289,12 +344,10 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
     handleInput(newValue)
   })
 
-  // 初始化
-  initializeCommands()
-
   return {
     // 状态
     currentInput,
+    currentCommandLine,
     suggestions,
     selectedSuggestionIndex,
     commandHistory,
@@ -319,10 +372,7 @@ export function useCommandInput(options: UseCommandInputOptions = {}) {
     clearInput,
     getCommandHelp,
     getAllCommands,
-    initializeCommands,
-
-    // 实例访问（高级用途）
-    parser,
-    configManager
+    handleTerminalData,
+    updateDisplay
   }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref, onMounted, onUnmounted, nextTick, computed, h, watch} from 'vue'
-import {useModeSwitch} from '@/composables/useModeSwitch'
+import {InputMode, useModeSwitch} from '@/composables/useModeSwitch'
 import {UIMessage, MessageType, EventType} from '@/types/events'
 import {AgentType} from '@/types/session'
 import {useChatStore} from '@/stores/chatStore'
@@ -52,7 +52,7 @@ import 'highlight.js/styles/atom-one-light.css'
 import 'katex/dist/katex.min.css'
 import {NotificationType} from '@/types/notification'
 import {useMessageConfig} from '@/composables/useMessageConfig'
-import TerminalContainer from '@/components/terminal/TerminalContainer.vue'
+import Terminal from '@/components/terminal/Terminal.vue'
 import {MessageStyle} from '@/types/messageConfig'
 import {ProgressInfo} from "@/types/status";
 import {useRoute, useRouter} from "vue-router";
@@ -70,12 +70,11 @@ const {
   currentThemeClass,
   isGeekMode,
   isMultimodalMode,
-  isCommandMode,
   switchMode
 } = useModeSwitch()
 
 // 🖥️ 终端界面状态管理
-const terminalRef = ref<InstanceType<typeof TerminalContainer>>()
+const terminalRef = ref<InstanceType<typeof Terminal>>()
 const terminalReady = ref(false)
 
 // 终端事件处理
@@ -106,10 +105,7 @@ const approvalResults = ref<Map<string, any>>(new Map())
 const isLoading = computed(() => taskStatus.value.is('running'))
 const chatContent = ref<HTMLElement>()
 const showScrollButton = ref(false)
-const rightPanelCollapsed = ref(false)
 
-const inkTransitionTrigger = ref(false)
-const inkOrigin = ref({x: 0, y: 0})
 
 // DOM引用
 const appContainer = ref<HTMLElement>()
@@ -1314,27 +1310,20 @@ onUnmounted(() => {
               @click="() => switchMode('multimodal')"
               title="退出极客模式"
             >
-              ⚡ 多模态模式
+              退出
             </button>
           </div>
         </div>
 
-        <TerminalContainer
+        <Terminal
           ref="terminalRef"
-          :title="`Real Agent Terminal - Session ${sessionId}`"
           :session-id="sessionId"
-          :enable-geek-mode="true"
-          :show-header="true"
-          :show-controls="true"
-          @terminal-ready="handleTerminalReady"
-          @data="handleTerminalData"
-          @key="handleTerminalKey"
           class="geek-terminal-interface"
         />
       </div>
     </template>
 
-    <!-- ⚡ 多模态模式：正常界面 -->
+    <!-- 正常界面 -->
     <template v-else>
     <!-- 主要内容区域 -->
     <div class="main-content">

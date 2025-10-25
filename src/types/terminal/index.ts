@@ -2,7 +2,6 @@
 // 基于 xterm.js 的 Real Agent 极客模式类型系统
 
 import type { ITerminalOptions, ITerminalAddon } from '@xterm/xterm'
-import type { ComponentType } from 'vue'
 
 // 终端实例接口
 export interface TerminalInstance {

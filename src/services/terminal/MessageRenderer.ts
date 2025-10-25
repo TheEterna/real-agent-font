@@ -144,7 +144,7 @@ export class MessageRenderer {
     let currentLine = ''
 
     const words = text.split(' ')
-    for (const word of words) {
+    for (let word of words) {
       if ((currentLine + word).length <= maxLength) {
         currentLine = currentLine ? `${currentLine} ${word}` : word
       } else {
@@ -385,10 +385,13 @@ export class MessageRenderer {
         case 'error':
           await this.renderError(message)
           break
-        case 'thinking':
-          await this.renderThinking(message)
+        case 'assistant':
+          await this.renderProgress(message)
           break
-        case 'progress':
+        case 'user':
+          await this.renderProgress(message)
+          break
+        case 'tool_approval':
           await this.renderProgress(message)
           break
         default:
@@ -403,7 +406,6 @@ export class MessageRenderer {
       }
     }
   }
-
   // 渲染提示符
   async renderPrompt(prompt: string = '$ '): Promise<void> {
     if (!this.terminal) return
