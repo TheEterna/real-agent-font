@@ -7,10 +7,9 @@ import type { TerminalConfig } from '@/types/terminal'
 import { DEFAULT_TERMINAL_CONFIG } from '@/configs/terminal/xterm-config'
 import { useCommandInput } from '@/composables/terminal/useCommandInput'
 import type { ParsedCommand, ParseError } from '@/stores/terminalStore'
-import { useTerminalStore } from '@/stores/terminalStore'
 import { debounce } from "lodash"
 import '@xterm/xterm/css/xterm.css';
-
+import {useCommandHandler} from "@/composables/terminal/useCommandHandler";
 
 // Props
 interface Props {
@@ -22,20 +21,15 @@ const props = withDefaults(defineProps<Props>(), {})
 
 // 状态
 const container = ref<HTMLElement>()
-const terminal = ref<Terminal | null>(null)
+const terminal = ref<Terminal>()
 // const isReady = ref(true)
 // fixme: dev to true, should be false
 const isReady = ref(true)
-const currentCommandLine = ref('')
-const commandPrompt = ref('[root@real-agent-terminal]# ')
-
-
-let resizeObserver: ResizeObserver | null = null // 声明 ResizeObserver 实例
 
 // 终端存储
-const terminalStore = useTerminalStore()
 
 let fitAddon: FitAddon | null = null
+
 
 // 命令输入处理
 const {
@@ -55,13 +49,9 @@ const {
   handleTerminalData,
   updateDisplay
 } = useCommandInput({
-  onExecute: handleCommandExecute,
-  onError: handleCommandError,
-  write,
-  writeln,
-  showPrompt
+  terminal: terminal,
+  isReady: isReady
 })
-
 // 初始化
 const init = () => {
   if (!container.value) return
@@ -83,8 +73,7 @@ const init = () => {
   // 监听输入
   terminal.value.onData(handleTerminalData)
 
-  // 添加粘贴支持
-  setupPasteSupport()
+
   window.addEventListener('resize', debounce(function () {
     fitAddon?.fit()
   }, 500))
@@ -104,277 +93,25 @@ const showWelcomeMessage = () => {
   if (!terminal.value) return
 
   const welcomeText = `
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                  ║
 ║  ██████╗ ███████╗ █████╗ ██╗         █████╗  ██████╗ ███████╗███╗   ██╗████████╗ ║
 ║  ██╔══██╗██╔════╝██╔══██╗██║        ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝ ║
 ║  ██████╔╝█████╗  ███████║██║        ███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║    ║
 ║  ██╔══██╗██╔══╝  ██╔══██║██║        ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║    ║
 ║  ██║  ██║███████╗██║  ██║███████╗   ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║    ║
 ║  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝    ║
-║                                                                              ║
-║                            🚀 GEEK MODE ACTIVATED 🚀                        ║
-║                                                                              ║
-║  Welcome to Real Agent Geek Terminal v1.0                                   ║
-║  Type '/help' for available commands                                         ║
-║  Session ID: ${props.sessionId || 'unknown'}                                         ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
+║  Welcome to Real Agent Geek Terminal v1.0                                        ║
+║  Type '/help' for available commands                                             ║
+║  Session ID: ${props.sessionId}                                                           ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
 $ Ready for commands...
 `
 
-  terminal.value?.writeln(welcomeText)
-}
-// 设置粘贴支持
-const setupPasteSupport = () => {
-  if (!container.value) return
-
-  // 监听粘贴事件
-  container.value.addEventListener('paste', (e) => {
-    e.preventDefault()
-    const text = e.clipboardData?.getData('text')
-    if (text) {
-      // 将粘贴的文本添加到当前命令行
-      currentCommandLine.value += text
-      handleInput(currentCommandLine.value)
-      write(text)
-    }
-  })
-
-  // 监听复制事件（xterm.js 自动处理选择，我们只需要确保可以复制）
-  container.value.addEventListener('copy', (e) => {
-    const selection = terminal.value?.getSelection()
-    if (selection) {
-      e.clipboardData?.setData('text/plain', selection)
-      e.preventDefault()
-    }
-  })
+  terminal.value?.write(welcomeText)
 }
 
-// 命令执行
-async function handleCommandExecute(parsed: ParsedCommand) {
-  try {
-    writeln(`\r\n${commandPrompt.value}${parsed.original}`)
 
-    // 本地命令
-    switch (parsed.command.toLowerCase()) {
-      case 'clear':
-      case 'cls':
-        terminal.value?.clear()
-        showPrompt()
-        return
-
-      case 'help':
-        showHelp(parsed.args[0])
-        showPrompt()
-        return
-    }
-
-    // TODO: 调用后端API
-    writeln('⚙️ 命令处理中...')
-    await new Promise(resolve => setTimeout(resolve, 500))
-    writeln('✅ 完成')
-    showPrompt()
-  } catch (error) {
-    writeln(`❌ 错误: ${error instanceof Error ? error.message : '未知错误'}`)
-    showPrompt()
-  }
-}
-
-// 显示帮助信息
-function showHelp(commandName?: string) {
-  if (commandName) {
-    // 显示特定命令的详细帮助
-    const command = terminalStore.getCommand(commandName)
-    if (!command) {
-      writeln(`\r\n❌ 未知命令: ${commandName}`)
-      return
-    }
-
-    writeln('\r\n╔═══════════════════════════════════════════════════════════╗')
-    writeln(`║  命令: /${command.name}`)
-
-    if (command.aliases && command.aliases.length > 0) {
-      writeln(`║  别名: ${command.aliases.join(', ')}`)
-    }
-
-    writeln(`║  描述: ${command.description}`)
-    writeln(`║  用法: ${command.usage}`)
-
-    if (command.parameters && command.parameters.length > 0) {
-      writeln('║')
-      writeln('║  参数:')
-      command.parameters.forEach(param => {
-        const required = param.required ? '[必需]' : '[可选]'
-        const flags = []
-        if (param.shortFlag) flags.push(param.shortFlag)
-        if (param.longFlag) flags.push(param.longFlag)
-        const flagStr = flags.length > 0 ? ` (${flags.join(', ')})` : ''
-
-        writeln(`║    ${param.name}${flagStr} ${required}`)
-        writeln(`║      ${param.description}`)
-        if (param.defaultValue !== undefined) {
-          writeln(`║      默认值: ${param.defaultValue}`)
-        }
-      })
-    }
-
-    if (command.examples && command.examples.length > 0) {
-      writeln('║')
-      writeln('║  示例:')
-      command.examples.forEach(ex => {
-        writeln(`║    ${ex}`)
-      })
-    }
-
-    writeln('╚═══════════════════════════════════════════════════════════╝')
-  } else {
-    // 显示所有命令列表
-    writeln('\r\n╔═══════════════════════════════════════════════════════════╗')
-    writeln('║                    可用命令列表                           ║')
-    writeln('╚═══════════════════════════════════════════════════════════╝')
-    writeln('')
-
-    const categories = {
-      system: '🔧 系统控制',
-      ai: '🤖 AI交互',
-      file: '📁 文件操作',
-      connection: '🔌 连接管理'
-    }
-
-    const commandsByCategory = terminalStore.commandsByCategory
-
-    Object.entries(categories).forEach(([cat, label]) => {
-      const catCommands = commandsByCategory[cat as keyof typeof commandsByCategory] || []
-
-      if (catCommands.length > 0) {
-        writeln(`${label}:`)
-        catCommands.forEach(cmd => {
-          const aliases = cmd.aliases && cmd.aliases.length > 0
-            ? ` (${cmd.aliases.join(', ')})`
-            : ''
-          writeln(`  /${cmd.name}${aliases}`)
-          writeln(`    ${cmd.description}`)
-        })
-        writeln('')
-      }
-    })
-
-    writeln('💡 使用 /help <命令名> 查看详细帮助')
-    writeln('💡 使用 Tab 键自动补全命令')
-    writeln('💡 使用 ↑↓ 键浏览历史命令')
-  }
-}
-
-// 命令错误
-function handleCommandError(error: ParseError) {
-  writeln(`\r\n❌ ${error.message}`)
-  if (error.suggestion) {
-    writeln(`💡 ${error.suggestion}`)
-  }
-  showPrompt()
-}
-
-// 显示提示符
-function showPrompt() {
-  nextTick(() => {
-    write(`\r\n${commandPrompt.value}`)
-    currentCommandLine.value = ''
-  })
-}
-
-// 处理输入
-const handleTerminalData = (data: string) => {
-  const char = data
-
-  // 回车
-  if (char === '\r' || char === '\n') {
-    if (!currentCommandLine.value.trim()) {
-      showPrompt()
-      return
-    }
-    handleInput(currentCommandLine.value)
-    executeCommand()
-    return
-  }
-
-  // 退格
-  if (char === '\u007F' || char === '\b') {
-    if (currentCommandLine.value.length > 0) {
-      currentCommandLine.value = currentCommandLine.value.slice(0, -1)
-      handleInput(currentCommandLine.value)
-      write('\b \b')
-    }
-    return
-  }
-
-  // Tab - 补全
-  if (char === '\t') {
-    if (showSuggestions.value && handleTabComplete()) {
-      currentCommandLine.value = currentInput.value
-      updateDisplay()
-    }
-    return
-  }
-
-  // 向上箭头
-  if (char === '\u001b[A') {
-    if (showSuggestions.value) {
-      selectPreviousSuggestion()
-    } else {
-      selectPreviousHistory()
-      if (currentInput.value) {
-        currentCommandLine.value = currentInput.value
-        updateDisplay()
-      }
-    }
-    return
-  }
-
-  // 向下箭头
-  if (char === '\u001b[B') {
-    if (showSuggestions.value) {
-      selectNextSuggestion()
-    } else {
-      selectNextHistory()
-      if (currentInput.value) {
-        currentCommandLine.value = currentInput.value
-        updateDisplay()
-      }
-    }
-    return
-  }
-
-  // 普通字符
-  if (char.length === 1 && char.charCodeAt(0) >= 32) {
-    currentCommandLine.value += char
-    handleInput(currentCommandLine.value)
-    write(char)
-  }
-}
-
-// 更新显示
-function updateDisplay() {
-  write('\r\x1b[K')
-  write(commandPrompt.value + currentCommandLine.value)
-  handleInput(currentCommandLine.value)
-}
-
-// 写入方法
-const write = (data: string) => {
-  if (terminal.value && isReady.value) {
-    terminal.value.write(data)
-    terminal.value.scrollToBottom()
-  }
-}
-
-const writeln = (data: string) => {
-  if (terminal.value && isReady.value) {
-    terminal.value.writeln(data)
-    terminal.value.scrollToBottom()
-  }
-}
 
 const clear = () => terminal.value?.clear()
 const focus = () => terminal.value?.focus()
@@ -393,7 +130,7 @@ onUnmounted(() => {
 })
 
 // 暴露
-defineExpose({ write, writeln, clear, focus, terminal, isReady })
+defineExpose({ clear, focus, terminal, isReady })
 </script>
 
 <template>
@@ -455,13 +192,17 @@ defineExpose({ write, writeln, clear, focus, terminal, isReady })
   position: relative;
   width: 100%;
   overflow: hidden;  // 防止内容溢出
+  padding: 8px;  // 在容器层添加 padding，避免影响 xterm 坐标计算
 
   :deep(.xterm) {
-
-    padding: 8px;
+    height: 100%;  // 确保 xterm 填充整个容器
+    width: 100%;
   }
 
-
+  // 确保 xterm 的 viewport 和 screen 正确对齐
+  :deep(.xterm-viewport) {
+    width: 100% !important;
+  }
 }
 
 .loading {

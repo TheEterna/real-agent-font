@@ -26,11 +26,12 @@ export interface SimpleParameter {
   defaultValue?: any
 }
 
-// 简化的解析结果
+// 解析结果 - 匹配后端 TerminalCommandRequest
 export interface ParsedCommand {
-  original: string
-  command: string
-  args: string[]
+  original: string      // 原始输入
+  command: string       // 命令名称（不含 /）
+  options: string[]     // 选项参数列表（--开头的参数）
+  arguments: string[]   // 普通参数列表
 }
 
 // 简化的错误类型
@@ -273,7 +274,19 @@ export const useTerminalStore = defineStore('terminal', () => {
     })
   }
 
-  // 简单的命令解析
+  /**
+   * 命令解析 - 新规则
+   * 1. 命令部分：必须在开头，只能有一个（如 /plan）
+   * 2. 选项参数：--开头，有多个时只取第一个
+   * 3. 普通参数：其余所有内容作为字符串数组
+   * 
+   * 示例：
+   * /plan --detailed 规划一下 我去马来西亚的旅游
+   * => command: "plan", options: ["detailed"], arguments: ["规划一下", "我去马来西亚的旅游"]
+   * 
+   * /plan 规划一下 --detailed 我去马来西亚的旅游
+   * => command: "plan", options: ["detailed"], arguments: ["规划一下", "我去马来西亚的旅游"]
+   */
   const parseCommand = (input: string): { command?: ParsedCommand; error?: ParseError } => {
     const trimmed = input.trim()
     if (!trimmed) {
@@ -294,12 +307,13 @@ export const useTerminalStore = defineStore('terminal', () => {
       return { error: { message: '命令名称不能为空' } }
     }
 
-    // 简单分词：按空格分割，忽略引号等复杂处理
+    // 按空格分词
     const tokens = withoutPrefix.split(/\s+/).filter(t => t.length > 0)
     if (tokens.length === 0) {
       return { error: { message: '无效的命令格式' } }
     }
 
+    // 1. 提取命令名称（第一个token）
     const commandName = tokens[0]
     const command = getCommand(commandName)
 
@@ -317,11 +331,36 @@ export const useTerminalStore = defineStore('terminal', () => {
       }
     }
 
+    // 2. 解析选项和参数
+    const options: string[] = []
+    const args: string[] = []
+    let firstOptionFound = false
+
+    for (let i = 1; i < tokens.length; i++) {
+      const token = tokens[i]
+      
+      if (token.startsWith('--')) {
+        // 选项参数：只取第一个
+        if (!firstOptionFound) {
+          const optionName = token.substring(2) // 去掉 --
+          if (optionName) {
+            options.push(optionName)
+            firstOptionFound = true
+          }
+        }
+        // 后续的选项参数被忽略
+      } else {
+        // 普通参数
+        args.push(token)
+      }
+    }
+
     return {
       command: {
         original: input,
         command: commandName,
-        args: tokens.slice(1)
+        options: options,
+        arguments: args
       }
     }
   }

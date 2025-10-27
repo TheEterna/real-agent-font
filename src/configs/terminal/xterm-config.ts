@@ -12,7 +12,7 @@ export const DEFAULT_TERMINAL_CONFIG: TerminalConfig = {
     fontFamily: 'Courier New, JetBrains Mono, Consolas, Monaco, monospace',
     fontWeight: 'normal',
     fontWeightBold: 'bold',
-    lineHeight: 1.2,
+    lineHeight: 1.0,  // 使用 1.0 确保行高计算精确，避免双击选择时坐标偏移
     letterSpacing: 0,
 
     // 光标配置
