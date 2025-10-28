@@ -6,7 +6,7 @@ import { Terminal } from "@xterm/xterm";
 export interface UseCommandInputOptions {
     historySize?: number
     commandPrompt?: string,
-    terminal?: Ref<Terminal | undefined, Terminal | undefined>,
+    terminal?: Ref<Terminal | undefined>,
     isReady: Ref<boolean>,
 }
 
@@ -33,6 +33,13 @@ export function useCommandInput(options: UseCommandInputOptions = { isReady: ref
     const temporarySavedInput = ref('') // 浏览历史前保存的临时输入
     const showSuggestions = ref(false)
     const isLoading = ref(false)
+
+    // 输入法组合态状态
+    const isComposing = ref(false) // 是否处于输入法组合态
+    const compositionValue = ref('') // 组合态中的临时输入
+    const compositionStartCursor = ref(0) // 组合态开始时的光标位置
+    const compositionStartText = ref('') // 组合态开始时的文本内容
+    const isCompositionEndHandled = ref(false) // 标记组合态结束时是否已处理输入
 
     // 解析结果
     const parseResult = ref<{
@@ -65,6 +72,34 @@ export function useCommandInput(options: UseCommandInputOptions = { isReady: ref
         }
         return null
     })
+
+    // 工具函数：计算字符串的显示宽度（中文字符占2个宽度）
+    const getStringWidth = (str: string): number => {
+        let width = 0
+        for (let i = 0; i < str.length; i++) {
+            const code = str.charCodeAt(i)
+            // 中文字符范围：0x4E00-0x9FFF（基本汉字）
+            // 全角字符范围：0xFF00-0xFFEF
+            // 其他宽字符：0x3000-0x303F（CJK符号和标点）
+            if ((code >= 0x4E00 && code <= 0x9FFF) ||
+                (code >= 0xFF00 && code <= 0xFFEF) ||
+                (code >= 0x3000 && code <= 0x303F)) {
+                width += 2
+            } else {
+                width += 1
+            }
+        }
+        return width
+    }
+
+    // 工具函数：判断字符是否为中文或全角字符
+    const isWideChar = (char: string): boolean => {
+        if (char.length === 0) return false
+        const code = char.charCodeAt(0)
+        return (code >= 0x4E00 && code <= 0x9FFF) ||
+            (code >= 0xFF00 && code <= 0xFFEF) ||
+            (code >= 0x3000 && code <= 0x303F)
+    }
 
     // 更新命令建议
     const updateSuggestions = (input: string) => {
@@ -311,8 +346,13 @@ export function useCommandInput(options: UseCommandInputOptions = { isReady: ref
         // 重新写入命令行
         write(commandPrompt + currentCommandLine.value)
 
+        // 计算光标位置（基于字符宽度）
+        const prefix = currentCommandLine.value.slice(0, cursorPosition.value)
+        const prefixWidth = getStringWidth(prefix)
+        const totalWidth = getStringWidth(currentCommandLine.value)
+        const offset = totalWidth - prefixWidth
+
         // 移动光标到正确位置
-        const offset = currentCommandLine.value.length - cursorPosition.value
         if (offset > 0) {
             write(`\x1b[${offset}D`) // 向左移动光标
         }
@@ -330,32 +370,92 @@ export function useCommandInput(options: UseCommandInputOptions = { isReady: ref
         updateDisplay()
     }
 
-    // 光标向左移动
+    // 光标向左移动（适配宽字符）
     const moveCursorLeft = () => {
         if (cursorPosition.value > 0) {
             cursorPosition.value--
-            if (write) write('\x1b[D') // 向左移动一个字符
+            updateDisplay()
         }
     }
 
-    // 光标向右移动
+    // 光标向右移动（适配宽字符）
     const moveCursorRight = () => {
         if (cursorPosition.value < currentCommandLine.value.length) {
             cursorPosition.value++
-            if (write) write('\x1b[C') // 向右移动一个字符
+            updateDisplay()
         }
     }
 
     // 处理终端原始数据输入
     const handleTerminalData = (data: string) => {
+        // 组合态结束后，忽略已处理的字符数据
+        if (isCompositionEndHandled.value) {
+            isCompositionEndHandled.value = false
+            return
+        }
+
+        // 如果是组合态且不是确认输入（如回车），则忽略输入
+        if (isComposing.value) {
+            // 在组合态下，只处理回车和换行
+            if (data === '\r' || data === '\n') {
+                // 结束组合态
+                isComposing.value = false
+                compositionValue.value = ''
+            } else {
+                // 忽略其他输入，由compositionupdate事件处理
+                return
+            }
+        }
+
         const char = data
 
-        // 回车
-        if (char === '\r' || char === '\n') {
+        // 处理 Shift + Enter（换行）
+        if (char === '\x1b[13;2u' || char === '\x1b[13;2~' || char === '\n') {
+            // 在当前位置插入换行符
+            const beforeCursor = currentCommandLine.value.slice(0, cursorPosition.value)
+            const afterCursor = currentCommandLine.value.slice(cursorPosition.value)
+            currentCommandLine.value = beforeCursor + '\n' + afterCursor
+            cursorPosition.value = beforeCursor.length + 1
+            updateDisplay()
+            return
+        }
+
+        // 处理普通回车（执行命令）
+        if (char === '\r') {
+            // 如果当前行以反斜杠结尾，则视为换行
+            if (currentCommandLine.value.endsWith('\\')) {
+                // 移除反斜杠并添加换行
+                currentCommandLine.value = currentCommandLine.value.slice(0, -1) + '\n'
+                cursorPosition.value = currentCommandLine.value.length
+                updateDisplay()
+                return
+            }
+            
+            // 检查是否有未闭合的引号或括号
+            const line = currentCommandLine.value.trim()
+            if (line) {
+                const openQuotes = (line.match(/"/g) || []).length % 2 !== 0
+                const openSingleQuotes = (line.match(/'/g) || []).length % 2 !== 0
+                const openParens = (line.match(/\(/g) || []).length > (line.match(/\)/g) || []).length
+                const openBrackets = (line.match(/\[/g) || []).length > (line.match(/\]/g) || []).length
+                const openBraces = (line.match(/\{/g) || []).length > (line.match(/\}/g) || []).length
+                
+                if (openQuotes || openSingleQuotes || openParens || openBrackets || openBraces) {
+                    // 如果存在未闭合的符号，添加换行
+                    currentCommandLine.value += '\n'
+                    cursorPosition.value = currentCommandLine.value.length
+                    updateDisplay()
+                    return
+                }
+            }
+            
+            // 如果当前行为空，显示新的提示符
             if (!currentCommandLine.value.trim()) {
                 if (showPrompt) showPrompt()
                 return
             }
+            
+            // 执行命令
             handleInput(currentCommandLine.value)
             executeCommand()
             return
@@ -444,27 +544,108 @@ export function useCommandInput(options: UseCommandInputOptions = { isReady: ref
         }
 
         // 普通字符 - 在光标位置插入
-        if (char.length === 1 && char.charCodeAt(0) >= 32) {
-            // 在光标位置插入字符
-            currentCommandLine.value =
-                currentCommandLine.value.slice(0, cursorPosition.value) +
-                char +
-                currentCommandLine.value.slice(cursorPosition.value)
-            cursorPosition.value++
-            handleInput(currentCommandLine.value)
-            updateDisplay()
+        // 修改判断条件以支持中文字符和其他Unicode字符
+        if (char.length > 0 && !char.startsWith('\u001b')) {
+            const charCode = char.charCodeAt(0)
+            // 允许可打印ASCII字符（32-126）和所有Unicode字符（>= 128）
+            // 这样可以支持中文、日文、韩文等多字节字符
+            if ((charCode >= 32 && charCode <= 126) || charCode >= 128) {
+                // 在光标位置插入字符
+                currentCommandLine.value =
+                    currentCommandLine.value.slice(0, cursorPosition.value) +
+                    char +
+                    currentCommandLine.value.slice(cursorPosition.value)
+                cursorPosition.value++
+                handleInput(currentCommandLine.value)
+                updateDisplay()
+            }
         }
     }
+
+    // 监听终端元素变化以添加输入法事件监听
+    watch(() => terminal?.value?.element, (element, oldElement, onCleanup) => {
+        if (!element) return
+
+        // 添加输入法组合事件监听
+        const handleCompositionStart = () => {
+            isComposing.value = true
+            compositionValue.value = ''
+            // 记录当前光标位置和文本（组合态开始时的基准）
+            compositionStartCursor.value = cursorPosition.value
+            compositionStartText.value = currentCommandLine.value
+        }
+
+
+        const handleCompositionEnd = (e: CompositionEvent) => {
+            if (!isComposing.value) return
+
+            isComposing.value = false
+
+            if (e.data) {
+                // 基于开始时的上下文计算最终文本
+                const before = compositionStartText.value.slice(0, compositionStartCursor.value)
+                const after = compositionStartText.value.slice(compositionStartCursor.value)
+
+                // 更新命令行为最终确认的文本
+                currentCommandLine.value = before + e.data + after
+                cursorPosition.value = compositionStartCursor.value + e.data.length
+
+                // 处理输入并更新显示
+                handleInput(currentCommandLine.value)
+                updateDisplay()
+
+                // 标记已处理，避免handleTerminalData重复处理
+                isCompositionEndHandled.value = true
+            }
+
+            // 重置组合状态
+            compositionValue.value = ''
+            compositionStartText.value = ''
+            compositionStartCursor.value = 0
+        }
+
+        element.addEventListener('compositionstart', handleCompositionStart)
+        element.addEventListener('compositionend', handleCompositionEnd as EventListener)
+
+        // 清理函数
+        onCleanup(() => {
+            element.removeEventListener('compositionstart', handleCompositionStart)
+            element.removeEventListener('compositionend', handleCompositionEnd as EventListener)
+        })
+    }, { immediate: true })
 
     // 监听输入变化
     watch(currentInput, (newValue) => {
         handleInput(newValue)
     })
 
+    // 粘贴文本（一次性插入，光标跳到末尾）
+    const pasteText = (text: string) => {
+        if (!text) return
+
+        // 在当前光标位置插入文本
+        const before = currentCommandLine.value.slice(0, cursorPosition.value)
+        const after = currentCommandLine.value.slice(cursorPosition.value)
+        const newCommand = before + text + after
+
+        // 更新命令行
+        currentCommandLine.value = newCommand
+
+        // 光标移动到插入文本的末尾
+        cursorPosition.value = before.length + text.length
+
+        // 更新输入状态和建议
+        handleInput(newCommand)
+
+        // 更新显示
+        updateDisplay()
+    }
+
     return {
         // 状态
         currentInput,
         currentCommandLine,
+        cursorPosition,  // ⚠️ 暴露光标位置
         suggestions,
         selectedSuggestionIndex,
         commandHistory,
@@ -480,6 +661,7 @@ export function useCommandInput(options: UseCommandInputOptions = { isReady: ref
         // 方法
         handleInput,
         handleTabComplete,
+        pasteText,  // ⚠️ 暴露粘贴方法
         selectPreviousSuggestion,
         selectNextSuggestion,
         selectSuggestion,

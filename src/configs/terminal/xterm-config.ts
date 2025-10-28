@@ -8,28 +8,26 @@ import type {GeekModeTheme} from '@/types/terminal/themes'
 export const DEFAULT_TERMINAL_CONFIG: TerminalConfig = {
     // 基础配置
     scrollback: 1000,
-    fontSize: 14,
-    fontFamily: 'Courier New, JetBrains Mono, Consolas, Monaco, monospace',
+    fontSize: 16,
     fontWeight: 'normal',
-    fontWeightBold: 'bold',
-    lineHeight: 1.0,  // 使用 1.0 确保行高计算精确，避免双击选择时坐标偏移
+    lineHeight: 1.2,  // 调整为1.2，1.0太紧凑可能导致选择框计算问题
     letterSpacing: 0,
 
     // 光标配置
     cursorBlink: true,
-    cursorStyle: 'block',
+    cursorStyle: 'bar',
     cursorWidth: 1,
 
     // 渲染配置
     allowTransparency: true,
     drawBoldTextInBrightColors: true,
-    logLevel: 'warn',
+    logLevel: 'info',
 
     // 交互配置
     convertEol: true,
     disableStdin: false,
     macOptionIsMeta: false,
-    rightClickSelectsWord: true,
+    rightClickSelectsWord: false,  // ⚠️ 改为false，避免与我们的右键菜单冲突
 
     // 滚动配置
     fastScrollModifier: 'alt',

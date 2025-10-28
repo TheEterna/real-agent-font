@@ -77,22 +77,8 @@ const {
 const terminalRef = ref<InstanceType<typeof Terminal>>()
 const terminalReady = ref(false)
 
-// 终端事件处理
-const handleTerminalReady = (terminal: any) => {
-  terminalReady.value = true
-  console.log('Terminal ready:', terminal)
-}
 
-const handleTerminalData = (data: string) => {
-  // 处理终端输入数据
-  console.log('Terminal data:', data)
-  // 这里可以处理终端命令，发送到后端等
-}
 
-const handleTerminalKey = (event: { key: string; domEvent: KeyboardEvent }) => {
-  // 处理特殊按键
-  console.log('Terminal key:', event)
-}
 
 // 消息配置 - 使用 ChatGPT 风格
 const {getMessageConfig, shouldCollapse} = useMessageConfig(MessageStyle.CHATGPT)
@@ -457,7 +443,7 @@ const syncModeFromRoute = () => {
 // 监听路由变化同步模式
 watch(route, () => {
   syncModeFromRoute()
-}, { immediate: true })
+}, {immediate: true})
 
 // 输入区工具栏
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -828,7 +814,9 @@ const setupSendButtonAdvancedAnimations = () => {
       y: -1,
       duration: 0.2,
       ease: 'power2.out',
-      onComplete: () => { isAnimating = false }
+      onComplete: () => {
+        isAnimating = false
+      }
     })
   })
 
@@ -839,7 +827,9 @@ const setupSendButtonAdvancedAnimations = () => {
       y: 0,
       duration: 0.2,
       ease: 'power2.out',
-      onComplete: () => { isAnimating = false }
+      onComplete: () => {
+        isAnimating = false
+      }
     })
   })
 }
@@ -863,7 +853,9 @@ const setupToolbarAdvancedAnimations = () => {
         scale: 1.05,
         duration: 0.2,
         ease: 'power2.out',
-        onComplete: () => { isAnimating = false }
+        onComplete: () => {
+          isAnimating = false
+        }
       })
     })
 
@@ -872,7 +864,9 @@ const setupToolbarAdvancedAnimations = () => {
         scale: 1,
         duration: 0.2,
         ease: 'power2.out',
-        onComplete: () => { isAnimating = false }
+        onComplete: () => {
+          isAnimating = false
+        }
       })
     })
 
@@ -889,7 +883,9 @@ const setupToolbarAdvancedAnimations = () => {
               scale: 1.05,
               duration: 0.1,
               ease: 'power2.out',
-              onComplete: () => { isAnimating = false }
+              onComplete: () => {
+                isAnimating = false
+              }
             })
           }
         })
@@ -926,7 +922,6 @@ const setupAttachmentAdvancedAnimations = () => {
     })
   })
 }
-
 
 
 // 组件挂载
@@ -1306,9 +1301,9 @@ onUnmounted(() => {
           </div>
           <div class="mode-actions">
             <button
-              class="exit-geek-btn"
-              @click="() => switchMode('multimodal')"
-              title="退出极客模式"
+                class="exit-geek-btn"
+                @click="() => switchMode('multimodal')"
+                title="退出极客模式"
             >
               退出
             </button>
@@ -1316,165 +1311,164 @@ onUnmounted(() => {
         </div>
 
         <Terminal
-          ref="terminalRef"
-          :session-id="sessionId"
-          class="geek-terminal-interface"
+            ref="terminalRef"
+            :session-id="sessionId"
+            class="geek-terminal-interface"
         />
       </div>
     </template>
 
     <!-- 正常界面 -->
     <template v-else>
-    <!-- 主要内容区域 -->
-    <div class="main-content">
-      <!-- 顶部状态栏 -->
-      <div class="top-status-bar">
+      <!-- 主要内容区域 -->
+      <div class="main-content">
+        <!-- 顶部状态栏 -->
+        <div class="top-status-bar">
           <StatusIndicator status='running'/>
-      </div>
-
-      <!-- 对话区域 -->
-      <div class="chat-container" ref="chatContent">
-        <div class="messages-wrapper">
-          <div
-              v-for="(message, index) in messages"
-              :key="index"
-              :id="message.nodeId ? 'msg-' + message.nodeId : undefined"
-              class="message-wrapper"
-          >
-            <!-- 工具审批消息 -->
-            <EnhancedToolApprovalCard
-                v-if="message.type === MessageType.ToolApproval && message.approval"
-                :approval="message.approval"
-                :session-id="sessionId"
-                @approved="handleToolApproved(message.nodeId!, $event)"
-                @rejected="handleToolRejected(message.nodeId!, $event)"
-                @error="handleToolError(message.nodeId!, $event)"
-                @retryRequested="handleToolRetryRequested(message.nodeId!, $event)"
-                @terminateRequested="handleToolTerminateRequested(message.nodeId!, $event)"
-                class="message-item"
-            />
-            <!-- Thinking 消息 - 使用折叠组件 -->
-            <CollapsibleThinking
-                v-else-if="message.eventType === EventType.THINKING && shouldCollapse(message)"
-                :content="message.message"
-                :sender="message.sender"
-                :timestamp="message.timestamp"
-                :is-thinking="!message.endTime"
-                class="message-item"
-            />
-            <!-- 普通消息 -->
-            <MessageItem v-else :message="message" class="message-item"/>
-          </div>
-
-          <!-- 加载状态 -->
-          <div v-if="isLoading" class="loading-indicator">
-            <div class="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <span class="loading-text">智能分析中...</span>
-          </div>
         </div>
 
-        <!-- 滚动到底部按钮 -->
-        <Transition name="fade">
-          <div v-show="showScrollButton" class="scroll-to-bottom" @click="scrollToBottom">
-            <a-button type="primary" shape="circle" :icon="h(ArrowDownOutlined)"/>
-          </div>
-        </Transition>
-      </div>
+        <!-- 对话区域 -->
+        <div class="chat-container" ref="chatContent">
+          <div class="messages-wrapper">
+            <div
+                v-for="(message, index) in messages"
+                :key="index"
+                :id="message.nodeId ? 'msg-' + message.nodeId : undefined"
+                class="message-wrapper"
+            >
+              <!-- 工具审批消息 -->
+              <EnhancedToolApprovalCard
+                  v-if="message.type === MessageType.ToolApproval && message.approval"
+                  :approval="message.approval"
+                  :session-id="sessionId"
+                  @approved="handleToolApproved(message.nodeId!, $event)"
+                  @rejected="handleToolRejected(message.nodeId!, $event)"
+                  @error="handleToolError(message.nodeId!, $event)"
+                  @retryRequested="handleToolRetryRequested(message.nodeId!, $event)"
+                  @terminateRequested="handleToolTerminateRequested(message.nodeId!, $event)"
+                  class="message-item"
+              />
+              <!-- Thinking 消息 - 使用折叠组件 -->
+              <CollapsibleThinking
+                  v-else-if="message.eventType === EventType.THINKING && shouldCollapse(message)"
+                  :content="message.message"
+                  :sender="message.sender"
+                  :timestamp="message.timestamp"
+                  :is-thinking="!message.endTime"
+                  class="message-item"
+              />
+              <!-- 普通消息 -->
+              <MessageItem v-else :message="message" class="message-item"/>
+            </div>
 
-      <div
-          class="input-container"
-          @dragover.prevent
-          @drop="onDropFiles"
-      >
-        <!-- 🎭 模式选择器 -->
-        <div class="mode-selector">
-          <!-- 📎 附件预览 -->
-          <div v-if="attachments.length" class="attachments-preview">
-            <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
-              <FileTextOutlined class="attachment-icon"/>
-              <span class="attachment-name">{{ attachment.name }}</span>
-              <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
-              <button
-                  size="small"
-                  @click="removeAttachment(attachment.name)"
-                  class="remove-btn"
-              >×
-              </button>
+            <!-- 加载状态 -->
+            <div v-if="isLoading" class="loading-indicator">
+              <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span class="loading-text">智能分析中...</span>
             </div>
           </div>
-          <GeekModeButton
-              :active="currentMode === 'geek'"
-              :icon="RobotOutlined"
-              label="极客模式"
-              @click="() => switchMode('geek')"
-          />
-          <NeonModeButton
-              :active="currentMode === 'multimodal'"
-              :icon="ThunderboltOutlined"
-              label="多模态模式"
-              variant="multimodal"
-              @click="() => switchMode('multimodal')"
-          />
+
+          <!-- 滚动到底部按钮 -->
+          <Transition name="fade">
+            <div v-show="showScrollButton" class="scroll-to-bottom" @click="scrollToBottom">
+              <a-button type="primary" shape="circle" :icon="h(ArrowDownOutlined)"/>
+            </div>
+          </Transition>
         </div>
 
+        <div
+            class="input-container"
+            @dragover.prevent
+            @drop="onDropFiles"
+        >
+          <!-- 🎭 模式选择器 -->
+          <div class="mode-selector">
+            <!-- 📎 附件预览 -->
+            <div v-if="attachments.length" class="attachments-preview">
+              <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
+                <FileTextOutlined class="attachment-icon"/>
+                <span class="attachment-name">{{ attachment.name }}</span>
+                <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
+                <button
+                    size="small"
+                    @click="removeAttachment(attachment.name)"
+                    class="remove-btn"
+                >×
+                </button>
+              </div>
+            </div>
+            <GeekModeButton
+                :active="currentMode === 'geek'"
+                :icon="RobotOutlined"
+                label="极客模式"
+                @click="() => switchMode('geek')"
+            />
+            <NeonModeButton
+                :active="currentMode === 'multimodal'"
+                :icon="ThunderboltOutlined"
+                label="多模态模式"
+                variant="multimodal"
+                @click="() => switchMode('multimodal')"
+            />
+          </div>
 
 
-        <!-- ✍️ 输入区域（textarea + 发送按钮 + 工具栏） -->
-        <div class="input-area">
-          <a-textarea
-              v-model:value="inputMessage"
-              :maxlength="4000"
-              :auto-size="{ minRows: 1, maxRows: 8 }"
-              placeholder="请输入您的问题..."
-              :disabled="isLoading"
-              :bordered="false"
-              @pressEnter="onPressEnter"
-              @paste="onPaste"
-          />
-          <a-button
-              :disabled="!canSend"
-              :loading="isLoading"
-              @click="sendMessage"
-              class="send-button"
-          >
-            <SendOutlined v-if="!isLoading"/>
-            <span>{{ isLoading ? '处理中...' : '发送' }}</span>
-          </a-button>
+          <!-- ✍️ 输入区域（textarea + 发送按钮 + 工具栏） -->
+          <div class="input-area">
+            <a-textarea
+                v-model:value="inputMessage"
+                :maxlength="4000"
+                :auto-size="{ minRows: 1, maxRows: 8 }"
+                placeholder="请输入您的问题..."
+                :disabled="isLoading"
+                :bordered="false"
+                @pressEnter="onPressEnter"
+                @paste="onPaste"
+            />
+            <a-button
+                :disabled="!canSend"
+                :loading="isLoading"
+                @click="sendMessage"
+                class="send-button"
+            >
+              <SendOutlined v-if="!isLoading"/>
+              <span>{{ isLoading ? '处理中...' : '发送' }}</span>
+            </a-button>
 
-          <!-- 🛠️ 工具按钮组 -->
-          <div class="input-toolbar">
-            <a-button type="text" size="large" @click="handleUploadClick" :icon="h(PaperClipOutlined)"/>
-            <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(BulbOutlined)"/>
-            <a-dropdown placement="topLeft" trigger="click">
-              <a-button type="text" size="large" :icon="h(ThunderboltOutlined)"/>
-              <template #overlay>
-                <a-menu @click="({ key }) => insertTemplate((templates.find(t=>t.label=== key ) as any).text)">
-                  <a-menu-item v-for="t in templates" :key="t.label">
-                    {{ t.label }}
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
+            <!-- 🛠️ 工具按钮组 -->
+            <div class="input-toolbar">
+              <a-button type="text" size="large" @click="handleUploadClick" :icon="h(PaperClipOutlined)"/>
+              <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(BulbOutlined)"/>
+              <a-dropdown placement="topLeft" trigger="click">
+                <a-button type="text" size="large" :icon="h(ThunderboltOutlined)"/>
+                <template #overlay>
+                  <a-menu @click="({ key }) => insertTemplate((templates.find(t=>t.label=== key ) as any).text)">
+                    <a-menu-item v-for="t in templates" :key="t.label">
+                      {{ t.label }}
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+              </a-dropdown>
+            </div>
           </div>
         </div>
+
+
       </div>
 
-
-    </div>
-
-    <!-- 隐藏文件输入 -->
-    <input
-        type="file"
-        ref="fileInput"
-        style="display: none"
-        multiple
-        accept=".txt,.md,.markdown,.java,.kt,.scala,.py,.go,.js,.mjs,.cjs,.ts,.tsx,.json,.yml,.yaml,.xml,.html,.css,.scss,.less,.vue,.svelte,.c,.cpp,.h,.hpp,.cs,.rs,.php,.rb,.swift,.m,.mm,.sql,.sh,.bat,.ps1,.ini,.conf,.log,.pdf,image/*"
-        @change="onFileChange"
-    />
+      <!-- 隐藏文件输入 -->
+      <input
+          type="file"
+          ref="fileInput"
+          style="display: none"
+          multiple
+          accept=".txt,.md,.markdown,.java,.kt,.scala,.py,.go,.js,.mjs,.cjs,.ts,.tsx,.json,.yml,.yaml,.xml,.html,.css,.scss,.less,.vue,.svelte,.c,.cpp,.h,.hpp,.cs,.rs,.php,.rb,.swift,.m,.mm,.sql,.sh,.bat,.ps1,.ini,.conf,.log,.pdf,image/*"
+          @change="onFileChange"
+      />
     </template>
 
   </div>
@@ -1565,16 +1559,14 @@ onUnmounted(() => {
     /* 强化极客模式的视觉效果 */
     &.terminal-geek-mode {
       border: 2px solid rgba(0, 255, 0, 0.4);
-      box-shadow:
-        0 0 30px rgba(0, 255, 0, 0.15),
-        inset 0 0 30px rgba(0, 255, 0, 0.08);
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.15),
+      inset 0 0 30px rgba(0, 255, 0, 0.08);
 
       /* 增强矩阵背景效果 */
       &::before {
-        background:
-          radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.04) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(0, 255, 0, 0.02) 0%, transparent 50%),
-          radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.01) 0%, transparent 70%);
+        background: radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 255, 0, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.01) 0%, transparent 70%);
       }
     }
   }
@@ -1799,7 +1791,6 @@ onUnmounted(() => {
     backdrop-filter: blur(12px);
     transition: all var(--transition-normal);
   }
-
 
 
   .agent-label {

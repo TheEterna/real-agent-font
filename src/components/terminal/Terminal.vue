@@ -26,6 +26,13 @@ const terminal = ref<Terminal>()
 // fixme: dev to true, should be false
 const isReady = ref(true)
 
+// 右键菜单状态
+const contextMenu = ref({
+  show: false,
+  x: 0,
+  y: 0
+})
+
 // 终端存储
 
 let fitAddon: FitAddon | null = null
@@ -35,11 +42,13 @@ let fitAddon: FitAddon | null = null
 const {
   currentInput,
   currentCommandLine,
+  cursorPosition,
   suggestions,
   selectedSuggestionIndex,
   showSuggestions,
   handleInput,
   handleTabComplete,
+  pasteText,
   selectPreviousSuggestion,
   selectNextSuggestion,
   selectSuggestion,
@@ -105,7 +114,8 @@ const showWelcomeMessage = () => {
 ║  Type '/help' for available commands                                             ║
 ║  Session ID: ${props.sessionId}                                                           ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
-$ Ready for commands...
+
+Ready for commands...
 `
 
   terminal.value?.write(welcomeText)
@@ -116,17 +126,106 @@ $ Ready for commands...
 const clear = () => terminal.value?.clear()
 const focus = () => terminal.value?.focus()
 
+// 右键菜单处理
+const handleContextMenu = (e: MouseEvent) => {
+  e.preventDefault()
+
+  // 菜单尺寸（估算）
+  const menuWidth = 120
+  const menuHeight = 80
+
+  // 计算菜单位置，确保不超出视口边界
+  let x = e.clientX
+  let y = e.clientY
+
+  // 防止右侧溢出
+  if (x + menuWidth > window.innerWidth) {
+    x = window.innerWidth - menuWidth - 10
+  }
+
+  // 防止底部溢出
+  if (y + menuHeight > window.innerHeight) {
+    y = window.innerHeight - menuHeight - 10
+  }
+
+  // 始终显示右键菜单（复制需要选中文本，粘贴不需要）
+  contextMenu.value = {
+    show: true,
+    x,
+    y
+  }
+}
+
+// 复制选中的文本
+const handleCopy = async () => {
+  const selection = terminal.value?.getSelection()
+
+  if (selection) {
+    try {
+      await navigator.clipboard.writeText(selection)
+      console.log('复制成功')
+    } catch (err) {
+      console.error('复制失败:', err)
+    }
+  }
+
+  // 关闭菜单
+  contextMenu.value.show = false
+}
+
+// 粘贴剪贴板内容
+const handlePaste = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+
+    if (text) {
+      // ⚠️ 使用 pasteText 方法一次性插入文本，光标自动跳到末尾
+      // 不使用 handleTerminalData，因为它会逐字符处理，导致光标位置错误
+      pasteText(text)
+      console.log('粘贴成功')
+    }
+  } catch (err) {
+    console.error('粘贴失败:', err)
+  }
+
+  // 关闭菜单
+  contextMenu.value.show = false
+}
+
+// 检查是否有选中文本（用于禁用/启用复制菜单项）
+const hasSelection = () => {
+  return !!terminal.value?.getSelection()
+}
+
+// 关闭右键菜单
+const closeContextMenu = () => {
+  contextMenu.value.show = false
+}
+
+// 点击其他地方关闭菜单
+const handleClickOutside = () => {
+  if (contextMenu.value.show) {
+    closeContextMenu()
+  }
+}
+
 // 生命周期
 onMounted(() => {
   nextTick(init)
   setTimeout(() => {
     fitAddon?.fit()
   }, 60)
+
+  // 监听全局点击，关闭右键菜单
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   // terminal.value?.dispose()
   // fitAddon = null
+
+  // 移除监听
+  document.removeEventListener('click', handleClickOutside)
 })
 
 // 暴露
@@ -147,8 +246,34 @@ defineExpose({ clear, focus, terminal, isReady })
         @select="selectSuggestion"
       />
 
-      <div ref="container" class="terminal-container">
+      <div
+        ref="container"
+        class="terminal-container"
+        @contextmenu="handleContextMenu"
+      >
         <div v-if="!isReady" class="loading">初始化...</div>
+      </div>
+
+      <!-- 右键菜单 -->
+      <div
+        v-if="contextMenu.show"
+        class="context-menu"
+        :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+        @click.stop
+      >
+        <div
+          class="menu-item"
+          :class="{ disabled: !hasSelection() }"
+          @click="hasSelection() && handleCopy()"
+        >
+          <span class="menu-icon">📋</span>
+          <span>复制</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" @click="handlePaste">
+          <span class="menu-icon">📄</span>
+          <span>粘贴</span>
+        </div>
       </div>
     </div>
   </div>
@@ -192,11 +317,12 @@ defineExpose({ clear, focus, terminal, isReady })
   position: relative;
   width: 100%;
   overflow: hidden;  // 防止内容溢出
-  padding: 8px;  // 在容器层添加 padding，避免影响 xterm 坐标计算
+  // ⚠️ 移除padding，改用xterm内部的padding配置，避免坐标偏移
 
   :deep(.xterm) {
     height: 100%;  // 确保 xterm 填充整个容器
     width: 100%;
+    padding: 8px;  // ⚠️ 在xterm内部设置padding，保证坐标计算正确
   }
 
   // 确保 xterm 的 viewport 和 screen 正确对齐
@@ -213,5 +339,54 @@ defineExpose({ clear, focus, terminal, isReady })
   color: #00ff00;
   font-family: 'Courier New', monospace;
   text-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+}
+
+// 右键菜单样式
+.context-menu {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(15, 31, 15, 0.98);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+  min-width: 120px;
+  padding: 4px 0;
+  backdrop-filter: blur(8px);
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    color: #00ff00;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+
+    .menu-icon {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    &:hover:not(.disabled) {
+      background: rgba(0, 255, 0, 0.2);
+      box-shadow: inset 0 0 8px rgba(0, 255, 0, 0.3);
+    }
+
+    &:active:not(.disabled) {
+      background: rgba(0, 255, 0, 0.3);
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .menu-divider {
+    height: 1px;
+    background: rgba(0, 255, 0, 0.2);
+    margin: 4px 8px;
+  }
 }
 </style>
