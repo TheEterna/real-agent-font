@@ -6,7 +6,10 @@ import '@/styles/index.scss'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
+import { getTwoToneColor, setTwoToneColor } from '@ant-design/icons-vue';
 
+setTwoToneColor('#b8ddd9');
+getTwoToneColor();
 
 const app = createApp(App)
 app.use(createPinia())

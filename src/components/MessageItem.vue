@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import ToolBox from './ToolBox.vue'
 import { defineAsyncComponent } from 'vue'
 import { UIMessage, EventType, MessageType } from '@/types/events'
+import ErrorMessage from './ErrorMessage.vue'
+
 const MarkdownViewer = defineAsyncComponent(() => import('./MarkdownViewer.vue'))
 const ToolApprovalCard = defineAsyncComponent(() => import('./ToolApprovalCard.vue'))
 
@@ -10,6 +12,24 @@ const props = defineProps<{
   message: UIMessage
 }>()
 
+// 判断是否应该启用打字机效果
+// 只对 THINKING、ACTION、OBSERVING 等流式输出的消息启用
+const shouldUseTypewriter = computed(() => {
+  const mes = props.message
+  if (mes.type !== MessageType.Assistant) return false
+
+  // 对思考、行动、观察阶段启用打字机效果
+  return [
+    EventType.THINKING,
+    EventType.ACTION,
+    EventType.OBSERVING,
+    EventType.TASK_ANALYSIS,
+    EventType.THOUGHT,
+    EventType.INIT_PLAN,
+    EventType.UPDATE_PLAN,
+    EventType.ADVANCE_PLAN
+  ].includes(mes.eventType as EventType)
+})
 // 主题样式需要的语义类名：thinking/action/observing/tool/error/completed/system/user
 const messageCssClass = computed(() => {
   const mes = props.message
@@ -44,31 +64,41 @@ const formatTime = (ts?: Date | string) => {
 
 <template>
   <div :class="['message', messageCssClass]">
-    <div v-if="props.message.type !== MessageType.User" class="message-header">
-      <span class="sender">{{ props.message.sender }}</span>
-      <span class="timestamp">{{ formatTime((props.message as any).timestamp) }}</span>
-    </div>
+    <!-- 错误消息使用专用组件 -->
+    <ErrorMessage
+      v-if="props.message.type === MessageType.Error"
+      :message="props.message"
+    />
 
-    <div class="message-body">
-
-       <!-- 嵌入：若该消息节点包含 TOOL 事件，则在同一消息框内追加工具框列表 -->
-      <div v-if="props.message.type === MessageType.Tool" class="embedded-tools">
-        <ToolBox :message="props.message" />
+    <!-- 其他消息类型使用原有渲染逻辑 -->
+    <template v-else>
+      <div v-if="props.message.type !== MessageType.User" class="message-header">
+        <span class="sender">{{ props.message.sender }}</span>
+        <span class="timestamp">{{ formatTime((props.message as any).timestamp) }}</span>
       </div>
 
-      <!-- 工具审批 -->
-      <div v-else-if="props.message.type === MessageType.ToolApproval">
-        <ToolApprovalCard :approval="(props.message as any).approval" />
-      </div>
+      <div class="message-body">
 
-      <!-- 其他：默认按 Markdown 渲染正文 -->
-      <div v-else class="normal-message">
-        <div class="message-text">
-          <MarkdownViewer :message="props.message.message" />
+         <!-- 嵌入：若该消息节点包含 TOOL 事件，则在同一消息框内追加工具框列表 -->
+        <div v-if="props.message.type === MessageType.Tool" class="embedded-tools">
+          <ToolBox :message="props.message" />
+        </div>
+
+        <!-- 工具审批 -->
+        <div v-else-if="props.message.type === MessageType.ToolApproval">
+          <ToolApprovalCard :approval="(props.message as any).approval" />
+        </div>
+
+        <!-- 其他：默认按 Markdown 渲染正文 -->
+        <div v-else class="normal-message">
+          <div class="message-text">
+            <MarkdownViewer
+              :message="props.message.message"
+            />
+          </div>
         </div>
       </div>
-    </div>
-
+    </template>
 
   </div>
 </template>

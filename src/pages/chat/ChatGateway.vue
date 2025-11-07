@@ -7,7 +7,7 @@ import CeladonVideoLoading from '@/components/loading/CeladonVideoLoading.vue'
 
 // 动态导入Agent组件
 import ReAct from './ReAct.vue'
-import ReActPlus from './ReActPlus.vue'
+import Index from './reactplus/Index.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,7 +29,7 @@ const transitionSubtitle = ref('...')
 // Agent组件映射
 const agentComponentMap: Record<AgentType, any> = {
   [AgentType.ReAct]: ReAct,
-  [AgentType.ReAct_Plus]: ReActPlus,
+  [AgentType.ReAct_Plus]: Index,
   [AgentType.Coding]: ReAct, // todo 暂时使用ReAct作为placeholder
 }
 
@@ -240,13 +240,9 @@ onMounted(() => {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.fade-enter-from {
-  opacity: 0;
-  transform: scale(0.95) translateY(20px);
-}
 
 .fade-leave-to {
   opacity: 0;
-  transform: scale(1.05) translateY(-20px);
+  transform: scale(3) translateY(-20px);
 }
 </style>

@@ -1,0 +1,194 @@
+/* =================================================================
+   瓷釉青色系主题色彩变量 (Celadon Color System)
+   基于中国传统青瓷釉色的现代数字化表达
+   ================================================================= */
+
+:root {
+  /* =================================================================
+     瓷釉青主色系 (Primary Celadon Colors)
+     主色调基于青瓷釉色，具有典雅、温润的视觉特征
+     ================================================================= */
+
+  /* 瓷釉青主色调 - 基于宋代龙泉窑青瓷釉色 */
+  --celadon-50: #f0f7f7;       /* 极淡瓷釉青 - 若雪青瓷 */
+  --celadon-100: #d8ebea;      /* 淡瓷釉青 - 月白青瓷 */
+  --celadon-200: #b8ddd9;      /* 浅瓷釉青 - 粉青瓷釉 */
+  --celadon-300: #98cfc8;      /* 中浅瓷釉青 - 豆青瓷釉 */
+  --celadon-400: #7eb4ab;      /* 标准瓷釉青 - 梅子青瓷 */
+  --celadon-500: #6b9a98;      /* 主色调瓷釉青 - 龙泉青瓷 */
+  --celadon-600: #5a8482;      /* 深瓷釉青 - 官窑青瓷 */
+  --celadon-700: #4a6d6c;      /* 较深瓷釉青 - 汝窑青瓷 */
+  --celadon-800: #3a5655;      /* 深沉瓷釉青 - 青瓷暗釉 */
+  --celadon-900: #2a3f3f;      /* 极深瓷釉青 - 墨青瓷釉 */
+
+  /* =================================================================
+     辅助瓷釉色系 (Supporting Celadon Palette)
+     基于传统陶瓷工艺的相关色彩
+     ================================================================= */
+
+  /* 青瓷色系 - 传统青瓷的经典呈现 */
+  --porcelain-light: #c8d6ce;    /* 淡青瓷 - 影青瓷色 */
+  --porcelain-default: #9db5aa;  /* 青瓷色 - 标准青瓷 */
+  --porcelain-dark: #7a9488;     /* 深青瓷 - 青瓷深釉 */
+
+  /* 玉色系 - 温润如玉的绿调 */
+  --jade-light: #b5c99a;    /* 淡玉色 - 白玉带青 */
+  --jade-default: #87a96b;  /* 玉色 - 青白玉色 */
+  --jade-dark: #6b7f5a;     /* 深玉色 - 碧玉深色 */
+
+  /* 瓷白色系 - 瓷器底色变化 */
+  --ceramic-warm: #f2f6f4;     /* 暖瓷白 - 象牙白瓷 */
+  --ceramic-default: #e8f0f0;  /* 瓷白色 - 标准瓷白 */
+  --ceramic-cool: #dfe8e8;     /* 冷瓷白 - 月光白瓷 */
+
+  /* =================================================================
+     应用级语义化色彩 (Application Semantic Colors)
+     将瓷釉色系应用到具体UI状态的语义化定义
+     ================================================================= */
+
+  /* 主色调应用 */
+  --color-primary: var(--celadon-500);
+  --color-primary-hover: var(--celadon-600);
+  --color-primary-active: var(--celadon-700);
+  --color-primary-light: var(--celadon-100);
+  --color-primary-lighter: var(--celadon-50);
+
+  /* 状态色彩 - 保持传统青瓷美学的同时确保功能性 */
+  --color-thinking: var(--celadon-400);      /* 思考状态 - 梅子青 */
+  --color-thinking-bg: var(--celadon-50);    /* 思考背景 - 若雪青 */
+  --color-thinking-border: var(--celadon-300); /* 思考边框 - 豆青 */
+
+  --color-action: var(--jade-default);       /* 行动状态 - 青白玉 */
+  --color-action-bg: var(--jade-light);      /* 行动背景 - 淡玉色 */
+  --color-action-border: var(--jade-dark);   /* 行动边框 - 碧玉深色 */
+
+  --color-observing: var(--porcelain-default);  /* 观察状态 - 青瓷色 */
+  --color-observing-bg: var(--porcelain-light); /* 观察背景 - 淡青瓷 */
+  --color-observing-border: var(--porcelain-dark); /* 观察边框 - 深青瓷 */
+
+  --color-completed: var(--celadon-600);     /* 完成状态 - 深瓷釉青 */
+  --color-completed-bg: var(--celadon-100); /* 完成背景 - 淡瓷釉青 */
+  --color-completed-border: var(--celadon-500); /* 完成边框 - 主色调 */
+
+  /* 通用UI色彩 */
+  --color-background: var(--ceramic-warm);      /* 主背景 - 暖瓷白 */
+  --color-surface: var(--ceramic-default);     /* 表面色 - 标准瓷白 */
+  --color-border: var(--celadon-200);          /* 边框色 - 浅瓷釉青 */
+  --color-border-light: var(--celadon-100);    /* 淡边框 - 淡瓷釉青 */
+
+  --color-text-primary: var(--celadon-800);    /* 主文字 - 深沉瓷釉青 */
+  --color-text-secondary: var(--celadon-600);  /* 次要文字 - 深瓷釉青 */
+  --color-text-tertiary: var(--celadon-400);   /* 辅助文字 - 标准瓷釉青 */
+  --color-text-placeholder: var(--celadon-300); /* 占位符 - 中浅瓷釉青 */
+
+  /* =================================================================
+     动效和状态色彩 (Animation & State Colors)
+     专用于GSAP动画和交互状态的色彩定义
+     ================================================================= */
+
+  /* 悬浮状态 */
+  --color-hover-background: var(--celadon-50);
+  --color-hover-border: var(--celadon-300);
+  --color-hover-shadow: rgba(107, 154, 152, 0.15);
+
+  /* 激活状态 */
+  --color-active-background: var(--celadon-100);
+  --color-active-border: var(--celadon-400);
+  --color-active-shadow: rgba(107, 154, 152, 0.25);
+
+  /* 焦点状态 */
+  --color-focus-ring: var(--celadon-300);
+  --color-focus-background: var(--celadon-50);
+
+  /* =================================================================
+     深色模式适配 (Dark Mode Adaptations)
+     瓷釉青色系的深色模式优化
+     ================================================================= */
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* 深色模式下的瓷釉色调整 - 保持青瓷美学但适应深色环境 */
+      --color-background: #1a2626;                    /* 深色背景 - 墨青瓷色 */
+      --color-surface: #243333;                       /* 深色表面 - 青瓷暗调 */
+      --color-border: var(--celadon-700);            /* 深色边框 */
+      --color-border-light: var(--celadon-600);      /* 深色淡边框 */
+
+      --color-text-primary: var(--celadon-100);      /* 深色主文字 */
+      --color-text-secondary: var(--celadon-200);    /* 深色次要文字 */
+      --color-text-tertiary: var(--celadon-300);     /* 深色辅助文字 */
+      --color-text-placeholder: var(--celadon-500);  /* 深色占位符 */
+
+      /* 深色模式悬浮状态 */
+      --color-hover-background: var(--celadon-900);
+      --color-hover-border: var(--celadon-600);
+      --color-hover-shadow: rgba(107, 154, 152, 0.3);
+
+      /* 深色模式激活状态 */
+      --color-active-background: var(--celadon-800);
+      --color-active-border: var(--celadon-500);
+      --color-active-shadow: rgba(107, 154, 152, 0.4);
+    }
+  }
+}
+
+/* =================================================================
+   Tailwind CSS 兼容性类 (Tailwind Compatibility Classes)
+   为了确保与 Tailwind 配色的无缝集成
+   ================================================================= */
+
+
+/* 辅助色系类 */
+.bg-celadon { background-color: var(--porcelain-default); }
+.bg-celadon-light { background-color: var(--porcelain-light); }
+.bg-celadon-dark { background-color: var(--porcelain-dark); }
+
+.text-celadon { color: var(--porcelain-default); }
+.text-celadon-light { color: var(--porcelain-light); }
+.text-celadon-dark { color: var(--porcelain-dark); }
+
+.bg-jade { background-color: var(--jade-default); }
+.bg-jade-light { background-color: var(--jade-light); }
+.bg-jade-dark { background-color: var(--jade-dark); }
+
+.text-jade { color: var(--jade-default); }
+.text-jade-light { color: var(--jade-light); }
+.text-jade-dark { color: var(--jade-dark); }
+
+/* =================================================================
+   使用指南 (Usage Guidelines)
+   ================================================================= */
+
+/*
+在组件中使用瓷釉青色系的建议：
+
+1. **主色调应用**：
+   - 使用 var(--color-primary) 作为主要品牌色
+   - 使用 var(--color-primary-hover) 处理悬浮状态
+   - 使用 var(--color-primary-light) 作为淡化背景
+
+2. **状态色彩**：
+   - 思考状态：var(--color-thinking)
+   - 行动状态：var(--color-action)
+   - 观察状态：var(--color-observing)
+   - 完成状态：var(--color-completed)
+
+3. **Tailwind 集成**：
+   - 可以直接使用 primary-500, celadon, jade 等类名
+   - 也可以在 @apply 指令中使用自定义变量
+
+4. **GSAP 动画**：
+   - 使用 var(--color-hover-shadow) 等预定义颜色
+   - 确保动画色彩与整体主题协调
+
+示例：
+.my-component {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.my-component:hover {
+  background: var(--color-hover-background);
+  box-shadow: 0 4px 12px var(--color-hover-shadow);
+}
+*/

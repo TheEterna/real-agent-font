@@ -153,7 +153,8 @@ onMounted(() => {
         </div>
       </div>
       <a-button
-        class="toolbar-btn new-session-btn"
+        class="new-session-btn text-shadow-cyan-900"
+        :style='{ background: `linear-gradient(135deg, ${getRandomGlassColor()} 0%, ${getRandomGlassColor()} 100%)`}'
         type="primary"
         size="large"
         @click="handleNewConversation"
@@ -252,12 +253,12 @@ onMounted(() => {
 
 /* 新建会话按钮样式 */
 .new-session-btn {
+  color: rgba(0, 0, 0, 0.5);
   width: 100%;
   height: 44px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   transition: all 0.3s ease;
@@ -266,7 +267,6 @@ onMounted(() => {
 .new-session-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .new-session-btn:active {

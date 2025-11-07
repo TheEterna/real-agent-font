@@ -9,10 +9,26 @@ $border-color: #e5e7eb;
 $text-color: #1f2937;
 $muted-color: #666;
 
+// Primary color (can be tuned per brand)
+$primary-color: #6b9a98;
+
+$primary-color-50: #f0f7f7;
+$primary-color-75: #e4f1f1;
+$primary-color-100: #d8ebea;
+$primary-color-200: #b8ddd9;
+$primary-color-300: #98cfc8;
+$primary-color-400: #7eb4ab;
+$primary-color-500: #6b9a98;
+$primary-color-600: #5a8482;
+$primary-color-700: #4a6d6c;
+$primary-color-800: #3a5655;
+$primary-color-900: #2a3f3f;
+
 // Section fixed heights (can be tuned per layout)
 $section-height-mcp: 360px;
 $section-height-system: 360px;
 
+$jelly-pink-lightest: #fffafb;
 $jelly-pink-light: #ffebee;
 $jelly-pink: #fce4ec;
 $jelly-pink-deep: #f3bddb;
@@ -29,6 +45,7 @@ $jelly-green-light: #e8f5e9;
 $jelly-green: #c8e6c9;
 $jelly-green-deep: #a5d6a7;
 
+$jelly-yellow-lightest: #fbf9f2;
 $jelly-yellow-light: #fff8e1;
 $jelly-yellow: #ffeeba;
 $jelly-yellow-deep: #ffe082;
@@ -50,6 +67,7 @@ $jelly-magenta-light: #fce4ec;
 $jelly-magenta: #f0bbdb;
 $jelly-magenta-deep: #e59ed6;
 
+$jelly-teal-lightest: #e9f6f5;
 $jelly-teal-light: #e0f2f1;
 $jelly-teal: #b2dfdb;
 $jelly-teal-deep: #80cbc4;

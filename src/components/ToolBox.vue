@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { UIMessage } from '@/types/events'
+import { UIMessage } from '@/types/events.js'
 
 const props = defineProps<{
   message: UIMessage
@@ -165,7 +165,6 @@ const getToolIcon = (name: string): string => {
 </template>
 
 <style scoped lang="scss">
-@use "@/styles/_variables.scss" as *;
 
 .tool-box-container {
   width: 100%;

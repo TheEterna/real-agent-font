@@ -1,0 +1,1373 @@
+/* $$$$$$$$$$$$$ CSSVARIABLES - Design Tokens $$$$$$$$$$$$$ */
+/* 🎨 青花瓷配色系统 - Celadon Color System */
+/* 背景 - 素雅瓷白 */
+$bg-primary: #F8F9FA; /* 瓷器底色 - 素雅米白 */
+$bg-secondary: #FEFEFE; /* 主体瓷白 - 纯净如玉 */
+$bg-tertiary: #F0F4F4; /* 淡青瓷面 - 青白相间 */
+$bg-hover: #E8F0F0; /* 悬浮态 - 青影浮动 */
+
+/* 文字 - 墨色系统 */
+$text-primary: #2C3E3E; /* 主墨色 - 深邃内敛 */
+$text-secondary: #5B7373; /* 次墨色 - 典雅沉稳 */
+$text-tertiary: #8B9D9D; /* 淡墨色 - 水墨晕染 */
+$text-inverse: #FFFFFF; /* 反白色 */
+
+/* 边框 - 青瓷轮廓 */
+$border-subtle: #E0E8E8; /* 微妙青边 */
+$border-light: #C8D8D8; /* 淡青边框 */
+$border-medium: #A0B8B8; /* 中青边框 */
+
+/* 品牌色 - 青龙之色 */
+$brand-primary: #5B8A8A; /* 主青瓷色 - 青龙本色 */
+$brand-hover: #3A5F5F; /* 悬浮深青 - 龙威显现 */
+$brand-light: #D8E8E8; /* 淡青光晕 - 龙息扩散 */
+$brand-glow: rgba(91, 138, 138, 0.2); /* 青光晕染 */
+
+/* 辅助色 - 水墨点缀 */
+$accent-jade: #6B9A98; /* 翠玉青 */
+$accent-jade-light: #E0F0F0;
+$accent-ink: #4A6868; /* 墨青色 */
+$accent-ink-light: #D0E0E0;
+
+/* 状态色 - 东方意境 */
+$success: #52A885; /* 翠竹绿 */
+$success-light: #D8F0E8;
+$warning: #D0A048; /* 秋叶金 */
+$warning-light: #F8F0D8;
+$error: #C85A5A; /* 朱砂红 */
+$error-light: #F8E0E0;
+$info: #5B8A8A; /* 青瓷信息色 */
+$info-light: #D8E8E8;
+
+/* 间距 */
+$space-xs: 0.25rem;
+$space-sm: 0.5rem;
+$space-md: 1rem;
+$space-lg: 1.5rem;
+$space-xl: 2rem;
+$space-2xl: 3rem;
+$space-3xl: 4rem;
+$space-4xl: 5rem;
+$space-5xl: 6rem;
+
+/* 字体 */
+$font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+$font-mono: 'SF Mono', 'JetBrains Mono', Consolas, 'Liberation Mono', monospace;
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+/* 圆角 - 瓷器圆润 */
+$radius-sm: 0.375rem;
+$radius-md: 0.625rem;
+$radius-lg: 0.875rem;
+$radius-xl: 1.125rem;
+$radius-full: 9999px;
+
+/* 阴影 - 青瓷质感 */
+$shadow-subtle: 0 1px 3px rgba(91, 138, 138, 0.06), 0 1px 2px rgba(91, 138, 138, 0.03);
+$shadow-soft: 0 2px 8px rgba(91, 138, 138, 0.08), 0 2px 4px rgba(91, 138, 138, 0.04);
+$shadow-medium: 0 4px 16px rgba(91, 138, 138, 0.12), 0 2px 6px rgba(91, 138, 138, 0.06);
+$shadow-large: 0 8px 32px rgba(91, 138, 138, 0.16), 0 4px 12px rgba(91, 138, 138, 0.08);
+$shadow-glow: 0 0 24px var($brand-glow);
+
+/* 过渡 - 如水流云转 */
+$transition-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-spring: 600ms cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹簧效果 - 龙腾之态 */
+
+/* $$$$$$$$$$ MessageItem 青花瓷主题变量 $$$$$$$$$$ */
+
+/* 基础消息样式 */
+$message-spacing: 1.2rem;
+$message-padding: 1.25rem;
+$message-radius: 0.875rem;
+$message-bg: #FEFEFE; /* 瓷白背景 */
+$message-shadow: rgba(91, 138, 138, 0.08);
+$message-text: #2C3E3E; /* 主墨色 */
+$message-border-width: 3px;
+
+/* 消息头部 */
+$message-header-text: #5B7373; /* 次墨色 */
+$message-sender-text: #3A5F5F; /* 深青色 */
+
+/* 用户消息 - 淡青瓷 */
+$message-user-bg: #F8FCFC;
+$message-user-border: #C8D8D8;
+$message-user-text: #5B8A8A;
+
+/* Thinking 消息 - 琥珀青 */
+$message-thinking-bg: #F8F8F0;
+$message-thinking-border: #D0A048; /* 秋叶金 */
+$message-thinking-text: #8B7536;
+
+/* Action 消息 - 翠竹青 */
+$message-action-bg: #F0F8F4;
+$message-action-border: #52A885; /* 翠竹绿 */
+$message-action-text: #3A7860;
+
+/* Observing 消息 - 紫砂青 */
+$message-observing-bg: #F4F0F8;
+$message-observing-border: #8B7BA8;
+$message-observing-text: #5B4B78;
+
+/* Tool 消息 - 湖水青 */
+$message-tool-bg: #F0F8FC;
+$message-tool-border: #6B9AB8;
+$message-tool-text: #4A6878;
+
+/* Error 消息 - 朱砂红 */
+$message-error-bg: #FCF0F0;
+$message-error-border: #C85A5A;
+$message-error-text: #A03838;
+
+/* Progress 消息 - 蜜蜡黄 */
+$message-progress-bg: #FCF8F0;
+$message-progress-border: #D8B870;
+$message-progress-text: #A08850;
+
+/* Warning 消息 - 琥珀黄 */
+$message-warning-bg: #FCF4E8;
+$message-warning-border: #D0A048;
+$message-warning-text: #A08038;
+
+/* $$$$$$$$$$$$$ 🖥️ 极客模式终端界面样式 $$$$$$$$$$$$$ */
+.geek-mode-wrapper {
+ width: 100%;
+ height: 100vh;
+ display: flex;
+ flex-direction: column;
+ background: #000000;
+}
+
+/* 极客模式快速切换头部 */
+.geek-mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+  border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  min-height: 40px;
+  z-index: 100;
+
+  .mode-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .mode-label {
+      font-weight: bold;
+      text-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+      letter-spacing: 1px;
+    }
+
+    .session-info {
+      color: rgba(0, 255, 0, 0.7);
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  }
+
+  .mode-actions {
+    .exit-geek-btn {
+      background: transparent;
+      border: 1px solid rgba(0, 255, 0, 0.4);
+      color: #00ff00;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+
+      &:hover {
+        background: rgba(0, 255, 0, 0.1);
+        border-color: rgba(0, 255, 0, 0.8);
+        box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+        text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+      }
+    }
+  }
+}
+
+.geek-terminal-interface {
+  flex: 1;
+  position: relative;
+
+  /* 确保终端占据剩余空间 */
+  :deep(.terminal-container) {
+    height: 100%;
+    border-radius: 0;
+
+    /* 强化极客模式的视觉效果 */
+    &.terminal-geek-mode {
+      border: 2px solid rgba(0, 255, 0, 0.4);
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.15),
+      inset 0 0 30px rgba(0, 255, 0, 0.08);
+
+      /* 增强矩阵背景效果 */
+      &::before {
+        background: radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 255, 0, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.01) 0%, transparent 70%);
+      }
+    }
+  }
+
+  /* 终端头部增强 */
+  :deep(.terminal-header) {
+    background: linear-gradient(135deg, #0a1a0a 0%, #1a2f1a 50%, #0f1f0f 100%);
+    border-bottom: 2px solid rgba(0, 255, 0, 0.4);
+    padding: 12px 20px;
+
+    .terminal-title {
+      .title-text {
+        font-size: 16px;
+        font-weight: bold;
+        text-shadow: 0 0 12px rgba(0, 255, 0, 0.7);
+      }
+    }
+
+    .status-indicator {
+      .status-text {
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+    }
+  }
+}
+
+
+
+/* $$$$$$$$$$$$$ BASE LAYOUT $$$$$$$$$$$$$ */
+.react-plus-app {
+  /* 青花瓷底纹背景 */
+  background: linear-gradient(180deg,
+          $bg-primary 0%,
+          #F0F4F4 50%,
+          $bg-primary 100%
+  );
+  font-family: $font-sans;
+  color: $text-primary;
+  display: flex;
+  flex-direction: column;
+  transition: background-color $transition-normal;
+  position: relative;
+
+  overflow: auto;
+  /* 青花瓷纹理叠加 */
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(91, 138, 138, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(91, 138, 138, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .main-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* $$$$$$$$$$$$$ TOP STATUS BAR $$$$$$$$$$$$$ */
+.react-plus-app {
+  width: 100%;
+  height: 100%;
+  .top-status-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0);
+    padding-top: $space-md;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all $transition-normal;
+  }
+
+
+  .agent-label {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $text-secondary;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+
+  .action-btn {
+    position: relative;
+    color: $text-secondary !important;
+    transition: all $transition-normal !important;
+    border-radius: $radius-sm !important;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, $brand-glow 50%, transparent 70%);
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: opacity $transition-fast;
+    }
+
+    &:hover {
+      color: $brand-primary !important;
+      background: $bg-hover !important;
+      transform: translateY(-1px);
+      box-shadow: $shadow-subtle;
+
+      &::before {
+        animation: shimmer 1.5s ease-in-out infinite;
+        opacity: 1;
+      }
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
+      transition: all 100ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+}
+
+/* $$$$$$$$$$$$$ PROGRESS INDICATOR $$$$$$$$$$$$$ */
+.react-plus-app {
+  .global-progress {
+    padding: $space-md $space-xl;
+    background: $bg-secondary;
+    border-bottom: 1px solid $border-subtle;
+    animation: slideDown $transition-normal;
+  }
+
+  .progress-content {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+  }
+
+  .progress-icon {
+    position: relative;
+  }
+
+  .progress-indicator {
+    position: relative;
+    width: 24px;
+    height: 24px;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    inset: -8px;
+    border: 2px solid $brand-primary;
+    border-radius: 50%;
+    opacity: 0.8;
+    box-shadow: 0 0 12px $brand-glow;
+  }
+
+  .pulse-dot {
+    position: absolute;
+    inset: -10px;
+    z-index: 99;
+    background: $brand-primary;
+    border-radius: 50%;
+    box-shadow: 0 0 16px $brand-primary,
+    0 0 32px $brand-glow;
+  }
+
+  .progress-text {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    font-weight: 500;
+  }
+}
+
+/* 🐉 以下动画已由 GSAP 接管 */
+/* slideDown - 由 GSAP 页面初始化实现 */
+/* dragonRing - 由 setupPulseAnimation() 实现 */
+/* dragonCore - 由 setupPulseAnimation() 实现 */
+
+/* $$$$$$$$$$$$$ CHAT CONTAINER $$$$$$$$$$$$$ */
+.react-plus-app {
+  .chat-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $space-lg;
+
+    overflow-y: auto;
+
+    padding: $space-2xl $space-lg;
+    scroll-behavior: smooth;
+    /* 半透明青瓷背景 */
+    background: rgba(248, 252, 252, 0.6);
+    backdrop-filter: blur(20px);
+
+    /* Custom scrollbar - 青瓷色 */
+    scrollbar-width: thin;
+    scrollbar-color: $brand-primary transparent;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg,
+              $brand-primary,
+              $brand-hover
+      );
+      border-radius: $radius-full;
+      transition: all $transition-fast;
+      box-shadow: 0 0 6px $brand-glow;
+
+      &:hover {
+        background: $brand-hover;
+        box-shadow: 0 0 12px $brand-glow;
+      }
+    }
+  }
+
+  .message-wrapper {
+    width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  .message-item {
+    transition: all $transition-normal;
+  }
+}
+
+/* $$$$$$$$$$$$$ 🎨 MESSAGE 青花瓷增强样式 $$$$$$$$$$$$$ */
+.react-plus-app {
+  /* 为所有消息添加青瓷质感 */
+  :deep(.message) {
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    transition: all $transition-normal;
+
+    /* 青瓷釉光效果 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg,
+              transparent,
+              rgba(91, 138, 138, 0.08),
+              transparent
+      );
+      transition: left $transition-slow;
+      pointer-events: none;
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+
+    /* 不同类型消息的青龙光晕 */
+    &.thinking:hover {
+      box-shadow: 0 4px 16px rgba(208, 160, 72, 0.2),
+      0 2px 8px rgba(208, 160, 72, 0.1);
+    }
+
+    &.action:hover {
+      box-shadow: 0 4px 16px rgba(82, 168, 133, 0.2),
+      0 2px 8px rgba(82, 168, 133, 0.1);
+    }
+
+    &.observing:hover {
+      box-shadow: 0 4px 16px rgba(139, 123, 168, 0.2),
+      0 2px 8px rgba(139, 123, 168, 0.1);
+    }
+
+    &.tool:hover {
+      box-shadow: 0 4px 16px rgba(107, 154, 184, 0.2),
+      0 2px 8px rgba(107, 154, 184, 0.1);
+    }
+
+    &.error:hover {
+      box-shadow: 0 4px 16px rgba(200, 90, 90, 0.2),
+      0 2px 8px rgba(200, 90, 90, 0.1);
+    }
+
+    &.user:hover {
+      box-shadow: 0 4px 16px rgba(91, 138, 138, 0.15),
+      0 2px 8px rgba(91, 138, 138, 0.08);
+    }
+
+    /* 发送者名称下划线动效 */
+    &:hover .sender::after {
+      width: 100%;
+    }
+  }
+
+  /* 消息头部优化 */
+  :deep(.message-header) {
+    font-family: $font-sans;
+  }
+
+  :deep(.sender) {
+    position: relative;
+    display: inline-block;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: $brand-primary;
+      transition: width $transition-normal;
+    }
+  }
+}
+
+/* $$$$$$$$$$$$$ LOADING INDICATOR $$$$$$$$$$$$$ */
+.react-plus-app {
+  .loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-lg;
+    animation: dragonRise $transition-slow;
+  }
+
+  .loading-dots {
+    display: flex;
+    gap: $space-sm;
+    position: relative;
+  }
+
+  /* 青花瓷加载点 */
+  .loading-dots span {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $brand-primary;
+    box-shadow: 0 0 8px $brand-glow;
+  }
+
+  .loading-dots span::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid $brand-primary;
+    opacity: 0;
+    animation: dragonDotRing 1.6s ease-in-out infinite;
+  }
+
+  .loading-dots span:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .loading-dots span:nth-child(1)::after {
+    animation-delay: 0s;
+  }
+
+  .loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dots span:nth-child(2)::after {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .loading-dots span:nth-child(3)::after {
+    animation-delay: 0.4s;
+  }
+
+  .loading-text {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    font-weight: 500;
+    background: linear-gradient(90deg,
+            $text-secondary,
+            $brand-primary,
+            $text-secondary
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  /* $$$$$$$$$$$$$ SCROLL TO BOTTOM BUTTON $$$$$$$$$$$$$ */
+  .scroll-to-bottom {
+    position: fixed;
+    bottom: 200px;
+    right: $space-xl;
+    z-index: 40;
+    animation: dragonRise $transition-slow cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .scroll-to-bottom button {
+    position: relative;
+    background: $bg-secondary !important;
+    border: 2px solid $border-light !important;
+    box-shadow: $shadow-medium !important;
+    transition: all $transition-spring !important;
+    overflow: visible;
+  }
+
+  /* 青龙光环 */
+  .scroll-to-bottom button::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(
+                    from 0deg,
+                    $brand-primary,
+                    $accent-jade,
+                    $brand-primary
+    );
+    opacity: 0;
+    animation: spinRipple 3s linear infinite;
+    transition: opacity $transition-normal;
+  }
+
+  .scroll-to-bottom button:hover {
+    background: $brand-primary !important;
+    border-color: $brand-primary !important;
+    transform: translateY(-4px) scale(1.1) !important;
+    box-shadow: $shadow-large, $shadow-glow !important;
+  }
+
+  .scroll-to-bottom button:hover::before {
+    opacity: 0.6;
+  }
+
+  .scroll-to-bottom button:active {
+    transform: translateY(-2px) scale(1.05) !important;
+    transition: all 100ms !important;
+  }
+
+  /* Vue Transition 动效增强 */
+  .fade-enter-active {
+    animation: dragonRise $transition-slow cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .fade-leave-active {
+    transition: all $transition-normal;
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+
+  /* $$$$$$$$$$$$$ INPUT AREA - 汉白玉龙泉青瓷输入区域 $$$$$$$$$$$$$ */
+  .input-container {
+    position: sticky;
+    bottom: 5px;
+    z-index: 30;
+    width: 1000px;
+    margin: 0 auto;
+    /* 汉白玉底纹 - 温润如玉的渐变 */
+    background: linear-gradient(180deg,
+            rgba(230, 245, 245, 0.90) 0%,
+            rgba(220, 240, 240, 0.95) 20%,
+            rgba(245, 250, 250, 0.98) 40%,
+            rgba(255, 255, 255, 1) 50%,
+            rgba(240, 248, 248, 1) 60%,
+            rgba(225, 238, 238, 0.95) 80%,
+            rgba(215, 232, 232, 0.90) 100%
+    );
+
+    /* 使用 border + box-shadow 替代 border-image（兼容圆角） */
+    border: 2px solid rgba(107, 154, 152, 0.15);
+    border-radius: var(--radius-2xl, 1.5rem);
+    backdrop-filter: blur(24px) saturate(1.3) contrast(1.1);
+
+    /* 龙泉青瓷上缘光晕（模拟 border-image）+ 汉白玉深层质感阴影 */
+    box-shadow: /* 顶部青瓷光晕（模拟渐变边框） */
+            0 -2px 0 0 rgba(107, 154, 152, 0.4),
+            0 -4px 0 0 rgba(91, 138, 138, 0.2),
+              /* 深层阴影 */
+            0 -12px 48px rgba(91, 138, 138, 0.06),
+            0 -8px 32px rgba(91, 138, 138, 0.08),
+            0 -4px 16px rgba(255, 255, 255, 0.5),
+            0 -2px 8px rgba(255, 255, 255, 0.3),
+              /* 内部高光 */
+            inset 0 2px 0 rgba(255, 255, 255, 0.9),
+            inset 0 1px 0 rgba(255, 255, 255, 0.7),
+            inset 0 -1px 0 rgba(107, 154, 152, 0.08),
+            inset 0 -2px 0 rgba(107, 154, 152, 0.02);
+
+    overflow: hidden;
+  }
+
+
+  /* $$$$$$$$$$$$$ ATTACHMENTS PREVIEW - 汉白玉雕琢 $$$$$$$$$$$$$ */
+  .attachments-preview {
+    max-width: 800px;
+    margin: 0 auto $space-lg;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-md;
+    padding: $space-md;
+
+    /* 汉白玉底座 */
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(250, 254, 254, 0.95) 50%,
+            rgba(255, 255, 255, 0.9) 100%
+    );
+    border-radius: $radius-xl;
+    border: 1px solid rgba(107, 154, 152, 0.15);
+    backdrop-filter: blur(12px);
+
+    /* 龙泉青瓷光晕 */
+    box-shadow: 0 4px 16px rgba(91, 138, 138, 0.06),
+    0 2px 8px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+    transition: all $transition-spring;
+
+    /* 玉石纹理 */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(91, 138, 138, 0.12),
+      0 4px 12px rgba(255, 255, 255, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 0 24px rgba(107, 154, 152, 0.1);
+    }
+  }
+
+  .attachment-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-md $space-lg;
+
+    /* 汉白玉切片质感 */
+    background: linear-gradient(145deg,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(248, 254, 254, 0.9) 30%,
+            rgba(250, 252, 252, 0.95) 70%,
+            rgba(255, 255, 255, 0.9) 100%
+    );
+
+    /* 使用 border + box-shadow 替代 border-image（兼容圆角） */
+    border: 1px solid rgba(107, 154, 152, 0.2);
+    border-radius: $radius-lg;
+    font-size: $font-size-sm;
+    transition: all $transition-spring;
+    overflow: hidden;
+
+    /* 龙泉青瓷边框光晕（模拟 border-image）+ 玉石内光 */
+    box-shadow: /* 渐变边框效果 */
+            0 0 0 1px rgba(91, 138, 138, 0.15),
+              /* 基础阴影 */
+            0 2px 8px rgba(91, 138, 138, 0.08),
+            0 1px 4px rgba(255, 255, 255, 0.4),
+              /* 内部高光 */
+            inset 0 1px 0 rgba(255, 255, 255, 0.7),
+            inset 0 -1px 0 rgba(91, 138, 138, 0.05);
+
+    /* 龙泉青瓷釉质流光 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+              transparent,
+              rgba(107, 154, 152, 0.15),
+              rgba(91, 138, 138, 0.1),
+              transparent
+      );
+      transition: left $transition-slow;
+      pointer-events: none;
+    }
+
+    /* 汉白玉微妙纹理 */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 1.25em;
+
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity $transition-normal;
+    }
+
+    &:hover {
+      transform: translateY(-3px) scale(1.02) rotateY(2deg);
+      border-color: $brand-primary;
+
+      /* 龙泉青瓷光华绽放 */
+      box-shadow: 0 8px 24px rgba(91, 138, 138, 0.15),
+      0 4px 12px rgba(255, 255, 255, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(91, 138, 138, 0.1),
+      0 0 32px rgba(107, 154, 152, 0.2);
+
+      &::before {
+        left: 100%;
+      }
+
+      &::after {
+        opacity: 1;
+      }
+    }
+
+    &:active {
+      transform: translateY(-1px) scale(0.98);
+      transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  .attachment-icon {
+    color: $text-secondary;
+    font-size: $font-size-base;
+  }
+
+  .attachment-name {
+    color: $text-primary;
+    font-weight: 500;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .attachment-size {
+    color: $text-tertiary;
+    font-size: $font-size-xs;
+  }
+
+  .remove-btn {
+    color: $text-tertiary !important;
+    padding: 0 !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    transition: all $transition-fast !important;
+  }
+
+  .remove-btn:hover {
+    color: $error !important;
+    background: $bg-hover !important;
+  }
+
+  /* $$$$$$$$$$$$$ INPUT CONTAINER - 汉白玉龙泉青瓷极致融合 $$$$$$$$$$$$$ */
+
+
+  /* $$$$$$$$$$$$$ INPUT TOOLBAR FLOATING - 浮动工具栏（绝对定位于输入框左下角外部）$$$$$$$$$$$$$ */
+
+
+  /* $$$$$$$$$$$$$ MODE SELECTOR - 模式选择器 $$$$$$$$$$$$$ */
+  .mode-selector {
+    display: flex;
+    align-items: center; /* 确保按钮垂直对齐 */
+    gap: $space-lg; /* 增加按钮间距 */
+    padding: $space-lg $space-xl;
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(248, 252, 252, 0.85) 100%
+    );
+    border-bottom: 1px solid rgba(107, 154, 152, 0.08);
+    /* 确保按钮不被遮挡 */
+    z-index: 10;
+    position: relative;
+
+    /* 确保按钮可以接收点击事件 */
+    > * {
+      pointer-events: auto;
+      z-index: 11;
+    }
+
+    span {
+      white-space: nowrap;
+    }
+  }
+
+  /* $$$$$$$$$$$$$ INPUT AREA - 汉白玉龙泉青瓷输入区域 $$$$$$$$$$$$$ */
+  .input-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: $space-lg 150px $space-md $space-xl;
+
+    /* 汉白玉书写面 - 温润如玉 */
+    background: linear-gradient(145deg,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(250, 254, 254, 0.95) 30%,
+            rgba(248, 252, 252, 0.98) 70%,
+            rgba(255, 255, 255, 0.98) 100%
+    );
+
+    /* 边框与圆角 */
+    border-top: 1px solid rgba(107, 154, 152, 0.08);
+    width: 100%;
+
+    /* 平滑过渡 */
+    transition: all $transition-spring;
+
+
+    /* 悬浮时的汉白玉温润感 */
+    &:hover:not(:focus-within) {
+      border-top-color: rgba(107, 154, 152, 0.16);
+      background: linear-gradient(145deg,
+              rgba(255, 255, 255, 0.99) 0%,
+              rgba(250, 254, 254, 0.97) 35%,
+              rgba(248, 252, 252, 0.99) 70%,
+              rgba(255, 255, 255, 0.99) 100%
+      );
+    }
+
+    /* $$$$$ Textarea 样式 $$$$$ */
+    textarea {
+      width: 100%;
+      flex: 1;
+      height: 100%;
+      min-height: 52px;
+
+      /* 继承父容器背景，实现视觉统一 */
+      background: transparent;
+
+      /* 文本样式 */
+      color: $text-primary !important;
+      font-size: $font-size-base !important;
+      line-height: $line-height-relaxed !important;
+      font-family: $font-sans !important;
+      font-weight: 500 !important;
+
+      /* 移除所有默认样式，让焦点效果完全由父容器控制 */
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      resize: none !important;
+
+      /* Placeholder 样式 */
+      &::placeholder {
+        color: rgba(139, 157, 157, 0.6);
+        opacity: 0.8;
+        font-weight: 400;
+        font-style: italic;
+      }
+    }
+
+    /* 🎨 焦点效果已由父容器 :focus-within 统一控制 */
+
+    /* $$$$$ Send Button 样式 $$$$$ */
+    .send-button {
+      display: flex;
+      align-items: center;
+      position: absolute;
+      right: $space-2xl;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 44px;
+      min-width: 100px;
+      padding: 0 $space-lg !important;
+      border-radius: $radius-lg !important;
+      font-weight: 600 !important;
+      font-size: $font-size-sm !important;
+      letter-spacing: 0.5px;
+      overflow: hidden;
+      border: none !important;
+      outline: none !important;
+
+      /* 汉白玉龙泉青瓷按钮主体 - 深度质感 */
+      background: linear-gradient(145deg,
+              rgba(91, 138, 138, 0.98) 0%,
+              rgba(107, 154, 152, 0.95) 15%,
+              rgba(91, 138, 138, 1) 30%,
+              rgba(107, 154, 152, 0.97) 45%,
+              rgba(91, 138, 138, 0.99) 55%,
+              rgba(107, 154, 152, 0.96) 70%,
+              rgba(91, 138, 138, 0.98) 85%,
+              rgba(107, 154, 152, 0.95) 100%
+      ) !important;
+
+      color: rgba(255, 255, 255, 0.98) !important;
+
+      /* 使用 box-shadow 模拟渐变边框（兼容圆角）+ 汉白玉按钮深层阴影系统 */
+      box-shadow: /* 青瓷边缘光晕（模拟 border-image） */
+              0 0 0 1px rgba(255, 255, 255, 0.3),
+              0 0 0 2px rgba(107, 154, 152, 0.4),
+                /* 深层阴影 */
+              0 8px 32px rgba(91, 138, 138, 0.35),
+              0 4px 16px rgba(91, 138, 138, 0.25),
+              0 2px 8px rgba(255, 255, 255, 0.4),
+                /* 内部高光 */
+              inset 0 2px 0 rgba(255, 255, 255, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3),
+              inset 0 -1px 0 rgba(58, 95, 95, 0.2),
+              inset 0 -2px 0 rgba(58, 95, 95, 0.15) !important;
+
+      transition: all $transition-spring !important;
+
+
+      /* 汉白玉外围能量环 */
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        background: conic-gradient(
+                        from 0deg,
+                        rgba(91, 138, 138, 0.4) 0deg,
+                        rgba(107, 154, 152, 0.2) 60deg,
+                        rgba(255, 255, 255, 0.3) 120deg,
+                        rgba(107, 154, 152, 0.25) 180deg,
+                        rgba(91, 138, 138, 0.3) 240deg,
+                        rgba(255, 255, 255, 0.2) 300deg,
+                        rgba(91, 138, 138, 0.4) 360deg
+        );
+        z-index: -1;
+        opacity: 0;
+        transform: scale(0.95);
+        transition: all $transition-normal;
+        filter: blur(1px);
+      }
+
+      &:hover:not(:disabled) {
+        transform: translateY(-50%) scale(1.05) !important;
+
+        /* 龙泉青瓷觉醒状态 */
+        background: linear-gradient(145deg,
+                rgba(89, 126, 126, 1) 0%,
+                rgba(105, 135, 135, 0.98) 15%,
+                rgba(89, 126, 126, 1) 30%,
+                rgba(105, 135, 135, 0.99) 45%,
+                rgba(89, 126, 126, 1) 55%,
+                rgba(105, 135, 135, 0.98) 70%,
+                rgba(89, 126, 126, 1) 85%,
+                rgba(105, 135, 135, 0.98) 100%
+        ) !important;
+
+        /* 使用 box-shadow 模拟龙泉青瓷觉醒边缘（兼容圆角）+ 汉白玉龙泉青瓷神韵四射 */
+        box-shadow: /* 青瓷觉醒边缘光晕（模拟 border-image） */
+                0 0 0 1px rgba(255, 255, 255, 0.5),
+                0 0 0 2px rgba(107, 154, 152, 0.6),
+                0 0 0 3px rgba(255, 255, 255, 0.3),
+                  /* 深层阴影加强 */
+                0 16px 48px rgba(91, 138, 138, 0.45),
+                0 12px 32px rgba(91, 138, 138, 0.35),
+                0 8px 24px rgba(91, 138, 138, 0.25),
+                0 4px 16px rgba(255, 255, 255, 0.5),
+                  /* 内部高光 */
+                inset 0 2px 0 rgba(255, 255, 255, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -1px 0 rgba(58, 95, 95, 0.3),
+                inset 0 -2px 0 rgba(58, 95, 95, 0.2),
+                  /* 青瓷光晕 */
+                0 0 48px rgba(107, 154, 152, 0.3),
+                0 0 24px rgba(91, 138, 138, 0.4) !important;
+
+        /* 动画已迁移至 GSAP: setupSendButtonAdvancedAnimations() */
+
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(-2px) scale(1.01) !important;
+        transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+        /* 汉白玉按压深度质感 */
+        box-shadow: 0 6px 24px rgba(91, 138, 138, 0.3),
+        0 3px 12px rgba(91, 138, 138, 0.2),
+        inset 0 3px 6px rgba(58, 95, 95, 0.4),
+        inset 0 2px 4px rgba(58, 95, 95, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+
+        animation: none !important;
+      }
+
+      &:disabled {
+        background: linear-gradient(145deg,
+                rgba(139, 157, 157, 0.4) 0%,
+                rgba(155, 175, 175, 0.3) 25%,
+                rgba(139, 157, 157, 0.35) 50%,
+                rgba(155, 175, 175, 0.3) 75%,
+                rgba(139, 157, 157, 0.4) 100%
+        ) !important;
+        color: rgba(139, 157, 157, 0.7) !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+        animation: none !important;
+
+        /* 使用 box-shadow 模拟边框（兼容圆角） */
+        box-shadow: /* 灰色边缘 */
+                0 0 0 1px rgba(155, 175, 175, 0.15),
+                  /* 基础阴影 */
+                0 2px 8px rgba(139, 157, 157, 0.15),
+                  /* 内部高光 */
+                inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+
+    /* $$$$$ Input Toolbar 样式 $$$$$ */
+    .input-toolbar {
+      display: flex;
+      align-self: self-start;
+      gap: $space-md;
+      padding: $space-sm $space-md;
+
+      /* 汉白玉雕刻质感 */
+      background: linear-gradient(180deg,
+              rgba(248, 252, 252, 0.98) 0%,
+              rgba(250, 254, 254, 0.95) 50%,
+              rgba(255, 255, 255, 0.98) 100%
+      );
+
+      border-radius: $space-lg;
+      border: 1px solid rgba(107, 154, 152, 0.12);
+
+      box-shadow: /* 汉白玉内光 */
+              inset 0 1px 0 rgba(255, 255, 255, 0.8),
+              inset 0 -1px 0 rgba(107, 154, 152, 0.05),
+                /* 外部阴影 */
+              0 4px 12px rgba(91, 138, 138, 0.08),
+              0 2px 6px rgba(0, 0, 0, 0.04);
+
+      transition: all $transition-normal;
+      backdrop-filter: blur(8px);
+
+      button {
+        position: relative;
+        color: $text-secondary !important;
+        transition: all $transition-spring !important;
+        border-radius: $radius-lg !important;
+        overflow: hidden;
+
+        /* 汉白玉按钮质感 */
+        background: linear-gradient(145deg,
+                rgba(255, 255, 255, 0.8) 0%,
+                rgba(250, 254, 254, 0.7) 50%,
+                rgba(255, 255, 255, 0.8) 100%
+        ) !important;
+
+        border: 1px solid rgba(107, 154, 152, 0.1) !important;
+
+        box-shadow: 0 2px 6px rgba(91, 138, 138, 0.05),
+        0 1px 3px rgba(255, 255, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+
+        /* 龙泉青瓷内光 */
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: radial-gradient(circle at center,
+                  rgba(107, 154, 152, 0.1) 0%,
+                  transparent 60%
+          );
+          opacity: 0;
+          transform: scale(0);
+          transition: all $transition-normal;
+        }
+
+        /* 汉白玉光晕扩散 */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          background: linear-gradient(135deg,
+                  rgba(255, 255, 255, 0.4),
+                  rgba(107, 154, 152, 0.05),
+                  rgba(255, 255, 255, 0.4)
+          );
+          opacity: 0;
+          transition: all $transition-normal;
+        }
+
+        &:hover {
+          color: $brand-primary !important;
+          transform: translateY(-2px) scale(1.05) !important;
+
+          /* 龙泉青瓷光华绽放 */
+          background: linear-gradient(145deg,
+                  rgba(255, 255, 255, 0.95) 0%,
+                  rgba(248, 254, 254, 0.9) 30%,
+                  rgba(250, 252, 252, 0.95) 70%,
+                  rgba(255, 255, 255, 0.95) 100%
+          ) !important;
+
+          border-color: rgba(91, 138, 138, 0.2) !important;
+
+          box-shadow: 0 6px 18px rgba(91, 138, 138, 0.12),
+          0 3px 9px rgba(255, 255, 255, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          0 0 20px rgba(107, 154, 152, 0.15) !important;
+
+          &::before {
+            opacity: 1;
+            transform: scale(1);
+          }
+
+          &::after {
+            opacity: 0.6;
+          }
+        }
+
+        &:active {
+          transform: translateY(-1px) scale(1.02) !important;
+          transition: all 100ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+          /* 汉白玉按压质感 */
+          box-shadow: 0 2px 8px rgba(91, 138, 138, 0.08),
+          inset 0 2px 4px rgba(91, 138, 138, 0.05),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+        }
+      }
+    }
+  }
+
+  /* $$$$$$$$$$$$$ RESPONSIVE - 响应式适配 $$$$$$$$$$$$$ */
+  @media (max-width: 768px) {
+    .react-plus-app .top-status-bar {
+      padding: $space-md $space-lg;
+    }
+
+    .react-plus-app .chat-container {
+      padding: $space-xl $space-md;
+    }
+
+    .react-plus-app .input-container {
+      padding: $space-lg $space-md;
+    }
+
+    .react-plus-app .scroll-to-bottom {
+      right: $space-lg;
+      bottom: 180px;
+    }
+
+    /* .react-plus-app .right-panel {
+    width: 100%;
+  } */
+
+    .react-plus-app .quick-actions {
+      flex-direction: column;
+    }
+
+
+  }
+
+  @media (max-width: 480px) {
+    .react-plus-app .chat-container {
+      padding: $space-lg $space-sm;
+    }
+
+    .react-plus-app .input-container {
+      padding: $space-md;
+    }
+
+    .react-plus-app .send-button {
+      height: 40px !important;
+      min-width: 80px !important;
+      font-size: $font-size-xs !important;
+      padding: 0 $space-md !important;
+      right: $space-md;
+    }
+
+    .react-plus-app .input-area textarea {
+      padding: $space-md 100px $space-md $space-md !important;
+    }
+
+    .react-plus-app .mode-btn span {
+      display: none;
+    }
+
+    .react-plus-app .attachments-preview {
+      flex-direction: column;
+    }
+
+    .react-plus-app .attachment-chip {
+      width: 100%;
+    }
+  }
+
+  /* $$$$$$$$$$$$$ ACCESSIBILITY $$$$$$$$$$$$$ */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Focus visible for keyboard navigation */
+  .react-plus-app *:focus-visible {
+    outline: 2px solid $brand-primary;
+    outline-offset: 2px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: more) {
+    .react-plus-app .input-container,
+    .react-plus-app .attachment-chip {
+      border-width: 2px;
+    }
+  }
+}

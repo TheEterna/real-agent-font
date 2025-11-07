@@ -2,12 +2,12 @@
   <a-layout v-if="!isStandalone" style="overflow: hidden;min-height: 100vh;height: 100vh;">
     <a-layout-sider
       theme="light"
-      :width="220"
+      :width="300"
       :collapsed-width="0"
       :collapsed="effectiveCollapsed"
       :collapsible="false"
     >
-      <div class="sider-inner">
+      <div class="flex flex-col bg-primary-75 h-full p-4">
         <div class="sider-top">
           <button class="collapse-btn" @click="toggleCollapse" :title="collapsed ? '展开' : '折叠'" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
               <MenuFoldOutlined />
@@ -115,7 +115,8 @@
         </a-tooltip>
       </div>
     </div>
-    <a-layout>
+
+    <a-layout class="bg-primary-50">
       <a-layout-header class="header" v-if="showHeader">
         {{ t(`menu.${getCurrentMenu()}`) }}
       </a-layout-header>
@@ -187,7 +188,6 @@ const toggleCollapse = () => {
 <style scoped lang="scss">
 .brand{font-weight:700;font-size:18px;padding:8px 8px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:24px;height:54px}
 .header{background:#fff}
-.sider-inner{display:flex;flex-direction:column;height:100%;padding:8px}
 .sider-top{display:grid;grid-auto-rows:min-content;gap:8px}
 .collapse-btn{width:32px;height:32px;border:1px solid #e6eaf0;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:background-color .2s ease}
 .collapse-btn:hover{background:#f6f9ff}

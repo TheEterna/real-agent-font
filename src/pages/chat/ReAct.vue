@@ -85,7 +85,7 @@ const pushFilesWithValidation = (files: File[]) => {
   }
   if (added.length) attachments.value.push(...added)
 }
-const isLoading = computed(() => taskStatus.value.status === 'running')
+const isLoading = computed(() => taskStatus.value.value === 'running')
 const chatContent = ref<HTMLElement>()
 const showScrollButton = ref(false)
 // 发送可用状态（控制"亮起"）
@@ -355,16 +355,6 @@ const getStatusIcon = (status: string): string => {
   return iconMap[status as keyof typeof iconMap] || ''
 }
 
-// 获取状态文本
-const getStatusText = (status: string): string => {
-  const textMap = {
-    'running': 'ReAct任务执行中...',
-    'completed': '任务执行完成',
-    'error': '任务执行失败',
-    'idle': '等待中'
-  }
-  return textMap[status as keyof typeof textMap] || ''
-}
 
 // 渲染Markdown
 // 兼容 Vite 对 CommonJS/ESM 插件的导入：有的为 default，有的为命名空间对象
@@ -492,7 +482,7 @@ const md = new MarkdownIt({
 //             totalFiles: 45,
 //             directories: ['components', 'pages', 'stores', 'types', 'styles'],
 //             largestFiles: [
-//               { name: 'ReActPlus.vue', size: '15KB', lines: 882 },
+//               { name: 'Index.vue', size: '15KB', lines: 882 },
 //               { name: 'MessageItem.vue', size: '8KB', lines: 170 },
 //               { name: 'react-plus.css', size: '12KB', lines: 791 }
 //             ]
@@ -697,7 +687,7 @@ const md = new MarkdownIt({
 // ### 代码分割策略
 // \`\`\`typescript
 // // 路由级别的懒加载
-// const ReActPlus = () => import('@/pages/chat/ReActPlus.vue')
+// const Index = () => import('@/pages/chat/Index.vue')
 //
 // // 组件级别的异步加载
 // const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.vue'))

@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MessageItem from '@/components/MessageItem.vue'
-import CollapsibleThinking from '@/components/messages/CollapsibleThinking.vue'
+import CollapsibleThinking from '@/components/messages/ThinkingMessage.vue'
 import { useMessageConfig } from '@/composables/useMessageConfig'
 import { MessageStyle } from '@/types/messageConfig'
 import { EventType } from '@/types/events'

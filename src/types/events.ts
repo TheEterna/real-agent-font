@@ -17,7 +17,14 @@ export enum EventType {
   DONEWITHWARNING = 'DONEWITHWARNING',
   TOOL_APPROVAL = 'TOOL_APPROVAL',
   INTERACTION = 'INTERACTION',
-  COMPLETED = 'COMPLETED'
+  COMPLETED = 'COMPLETED',
+
+  // Index 专属事件类型
+  TASK_ANALYSIS = 'TASK_ANALYSIS',  // 任务分析阶段
+  THOUGHT = 'THOUGHT',              // 思维链生成
+  INIT_PLAN = 'INIT_PLAN',          // 初始化计划
+  UPDATE_PLAN = 'UPDATE_PLAN',      // 更新计划
+  ADVANCE_PLAN = 'ADVANCE_PLAN',    // 推进计划
 }
 
 export enum MessageType {
@@ -75,4 +82,8 @@ export interface UIMessage {
   approval?: any
   events?: BaseEventItem[],
   meta?: object
+
+  // hierarchy support for tool calls (父子关系支持)
+  parentNodeId?: string      // 父节点 ID（用于工具调用关联到 ACTION 节点）
+  children?: UIMessage[]     // 子消息列表（如工具调用结果）
 }

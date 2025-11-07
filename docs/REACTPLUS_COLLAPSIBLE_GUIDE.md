@@ -9,7 +9,7 @@ ReActPlus 页面已成功集成 `CollapsibleThinking` 组件，实现 ChatGPT �
 ### 1. 导入相关依赖
 
 ```typescript
-import CollapsibleThinking from '@/components/messages/CollapsibleThinking.vue'
+import CollapsibleThinking from '@/components/messages/ThinkingMessage.vue'
 import { useMessageConfig } from '@/composables/useMessageConfig'
 import { MessageStyle } from '@/types/messageConfig'
 ```

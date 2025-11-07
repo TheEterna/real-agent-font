@@ -459,7 +459,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/_variables.scss" as *;
 
 .tools-header {
   display: flex;

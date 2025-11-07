@@ -249,7 +249,7 @@ const toggleCollapse = () => {
 ### 在页面中使用
 
 ```vue
-<!-- ReActPlus.vue -->
+<!-- Index.vue -->
 <script setup>
 import { chatGPTConfig } from '@/configs/chatgpt-style'
 
@@ -583,7 +583,7 @@ const isExpanded = ref(false)
 ### 3. 在页面中使用
 
 ```vue
-<!-- ReActPlus.vue -->
+<!-- Index.vue -->
 <script setup>
 import MessageItem from '@/components/MessageItem.vue'
 import ChatGPTMessage from '@/components/messages/ChatGPTMessage.vue'
