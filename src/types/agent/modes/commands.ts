@@ -23,5 +23,5 @@ export interface CommandRegistry {
 export interface CommandContext {
   sessionId: string
   agentId: string
-  timestamp: Date
+  startTime: Date
 }

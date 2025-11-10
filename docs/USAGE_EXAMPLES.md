@@ -30,7 +30,7 @@ function shouldUseCollapsible(message: UIMessage): boolean {
         v-if="shouldUseCollapsible(msg)"
         :content="msg.message"
         :sender="msg.sender"
-        :timestamp="msg.timestamp"
+        :startTime="msg.startTime"
       />
       
       <!-- 其他消息：使用标准组件 -->

@@ -60,15 +60,15 @@
 ## 运行时数据模型
 
 - UI 消息 `UIMessage`（简化说明）
-  - 核心字段：`type`（MessageType）、`eventType`（EventType）、`message`（文本）、`data`（工具返回结构）、`sender`、`timestamp`、`nodeId`、`isCompletion` 等。
+  - 核心字段：`type`（MessageType）、`eventType`（EventType）、`message`（文本）、`data`（工具返回结构）、`sender`、`startTime`、`nodeId`、`isCompletion` 等。
   - 用于驱动 `MessageItem.vue` 的具体渲染。
 - SSE 事件 `SSEEvent`
-  - 服务端推送的统一事件数据，关键字段：`type`（EventType）、`message`、`timestamp`、`agentId`、`nodeId`、`data` 等。
+  - 服务端推送的统一事件数据，关键字段：`type`（EventType）、`message`、`startTime`、`agentId`、`nodeId`、`data` 等。
 - 组合式状态 `useSSE.ts`
   - `messages: UIMessage[]`：消息列表
   - `nodeIndex: Record<string, number>`：按 `nodeId` 将“主消息”索引到 `messages`，便于把同一 node 的后续事件累计到同一条消息
-  - `progress: { text; timestamp; agentId? } | null`：全局唯一进度状态（不进入 `messages`）
-  - `doneNotice: { text; timestamp; title } | null`：全局任务完成通知（不进入 `messages`）
+  - `progress: { text; startTime; agentId? } | null`：全局唯一进度状态（不进入 `messages`）
+  - `doneNotice: { text; startTime; title } | null`：全局任务完成通知（不进入 `messages`）
   - `executeReAct(text, sessionId)`：发起 ReAct 会话（SSE）
   - `handleEvent(event)`：SSE 事件总入口（解析与分发）
 
@@ -188,7 +188,7 @@ flowchart LR
   {
     "type": "PROGRESS",
     "message": "思考中：构建工具参数...",
-    "timestamp": "2025-09-23T14:20:30Z",
+    "startTime": "2025-09-23T14:20:30Z",
     "agentId": "ThinkingAgent",
     "nodeId": "node-123",
     "data": null

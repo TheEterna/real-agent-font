@@ -145,7 +145,7 @@ const formatTime = (ts?: Date | string) => {
           {{ isExpanded ? '▼' : '▶' }}
         </span>
       </div>
-      <span class="error-timestamp">{{ formatTime(message.timestamp) }}</span>
+      <span class="error-startTime">{{ formatTime(message.startTime) }}</span>
     </div>
 
     <div class="error-body">
@@ -250,7 +250,7 @@ const formatTime = (ts?: Date | string) => {
   margin-left: auto;
 }
 
-.error-timestamp {
+.error-startTime {
   font-size: 0.85rem;
   color: #666;
   margin-left: 1rem;

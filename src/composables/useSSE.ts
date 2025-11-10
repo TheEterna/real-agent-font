@@ -68,7 +68,7 @@ interface SSEOptions {
     /** 完成通知回调 */
     onDoneNotice?: (p: {
         text: string;
-        timestamp: Date;
+        startTime: Date;
         title: string;
         nodeId?: string,
         type: NotificationType
@@ -123,7 +123,7 @@ export function useSSE(options: SSEOptions = {}) {
         const eventType: string = event.type
         const messageType = MessageTypeMap[eventType] || MessageTypeMap[EventType.STARTED]
         let message = (event.message || '').toString()
-        const timestamp = event.startTime || Date.now()
+        const startTime = event.startTime || Date.now()
 
         const index = nodeIndex.value[nodeId]
 
@@ -138,7 +138,7 @@ export function useSSE(options: SSEOptions = {}) {
                     type: MessageTypeMap[EventType.TOOL],
                     eventType: eventType,
                     sender: getSenderByEventType(event),
-                    timestamp: timestamp,
+                    startTime: startTime,
                     message: event.message,
                     data: event.data,
                     meta: event.meta
@@ -151,7 +151,8 @@ export function useSSE(options: SSEOptions = {}) {
                 node.eventType = eventType
                 node.sender = getSenderByEventType(event)
                 node.approval = event.data
-                node.timestamp = timestamp
+                node.approval = event.message
+                node.startTime = startTime
                 node.events?.push?.(event)
                 node.meta = event.meta
             }
@@ -160,7 +161,7 @@ export function useSSE(options: SSEOptions = {}) {
                 node.message = node.message ? `${node.message}${message}` : message
                 node.type = messageType
                 node.eventType = eventType
-                node.timestamp = timestamp
+                node.startTime = startTime
                 node.events?.push?.(event)
                 node.meta = event.meta
             }
@@ -174,7 +175,7 @@ export function useSSE(options: SSEOptions = {}) {
                     type: MessageTypeMap[EventType.TOOL],
                     eventType: eventType,
                     sender: getSenderByEventType(event),
-                    timestamp: timestamp,
+                    startTime: startTime,
                     message: event.message,
                     data: event.data,
                     meta: event.meta,
@@ -182,7 +183,24 @@ export function useSSE(options: SSEOptions = {}) {
 
                 messages.value.push(toolMsg)
                 nodeIndex.value[nodeId] = messages.value.length - 1
-            } else {
+            }
+            else if (eventType === EventType.TOOL_APPROVAL) {
+
+                const toolMsg: UIMessage = {
+                    nodeId,
+                    sessionId: event.sessionId,
+                    type: MessageTypeMap[EventType.TOOL],
+                    eventType: eventType,
+                    sender: getSenderByEventType(event),
+                    startTime: startTime,
+                    message: event.message,
+                    data: event.data,
+                    meta: event.meta,
+                }
+                messages.value.push(toolMsg)
+                nodeIndex.value[nodeId] = messages.value.length - 1
+            }
+            else {
                 // 非工具事件作为主消息创建并建立nodeIndex
                 const node: UIMessage = {
                     nodeId: nodeId,
@@ -191,7 +209,7 @@ export function useSSE(options: SSEOptions = {}) {
                     eventType: eventType,
                     sender: getSenderByEventType(event),
                     message: message,
-                    timestamp: timestamp,
+                    startTime: startTime,
                     events: [event],
                     approval: eventType === EventType.TOOL_APPROVAL ? event.data : undefined,
                     meta: event.meta
@@ -239,15 +257,15 @@ export function useSSE(options: SSEOptions = {}) {
         },
         onProgress: (event: BaseEventItem, context: SSEContext) => {
             const message = (event.message || '').toString()
-            const timestamp = event.startTime || Date.now()
-            progress.value = new ProgressInfo(message, timestamp, event.agentId as any)
+            const startTime = event.startTime || Date.now()
+            progress.value = new ProgressInfo(message, startTime, event.agentId as any)
         },
         onDone: (event: BaseEventItem) => {
             const message = (event.message || '').toString()
-            const timestamp = event.startTime || Date.now()
+            const startTime = event.startTime || Date.now()
             options?.onDoneNotice?.({
                 text: message,
-                timestamp,
+                startTime,
                 title: currentTaskTitle.value || '',
                 nodeId: (event.nodeId as string) || undefined,
                 type: NotificationType.WARNING
@@ -255,11 +273,11 @@ export function useSSE(options: SSEOptions = {}) {
         },
         onDoneWithWarning: (event: BaseEventItem) => {
             const message = (event.message || '').toString()
-            const timestamp = event.startTime || Date.now()
+            const startTime = event.startTime || Date.now()
             progress.value = null
             options?.onDoneNotice?.({
                 text: message,
-                timestamp,
+                startTime,
                 title: currentTaskTitle.value || '',
                 nodeId: (event.nodeId as string) || undefined,
                 type: NotificationType.WARNING
@@ -267,10 +285,10 @@ export function useSSE(options: SSEOptions = {}) {
         },
         onError: (event: BaseEventItem) => {
             const message = (event.message || '').toString()
-            const timestamp = event.startTime || Date.now()
+            const startTime = event.startTime || Date.now()
             options?.onDoneNotice?.({
                 text: '[ERROR] ' + message,
-                timestamp,
+                startTime,
                 title: currentTaskTitle.value || '',
                 nodeId: (event.nodeId as string) || undefined,
                 type: NotificationType.ERROR
@@ -493,7 +511,7 @@ export function useSSE(options: SSEOptions = {}) {
                         closeSource(source)
                         messages.value.push({
                             nodeId: 'error',
-                            timestamp: new Date(),
+                            startTime: new Date(),
                             eventType: EventType.ERROR,
                             data: err,
                             sessionId: sessionId,

@@ -23,11 +23,11 @@ export class TaskStatus {
 
 export class ProgressInfo {
   text: string
-  timestamp: Date
+  startTime: Date
   agentId?: string
-  constructor(text: string, timestamp: Date, agentId?: string) {
+  constructor(text: string, startTime: Date, agentId?: string) {
     this.text = text
-    this.timestamp = timestamp
+    this.startTime = startTime
     this.agentId = agentId
   }
 }

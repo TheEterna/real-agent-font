@@ -193,7 +193,7 @@ function extractValuesToString(data: unknown): string {
 
       <div
         @click="toggleResponse"
-        class="tool-card transition-all duration-200 ease-in-out active:scale-[0.99] hover:shadow-lg cursor-pointer rounded-4xl px-2.5 py-2 flex items-end gap-1 self-start"
+        class="tool-card transition-all duration-200 ease-in-out active:scale-[0.99] hover:shadow-lg rounded-4xl px-2.5 py-2 flex items-end gap-1 self-start"
       >
         <span class="text-xl">{{ getToolIcon(toolName) }}</span>
         <span class="text-md text-primary-600 font-bold leading-6">{{ toolName }}</span>
@@ -237,6 +237,7 @@ function extractValuesToString(data: unknown): string {
   display: flex;
   flex-direction: column;
   gap: 0;
+  cursor: pointer;
 }
 
 .tool-card {

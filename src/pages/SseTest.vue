@@ -154,7 +154,7 @@ const clearMessages = () => {
           :key="index"
           class="message-item"
         >
-          <span class="timestamp">{{ new Date().toLocaleTimeString() }}</span>
+          <span class="startTime">{{ new Date().toLocaleTimeString() }}</span>
           <span class="message-text">{{ message }}</span>
         </div>
       </div>
@@ -293,7 +293,7 @@ const clearMessages = () => {
   border-bottom: none;
 }
 
-.timestamp {
+.startTime {
   color: #666;
   min-width: 80px;
 }

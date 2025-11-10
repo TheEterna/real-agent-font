@@ -35,7 +35,7 @@ const { getMessageConfig, shouldCollapse } = useMessageConfig(MessageStyle.CHATG
   v-else-if="message.eventType === EventType.THINKING && shouldCollapse(message)"
   :content="message.message"
   :sender="message.sender"
-  :timestamp="message.timestamp"
+  :startTime="message.startTime"
   class="message-item"
 />
 

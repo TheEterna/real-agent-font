@@ -9,7 +9,7 @@ import {
 const props = defineProps<{
   content: string
   sender?: string
-  timestamp?: Date | string
+  startTime?: Date | string
   isThinking?: boolean  // 是否正在思考（默认false表示已完成）
 }>()
 

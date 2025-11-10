@@ -179,7 +179,7 @@ const toggleCollapse = () => {
   >
     <div class="message-header">
       <span class="sender">{{ message.sender }}</span>
-      <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+      <span class="startTime">{{ formatTime(message.startTime) }}</span>
       
       <!-- 折叠按钮 -->
       <button 
@@ -293,7 +293,7 @@ const getMessageConfig = (message: UIMessage): MessageConfig => {
     <slot name="header" :message="message">
       <div class="message-header">
         <span class="sender">{{ message.sender }}</span>
-        <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+        <span class="startTime">{{ formatTime(message.startTime) }}</span>
       </div>
     </slot>
     

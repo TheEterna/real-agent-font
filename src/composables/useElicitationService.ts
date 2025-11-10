@@ -5,7 +5,7 @@ export interface ElicitationNotification {
   elicitationId: string
   message: string
   schema?: any
-  timestamp: number
+  startTime: number
 }
 
 export interface ElicitationService {

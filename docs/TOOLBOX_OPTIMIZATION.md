@@ -142,7 +142,7 @@ const responseData = computed(() => {
   "type": "tool",
   "eventType": "TOOL",
   "sender": "ActionAgent",
-  "timestamp": "2025-10-11T07:12:22.357Z",
+  "startTime": "2025-10-11T07:12:22.357Z",
   "message": "map_geocode",
   "data": {
     "id": "call_fef9a27c22cc42fcae6f73",

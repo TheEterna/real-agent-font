@@ -74,7 +74,7 @@ const formatTime = (ts?: Date | string) => {
     <template v-else>
       <div v-if="props.message.type !== MessageType.User" class="message-header">
         <span class="sender">{{ props.message.sender }}</span>
-        <span class="timestamp">{{ formatTime((props.message as any).timestamp) }}</span>
+        <span class="startTime">{{ formatTime((props.message as any).startTime) }}</span>
       </div>
 
       <div class="message-body">

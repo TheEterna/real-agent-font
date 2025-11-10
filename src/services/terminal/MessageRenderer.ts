@@ -220,9 +220,9 @@ export class MessageRenderer {
     const parts: string[] = []
 
     // 时间戳
-    if (this.options.enableTimestamp && message.timestamp) {
-      const timestamp = this.formatTimestamp(message.timestamp)
-      parts.push(`${MessageRenderer.ANSI.GRAY}[${timestamp}]${MessageRenderer.ANSI.RESET}`)
+    if (this.options.enableTimestamp && message.startTime) {
+      const startTime = this.formatTimestamp(message.startTime)
+      parts.push(`${MessageRenderer.ANSI.GRAY}[${startTime}]${MessageRenderer.ANSI.RESET}`)
     }
 
     // 图标和发送者

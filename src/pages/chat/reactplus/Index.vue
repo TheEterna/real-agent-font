@@ -7,12 +7,13 @@ import {useChatStore} from '@/stores/chatStore'
 import StatusIndicator from '@/components/StatusIndicator.vue'
 import MessageItem from '@/components/MessageItem.vue'
 import ThinkingMessage from '@/components/messages/ThinkingMessage.vue'
-import EnhancedToolApprovalCard from '@/components/EnhancedToolApprovalCard.vue'
+import ToolApprovalMessage from '@/components/messages/ToolApprovalMessage.vue'
 import InkModeButton from '@/components/InkModeButton.vue'
 import InkTransition from '@/components/InkTransition.vue'
 import {NeonModeButton, GeekModeButton} from '@/components/button'
 import {useSSE} from '@/composables/useSSE'
 import {notification} from 'ant-design-vue'
+import ErrorMessage from '@/components/messages/ErrorMessage.vue'
 import {
   SendOutlined,
   PaperClipOutlined,
@@ -56,7 +57,6 @@ import Terminal from '@/components/terminal/Terminal.vue'
 import {MessageStyle} from '@/types/messageConfig'
 import {ProgressInfo} from "@/types/status";
 import {useRoute, useRouter} from "vue-router";
-import ToolBox from "@/components/ToolBox.vue";
 import ToolMessage from "@/components/messages/ToolMessage.vue";
 
 // 共享状态（会话/Agent 选择）
@@ -65,7 +65,7 @@ const inputMessage = ref('')
 const attachments = ref<Attachment[]>([])
 const router = useRouter()
 const route = useRoute()
-// 🎭 模式切换功能
+
 const {
   currentMode,
   currentModeConfig,
@@ -78,8 +78,6 @@ const {
 // 🖥️ 终端界面状态管理
 const terminalRef = ref<InstanceType<typeof Terminal>>()
 const terminalReady = ref(false)
-
-
 
 
 // 消息配置 - 使用 ChatGPT 风格
@@ -170,12 +168,12 @@ const updateScrollButtonVisibility = () => {
 // 增强的通知处理
 const handleDoneNotice = (node: {
   text: string;
-  timestamp: Date;
+  startTime: Date;
   title: string;
   nodeId?: string,
   type: NotificationType
 }) => {
-  const key = `done-${node.timestamp.getTime()}-${Math.random().toString(36).slice(2, 8)}`
+  const key = `done-${node.startTime.getTime()}-${Math.random().toString(36).slice(2, 8)}`
 
   const onClick = () => locateByNode(node.nodeId)
 
@@ -210,7 +208,17 @@ const handleDoneNotice = (node: {
 }
 
 // 使用带自定义处理器的 useSSE
-let {messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, executeReActPlus, handleEvent, updateMessage} = useSSE({
+let {
+  messages,
+  nodeIndex,
+  connectionStatus,
+  taskStatus,
+  progress,
+  executeReAct,
+  executeReActPlus,
+  handleEvent,
+  updateMessage
+} = useSSE({
   onDoneNotice: handleDoneNotice,
   enableDefaultHandlers: true,  // 启用默认处理器
   handlers: {
@@ -225,7 +233,7 @@ let {messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, 
         callId: event.data?.callId,
         riskLevel: event.data?.riskLevel || 'medium',
         expectedResult: event.data?.expectedResult,
-        timestamp: new Date(),
+        startTime: new Date(),
         nodeId: approvalId
       })
 
@@ -237,8 +245,7 @@ let {messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, 
         eventType: EventType.TOOL_APPROVAL,
         sender: 'System',
         message: '需要您的审批才能执行工具',
-        timestamp: new Date(),
-        approval: pendingApprovals.value.get(approvalId),
+        startTime: new Date(),
         meta: event.meta
       }
 
@@ -253,7 +260,7 @@ let {messages, nodeIndex, connectionStatus, taskStatus, progress, executeReAct, 
 
 // 工具审批处理函数
 const handleToolApproved = (approvalId: string, result: any) => {
-  approvalResults.value.set(approvalId, {status: 'approved', result, timestamp: new Date()})
+  approvalResults.value.set(approvalId, {status: 'approved', result, startTime: new Date()})
   pendingApprovals.value.delete(approvalId)
 
   notification.success({
@@ -264,7 +271,7 @@ const handleToolApproved = (approvalId: string, result: any) => {
 }
 
 const handleToolRejected = (approvalId: string, reason: string) => {
-  approvalResults.value.set(approvalId, {status: 'rejected', reason, timestamp: new Date()})
+  approvalResults.value.set(approvalId, {status: 'rejected', reason, startTime: new Date()})
   pendingApprovals.value.delete(approvalId)
 
   notification.warning({
@@ -275,7 +282,7 @@ const handleToolRejected = (approvalId: string, reason: string) => {
 }
 
 const handleToolError = (approvalId: string, error: Error) => {
-  approvalResults.value.set(approvalId, {status: 'error', error: error.message, timestamp: new Date()})
+  approvalResults.value.set(approvalId, {status: 'error', error: error.message, startTime: new Date()})
 
   notification.error({
     message: '工具执行失败',
@@ -284,29 +291,13 @@ const handleToolError = (approvalId: string, error: Error) => {
   })
 }
 
-const handleToolRetryRequested = (approvalId: string, params: any) => {
-  approvalResults.value.set(approvalId, {status: 'retry-requested', params, timestamp: new Date()})
-  pendingApprovals.value.delete(approvalId)
-
-  notification.info({
-    message: '🔄 工具重新执行请求',
-    description: `正在重新分析 ${params.toolName} 工具调用...`,
-    duration: 4
-  })
-
-  // 这里可以触发重新执行工具的逻辑
-  console.log('🔄 重新执行工具请求:', params)
-
-  // TODO: 实现重新执行工具的后端API调用
-  // 可以调用类似 executeReAct 但是专门用于重试工具的API
-}
 
 const handleToolTerminateRequested = (approvalId: string, reason: string) => {
-  approvalResults.value.set(approvalId, {status: 'terminated', reason, timestamp: new Date()})
+  approvalResults.value.set(approvalId, {status: 'terminated', reason, startTime: new Date()})
   pendingApprovals.value.delete(approvalId)
 
   notification.warning({
-    message: '🛑 对话已终止',
+    message: '对话已终止',
     description: reason,
     duration: 6
   })
@@ -321,12 +312,12 @@ const handleToolTerminateRequested = (approvalId: string, reason: string) => {
   messages.value.push({
     type: MessageType.System,
     sender: 'System',
-    message: `🛑 **对话已终止**
+    message: `**对话已终止**
 
 ${reason}
 
 您可以开始新的对话或选择其他会话继续。`,
-    timestamp: new Date(),
+    startTime: new Date(),
     nodeId: `terminate-${Date.now()}`
   })
 
@@ -334,6 +325,23 @@ ${reason}
   nextTick(() => {
     scrollToBottom()
   })
+}
+
+
+const handleErrorCopied = (success: boolean) => {
+  if (success) {
+    notification.success({
+      message: '错误信息已复制',
+      description: '错误详情已复制到剪贴板',
+      duration: 2
+    })
+  } else {
+    notification.error({
+      message: '复制失败',
+      description: '无法访问剪贴板，请手动选择文本复制',
+      duration: 3
+    })
+  }
 }
 
 const locateByNode = (nodeId?: string) => {
@@ -360,7 +368,7 @@ const sendMessage = async () => {
     type: MessageType.User,
     sender: '用户',
     message: inputMessage.value,
-    timestamp: new Date()
+    startTime: new Date()
   }
 
   messages.value.push(userMessage)
@@ -380,7 +388,10 @@ const sendMessage = async () => {
       eventType: 'ERROR',
       sender: 'System',
       message: '发送失败: ' + (error as Error).message,
-      timestamp: new Date()
+      startTime: new Date(),
+      meta: {
+        originalMessage: currentMessage  // 保存原始消息用于重试
+      }
     })
     // 出错时手动设置任务状态
     taskStatus.value.set('error')
@@ -497,10 +508,10 @@ const onPaste = (e: ClipboardEvent) => {
 
 // ReAct+ 专属模板
 const templates: TemplateItem[] = [
-  new TemplateItem('🧠 智能分析任务', '请对以下问题进行深度分析，包括：\n1. 问题拆解和关键要素识别\n2. 多角度思考和风险评估\n3. 制定执行策略和行动计划\n\n问题描述：\n[请在此处描述您的问题]'),
-  new TemplateItem('🔧 工具链执行', '请使用相关工具完成以下任务，需要：\n1. 自动选择最适合的工具组合\n2. 按步骤执行并展示中间结果\n3. 对结果进行验证和优化\n\n任务要求：\n[请详细描述任务需求]'),
-  new TemplateItem('📊 数据驱动决策', '基于以下数据和背景，帮助我做出最佳决策：\n\n背景信息：\n- 当前状况：\n- 目标期望：\n- 约束条件：\n- 风险考量：\n\n请提供详细的分析过程和建议方案'),
-  new TemplateItem('🎯 目标导向规划', '请帮我制定实现以下目标的详细计划：\n\n目标：[具体目标]\n时间限制：[时间范围]\n资源情况：[可用资源]\n\n需要包括：里程碑设置、风险缓解、执行策略'),
+  new TemplateItem('智能分析任务', '请对以下问题进行深度分析，包括：\n1. 问题拆解和关键要素识别\n2. 多角度思考和风险评估\n3. 制定执行策略和行动计划\n\n问题描述：\n[请在此处描述您的问题]'),
+  new TemplateItem('工具链执行', '请使用相关工具完成以下任务，需要：\n1. 自动选择最适合的工具组合\n2. 按步骤执行并展示中间结果\n3. 对结果进行验证和优化\n\n任务要求：\n[请详细描述任务需求]'),
+  new TemplateItem('数据驱动决策', '基于以下数据和背景，帮助我做出最佳决策：\n\n背景信息：\n- 当前状况：\n- 目标期望：\n- 约束条件：\n- 风险考量：\n\n请提供详细的分析过程和建议方案'),
+  new TemplateItem('目标导向规划', '请帮我制定实现以下目标的详细计划：\n\n目标：[具体目标]\n时间限制：[时间范围]\n资源情况：[可用资源]\n\n需要包括：里程碑设置、风险缓解、执行策略'),
 ]
 
 const insertTemplate = (t: string) => {
@@ -964,7 +975,7 @@ onMounted(() => {
 🎯 **目标导向** - 始终聚焦于解决您的核心问题
 
 现在，请告诉我您希望我帮您解决什么问题？`,
-        timestamp: new Date(Date.now() - 300000),
+        startTime: new Date(Date.now() - 300000),
         nodeId: 'welcome-msg'
       },
 
@@ -973,7 +984,7 @@ onMounted(() => {
         type: MessageType.User,
         sender: '用户',
         message: '请帮我分析一下当前项目的代码结构，并给出优化建议',
-        timestamp: new Date(Date.now() - 250000),
+        startTime: new Date(Date.now() - 250000),
         nodeId: 'user-msg-1'
       },
 
@@ -988,7 +999,7 @@ onMounted(() => {
 3. 识别潜在的优化点
 4. 提供具体的改进建议
 让我开始执行这个任务...`,
-        timestamp: new Date(Date.now() - 240000),
+        startTime: new Date(Date.now() - 240000),
         nodeId: 'thinking-msg-1',
         endTime: new Date(Date.now() - 230000)
       },
@@ -1036,43 +1047,244 @@ onMounted(() => {
             language: "zh-CN"
           })
         },
-        timestamp: new Date(Date.now() - 200000),
+        startTime: new Date(Date.now() - 200000),
         nodeId: 'tool-msg-1'
       },
 
-      // 6. Assistant 观察消息
-      {
-        type: MessageType.Assistant,
-        eventType: EventType.OBSERVING,
-        sender: 'ReAct+ Assistant',
-        message: `通过文件扫描工具的分析结果，我观察到：
 
-📊 **项目规模**: 45个文件，结构清晰
-📁 **目录组织**: 采用 Vue 3 + TypeScript + Vite 现代化技术栈
-📝 **代码量**: 主要组件代码量适中，可维护性良好
-
-现在让我进行更深入的代码质量分析...`,
-        timestamp: new Date(Date.now() - 180000),
-        nodeId: 'observing-msg-1'
-      },
 
       // 7. 工具审批消息
       {
         type: MessageType.ToolApproval,
-        sender: 'System',
-        message: '需要您的审批才能执行工具',
-        timestamp: new Date(Date.now() - 160000),
+        sender: 'action_agent',
+        message: '',
+        startTime: new Date(Date.now() - 160000),
         nodeId: 'approval-msg-1',
-        approval: {
-          toolName: 'code_analyzer',
+
+        data: {
+          toolCallId: "tool_call_123456789",
+          toolName: "database_migration_tool",
           args: {
-            target: './src',
-            depth: 'deep',
-            includePrivate: true
+            migrationConfig: {
+              sourceDatabase: {
+                host: 'legacy-db.company.com',
+                port: 3306,
+                database: 'legacy_system',
+                username: 'migration_user',
+                password: '***masked***',
+                connectionOptions: {
+                  ssl: true,
+                  timeout: 30000,
+                  maxConnections: 10,
+                  charset: 'utf8mb4'
+                }
+              },
+              targetDatabase: {
+                host: 'new-db.company.com',
+                port: 5432,
+                database: 'modernized_system',
+                username: 'migration_user',
+                password: '***masked***',
+                connectionOptions: {
+                  ssl: true,
+                  timeout: 60000,
+                  maxConnections: 20,
+                  poolSize: 15
+                }
+              },
+              migrationStrategy: {
+                batchSize: 1000,
+                parallelTasks: 4,
+                retryPolicy: {
+                  maxRetries: 3,
+                  retryDelay: 5000,
+                  backoffMultiplier: 2
+                },
+                dataTransformation: {
+                  userTable: {
+                    fieldMapping: {
+                      'old_user_id': 'user_id',
+                      'user_name': 'username',
+                      'email_addr': 'email'
+                    },
+                    dataValidation: {
+                      required: ['username', 'email'],
+                      constraints: {
+                        username: { minLength: 3, maxLength: 50 },
+                        email: { format: 'email' }
+                      }
+                    }
+                  },
+                  orderTable: {
+                    fieldMapping: {
+                      'order_number': 'order_id',
+                      'customer_id': 'user_id',
+                      'order_total': 'total_amount'
+                    },
+                    dataValidation: {
+                      required: ['order_id', 'user_id', 'total_amount'],
+                      constraints: {
+                        total_amount: { type: 'decimal', min: 0 }
+                      }
+                    }
+                  }
+                }
+              },
+              backupOptions: {
+                createBackup: true,
+                backupLocation: '/backup/migration_backup_2024',
+                compressionLevel: 6,
+                retentionPeriod: '30 days'
+              }
+            },
+            executionOptions: {
+              dryRun: false,
+              stopOnError: true,
+              generateReport: true,
+              notificationSettings: {
+                email: {
+                  recipients: ['admin@company.com', 'dba@company.com'],
+                  onSuccess: true,
+                  onFailure: true,
+                  onProgress: false
+                },
+                webhook: {
+                  url: 'https://monitoring.company.com/webhook/migration',
+                  method: 'POST',
+                  headers: {
+                    'Authorization': 'Bearer ***masked***',
+                    'Content-Type': 'application/json'
+                  }
+                }
+              }
+            }
           },
-          riskLevel: 'medium',
-          expectedResult: '分析代码质量指标和潜在问题',
-          nodeId: 'approval-msg-1'
+
+        },
+        meta: {
+          toolSchema: {
+            name: 'database_migration_tool',
+            description: '执行复杂的数据库迁移任务，支持多数据库类型、数据转换、验证和备份功能',
+            category: 'database',
+            inputSchema: JSON.stringify({
+              type: 'object',
+              properties: {
+                migrationConfig: {
+                  type: 'object',
+                  description: '迁移配置信息',
+                  properties: {
+                    sourceDatabase: {
+                      type: 'object',
+                      description: '源数据库连接配置',
+                      properties: {
+                        host: { type: 'string', description: '数据库主机地址' },
+                        port: { type: 'number', description: '端口号' },
+                        database: { type: 'string', description: '数据库名称' },
+                        username: { type: 'string', description: '用户名' },
+                        password: { type: 'string', description: '密码' },
+                        connectionOptions: {
+                          type: 'object',
+                          description: '连接选项',
+                          properties: {
+                            ssl: { type: 'boolean' },
+                            timeout: { type: 'number' },
+                            maxConnections: { type: 'number' },
+                            charset: { type: 'string' }
+                          }
+                        }
+                      },
+                      required: ['host', 'port', 'database', 'username', 'password']
+                    },
+                    targetDatabase: {
+                      type: 'object',
+                      description: '目标数据库连接配置',
+                      properties: {
+                        host: { type: 'string' },
+                        port: { type: 'number' },
+                        database: { type: 'string' },
+                        username: { type: 'string' },
+                        password: { type: 'string' },
+                        connectionOptions: { type: 'object' }
+                      },
+                      required: ['host', 'port', 'database', 'username', 'password']
+                    },
+                    migrationStrategy: {
+                      type: 'object',
+                      description: '迁移策略配置',
+                      properties: {
+                        batchSize: { type: 'number', description: '批处理大小' },
+                        parallelTasks: { type: 'number', description: '并行任务数' },
+                        retryPolicy: {
+                          type: 'object',
+                          description: '重试策略',
+                          properties: {
+                            maxRetries: { type: 'number' },
+                            retryDelay: { type: 'number' },
+                            backoffMultiplier: { type: 'number' }
+                          }
+                        },
+                        dataTransformation: {
+                          type: 'object',
+                          description: '数据转换规则',
+                          additionalProperties: {
+                            type: 'object',
+                            properties: {
+                              fieldMapping: { type: 'object' },
+                              dataValidation: { type: 'object' }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    backupOptions: {
+                      type: 'object',
+                      description: '备份选项',
+                      properties: {
+                        createBackup: { type: 'boolean' },
+                        backupLocation: { type: 'string' },
+                        compressionLevel: { type: 'number' },
+                        retentionPeriod: { type: 'string' }
+                      }
+                    }
+                  },
+                  required: ['sourceDatabase', 'targetDatabase', 'migrationStrategy']
+                },
+                executionOptions: {
+                  type: 'object',
+                  description: '执行选项',
+                  properties: {
+                    dryRun: { type: 'boolean', description: '是否为试运行' },
+                    stopOnError: { type: 'boolean', description: '遇到错误时是否停止' },
+                    generateReport: { type: 'boolean', description: '是否生成报告' },
+                    notificationSettings: {
+                      type: 'object',
+                      description: '通知设置',
+                      properties: {
+                        email: {
+                          type: 'object',
+                          properties: {
+                            recipients: { type: 'array', items: { type: 'string' } },
+                            onSuccess: { type: 'boolean' },
+                            onFailure: { type: 'boolean' },
+                            onProgress: { type: 'boolean' }
+                          }
+                        },
+                        webhook: {
+                          type: 'object',
+                          properties: {
+                            url: { type: 'string' },
+                            method: { type: 'string' },
+                            headers: { type: 'object' }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              required: ['migrationConfig']
+            })
+          }
         }
       },
 
@@ -1108,7 +1320,7 @@ onMounted(() => {
             ]
           }
         },
-        timestamp: new Date(Date.now() - 140000),
+        startTime: new Date(Date.now() - 140000),
         nodeId: 'tool-msg-2'
       },
 
@@ -1127,37 +1339,8 @@ onMounted(() => {
 
 **错误详情**: Connection timeout after 30s
 **错误代码**: NET_TIMEOUT_001`,
-        timestamp: new Date(Date.now() - 120000),
-        nodeId: 'error-msg-1'
-      },
-
-      // 10. 带警告的完成消息
-      {
-        type: MessageType.Assistant,
-        eventType: EventType.DONEWITHWARNING,
-        sender: 'ReAct+ Assistant',
-        message: `⚠️ **分析已完成（有警告）**
-
-虽然遇到了网络问题，但基于已收集的数据，我可以给出以下分析结果：
-
-## 📋 项目结构分析报告
-
-### ✅ 优势
-- **架构清晰**: 采用 Vue 3 + TypeScript + Vite 现代化技术栈
-- **组件化**: 良好的组件拆分和复用设计
-- **类型安全**: 94.5% TypeScript 覆盖率
-
-### ⚠️ 改进建议
-1. **代码规范**: 添加 ESLint + Prettier 统一代码风格
-2. **类型完善**: 修复 3 个类型警告，提升类型安全性
-3. **测试覆盖**: 建议添加单元测试和端到端测试
-4. **性能优化**: 考虑使用 lazy loading 和 tree shaking
-
-### 🎯 下一步行动
-- 建议优先修复 TypeScript 警告
-- 可以考虑引入代码质量工具链`,
-        timestamp: new Date(Date.now() - 100000),
-        nodeId: 'done-warning-msg-1'
+        startTime: new Date(Date.now() - 120000),
+        nodeId: 'error-msg-1',
       },
 
       // 11. 用户回复
@@ -1165,7 +1348,7 @@ onMounted(() => {
         type: MessageType.User,
         sender: '用户',
         message: '感谢分析！请帮我生成一个改进代码质量的具体执行计划',
-        timestamp: new Date(Date.now() - 80000),
+        startTime: new Date(Date.now() - 80000),
         nodeId: 'user-msg-2'
       },
 
@@ -1246,7 +1429,7 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
 **💡 提示**: 这个计划可以根据团队情况和项目优先级进行调整。建议从阶段一开始，循序渐进地实施。
 
 您希望我详细说明哪个阶段的具体实施步骤？`,
-        timestamp: new Date(Date.now() - 60000),
+        startTime: new Date(Date.now() - 60000),
         nodeId: 'complex-markdown-msg'
       },
 
@@ -1263,7 +1446,7 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
 - 优化建议: 已生成
 
 系统运行正常，随时准备为您提供更多帮助。`,
-        timestamp: new Date(Date.now() - 40000),
+        startTime: new Date(Date.now() - 40000),
         nodeId: 'system-status-msg'
       }
     ]
@@ -1354,67 +1537,76 @@ onUnmounted(() => {
 
         <!-- 对话区域 -->
         <div class="chat-container" ref="chatContent">
-            <div
-                v-for="(message, index) in messages"
-                :key="index"
-                :id="message.nodeId ? 'msg-' + message.nodeId : undefined"
-                class="message-wrapper"
-            >
-              <!-- Thinking 消息 - 使用折叠组件 -->
-              <ThinkingMessage
-                  v-if="message.eventType === EventType.THINKING"
-                  :content="message.message"
-                  :sender="message.sender"
-                  :timestamp="message.timestamp"
-                  :is-thinking="!message.endTime"
-                  class="message-item"
-              />
-              <!-- 工具调用消息 -->
-              <ToolMessage v-else-if="message.type === MessageType.Tool" :message="message"></ToolMessage>
+          <div
+              v-for="(message, index) in messages"
+              :key="index"
+              :id="message.nodeId ? 'msg-' + message.nodeId : undefined"
+              class="message-wrapper"
+          >
+            <!-- Thinking 消息 - 使用折叠组件 -->
+            <ThinkingMessage
+                v-if="message.eventType === EventType.THINKING"
+                :content="message.message"
+                :sender="message.sender"
+                :startTime="message.startTime"
+                :is-thinking="!message.endTime"
+                class="message-item"
+            />
+            <!-- 工具调用消息 -->
+            <ToolMessage v-else-if="message.type === MessageType.Tool" :message="message"></ToolMessage>
 
-              <!-- 工具审批消息 -->
-              <EnhancedToolApprovalCard
-                  v-else-if="message.type === MessageType.ToolApproval && message.approval"
-                  :approval="message.approval"
-                  :session-id="sessionId"
-                  @approved="handleToolApproved(message.nodeId!, $event)"
-                  @rejected="handleToolRejected(message.nodeId!, $event)"
-                  @error="handleToolError(message.nodeId!, $event)"
-                  @retryRequested="handleToolRetryRequested(message.nodeId!, $event)"
-                  @terminateRequested="handleToolTerminateRequested(message.nodeId!, $event)"
-                  class="message-item"
-              />
-              <!-- 普通消息 -->
-              <MessageItem v-else :message="message" class="message-item"/>
-            </div>
-
-            <!-- 加载状态 -->
-            <div v-if="isLoading" class="loading-indicator">
-              <div class="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <span class="loading-text">
-                {{ progress?.text || '任务执行...' }}
-              </span>
-            </div>
+            <!-- 工具审批消息 -->
+            <ToolApprovalMessage
+                v-else-if="message.type === MessageType.ToolApproval"
+                :message="message"
+                :session-id="sessionId"
+                @approved="handleToolApproved(message.nodeId!, $event)"
+                @rejected="handleToolRejected(message.nodeId!, $event)"
+                @error="handleToolError(message.nodeId!, $event)"
+                @terminateRequested="handleToolTerminateRequested(message.nodeId!, $event)"
+                class="message-item"
+            />
+            <!-- 错误消息 - 使用专用组件 -->
+            <ErrorMessage
+                v-else-if="message.type === MessageType.Error"
+                :message="message"
+                :session-id="sessionId"
+                @copied="handleErrorCopied"
+                class="message-item"
+            />
+            <!-- 普通消息 -->
+            <MessageItem v-else :message="message" class="message-item"/>
           </div>
 
-          <!-- 滚动到底部按钮 -->
-          <Transition name="fade">
-            <div v-show="showScrollButton" class="scroll-to-bottom" @click="scrollToBottom">
-              <a-button type="primary" shape="circle" :icon="h(ArrowDownOutlined)"/>
+          <!-- 加载状态 -->
+          <div v-if="isLoading" class="loading-indicator">
+            <div class="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
-          </Transition>
+            <span class="loading-text">
+                {{ progress?.text || '任务执行...' }}
+              </span>
+          </div>
         </div>
 
+        <!-- 滚动到底部按钮 -->
+        <Transition name="fade">
+          <div v-show="showScrollButton" class="scroll-to-bottom" @click="scrollToBottom">
+            <a-button type="primary" shape="circle" :icon="h(ArrowDownOutlined)"/>
+          </div>
+        </Transition>
+      </div>
+      <div class="sticky bottom-1.5 z-30 w-[1000px] mx-auto">
+
         <div
-            class="input-container"
+            class="input-container overflow-hidden "
             @dragover.prevent
             @drop="onDropFiles"
         >
-          <!-- 🎭 模式选择器 -->
+
+          <!-- 模式选择器 -->
           <div class="mode-selector">
             <!-- 📎 附件预览 -->
             <div v-if="attachments.length" class="attachments-preview">
@@ -1446,7 +1638,7 @@ onUnmounted(() => {
           </div>
 
 
-          <!-- ✍️ 输入区域（textarea + 发送按钮 + 工具栏） -->
+          <!-- 输入区域（textarea + 发送按钮 + 工具栏） -->
           <div class="input-area">
             <a-textarea
                 v-model:value="inputMessage"
@@ -1485,7 +1677,7 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-
+      </div>
 
 
       <!-- 隐藏文件输入 -->

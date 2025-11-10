@@ -1,5 +1,7 @@
 // Strong types for SSE events and UI messages
 
+import {ToolSpec} from "@/services/tools.js";
+
 export enum EventType {
   STARTED = 'STARTED',
   PROGRESS = 'PROGRESS',
@@ -19,7 +21,7 @@ export enum EventType {
   INTERACTION = 'INTERACTION',
   COMPLETED = 'COMPLETED',
 
-  // Index 专属事件类型
+  // ReActPlus 专属事件类型,
   TASK_ANALYSIS = 'TASK_ANALYSIS',  // 任务分析阶段
   THOUGHT = 'THOUGHT',              // 思维链生成
   INIT_PLAN = 'INIT_PLAN',          // 初始化计划
@@ -76,12 +78,11 @@ export interface UIMessage {
   // time
   startTime?: Date
   endTime?: Date
-  timestamp?: Date
 
-  // tool/approval specific (optional, used by MessageItem/ToolBox)
-  approval?: any
   events?: BaseEventItem[],
-  meta?: object
+  meta?: {
+      toolSchema?: ToolSpec; // 可选链，允许 meta 或 toolSchema 不存在
+  };
 
   // hierarchy support for tool calls (父子关系支持)
   parentNodeId?: string      // 父节点 ID（用于工具调用关联到 ACTION 节点）

@@ -11,7 +11,7 @@ export interface ResponseResult<T = any> {
     code: number
     message: string
     data: T
-    timestamp: number
+    startTime: number
 }
 
 /**

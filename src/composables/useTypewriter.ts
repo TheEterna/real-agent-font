@@ -20,11 +20,11 @@ export function useTypewriter(speed: number = 30, enableEffect: boolean = true) 
      * 使用 requestAnimationFrame 实现流畅的打字机效果
      * 比 setInterval 更流畅，不会阻塞主线程
      */
-    const typeNextChar = (timestamp: number) => {
+    const typeNextChar = (startTime: number) => {
         if (!isTyping.value) return
 
         // 控制打字速度
-        if (timestamp - lastUpdateTime >= speed) {
+        if (startTime - lastUpdateTime >= speed) {
             const target = targetText.value
             const displayed = displayedText.value
 
@@ -32,7 +32,7 @@ export function useTypewriter(speed: number = 30, enableEffect: boolean = true) 
                 // 逐字符添加
                 displayedText.value = target.substring(0, currentIndex + 1)
                 currentIndex++
-                lastUpdateTime = timestamp
+                lastUpdateTime = startTime
             } else {
                 // 打字完成
                 isTyping.value = false

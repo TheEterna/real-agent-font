@@ -113,19 +113,19 @@ const updateScrollButtonVisibility = () => {
 // 使用可复用的 SSE 组合式函数（取消自动滚动，仅按钮手动触发）
 const handleDoneNotice = (node: {
   text: string;
-  timestamp: any; // 改为 any 类型，支持字符串、Date等
+  startTime: any; // 改为 any 类型，支持字符串、Date等
   title: string;
   nodeId?: string,
   type: NotificationType
 }) => {
-  const safeDate = ensureDate(node.timestamp)
+  const safeDate = ensureDate(node.startTime)
   const key = `done-${safeDate.getTime()}-${Math.random().toString(36).slice(2, 8)}`
 
   const onClick = () => locateByNode(node.nodeId)
 
   const desc = h('div', {style: 'max-width: 280px;'}, [
     h('div', {style: 'margin-top:4px; font-size:12px; color:#888; display:flex; align-items:center; gap:6px;'}, [
-      h('span', formatTime(node.timestamp)),
+      h('span', formatTime(node.startTime)),
       h('span', '·'),
       h('span', {style: 'max-width: 180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;'}, node.title || '')
     ])
@@ -222,7 +222,7 @@ const sendMessage = async () => {
     type: MessageType.User,
     sender: '用户',
     message: inputMessage.value,
-    timestamp: new Date()
+    startTime: new Date()
   }
 
   messages.value.push(userMessage)
@@ -242,7 +242,7 @@ const sendMessage = async () => {
       eventType: 'ERROR',
       sender: 'System',
       message: '发送失败: ' + (error as Error).message,
-      timestamp: new Date()
+      startTime: new Date()
     })
     // 出错时手动设置任务状态
     taskStatus.value.set('error')
@@ -420,7 +420,7 @@ const md = new MarkdownIt({
 // 🎯 **目标导向** - 始终聚焦于解决您的核心问题
 //
 // 现在，请告诉我您希望我帮您解决什么问题？`,
-//         timestamp: new Date(Date.now() - 300000),
+//         startTime: new Date(Date.now() - 300000),
 //         nodeId: 'welcome-msg'
 //       },
 //
@@ -429,7 +429,7 @@ const md = new MarkdownIt({
 //         type: MessageType.User,
 //         sender: '用户',
 //         message: '请帮我分析一下当前项目的代码结构，并给出优化建议',
-//         timestamp: new Date(Date.now() - 250000),
+//         startTime: new Date(Date.now() - 250000),
 //         nodeId: 'user-msg-1'
 //       },
 //
@@ -446,7 +446,7 @@ const md = new MarkdownIt({
 // 4. 提供具体的改进建议
 //
 // 让我开始执行这个任务...`,
-//         timestamp: new Date(Date.now() - 240000),
+//         startTime: new Date(Date.now() - 240000),
 //         nodeId: 'thinking-msg-1'
 //       },
 //
@@ -466,7 +466,7 @@ const md = new MarkdownIt({
 // - TypeScript 类型覆盖率
 // - 组件复用性分析
 // - API 设计一致性检查`,
-//         timestamp: new Date(Date.now() - 220000),
+//         startTime: new Date(Date.now() - 220000),
 //         nodeId: 'action-msg-1'
 //       },
 //
@@ -488,7 +488,7 @@ const md = new MarkdownIt({
 //             ]
 //           }
 //         },
-//         timestamp: new Date(Date.now() - 200000),
+//         startTime: new Date(Date.now() - 200000),
 //         nodeId: 'tool-msg-1'
 //       },
 //
@@ -504,7 +504,7 @@ const md = new MarkdownIt({
 // 📝 **代码量**: 主要组件代码量适中，可维护性良好
 //
 // 现在让我进行更深入的代码质量分析...`,
-//         timestamp: new Date(Date.now() - 180000),
+//         startTime: new Date(Date.now() - 180000),
 //         nodeId: 'observing-msg-1'
 //       },
 //
@@ -513,7 +513,7 @@ const md = new MarkdownIt({
 //         type: MessageType.ToolApproval,
 //         sender: 'System',
 //         message: '需要您的审批才能执行工具',
-//         timestamp: new Date(Date.now() - 160000),
+//         startTime: new Date(Date.now() - 160000),
 //         nodeId: 'approval-msg-1',
 //         approval: {
 //           toolName: 'code_analyzer',
@@ -560,7 +560,7 @@ const md = new MarkdownIt({
 //             ]
 //           }
 //         },
-//         timestamp: new Date(Date.now() - 140000),
+//         startTime: new Date(Date.now() - 140000),
 //         nodeId: 'tool-msg-2'
 //       },
 //
@@ -579,7 +579,7 @@ const md = new MarkdownIt({
 //
 // **错误详情**: Connection timeout after 30s
 // **错误代码**: NET_TIMEOUT_001`,
-//         timestamp: new Date(Date.now() - 120000),
+//         startTime: new Date(Date.now() - 120000),
 //         nodeId: 'error-msg-1'
 //       },
 //
@@ -608,7 +608,7 @@ const md = new MarkdownIt({
 // ### 🎯 下一步行动
 // - 建议优先修复 TypeScript 警告
 // - 可以考虑引入代码质量工具链`,
-//         timestamp: new Date(Date.now() - 100000),
+//         startTime: new Date(Date.now() - 100000),
 //         nodeId: 'done-warning-msg-1'
 //       },
 //
@@ -617,7 +617,7 @@ const md = new MarkdownIt({
 //         type: MessageType.User,
 //         sender: '用户',
 //         message: '感谢分析！请帮我生成一个改进代码质量的具体执行计划',
-//         timestamp: new Date(Date.now() - 80000),
+//         startTime: new Date(Date.now() - 80000),
 //         nodeId: 'user-msg-2'
 //       },
 //
@@ -698,7 +698,7 @@ const md = new MarkdownIt({
 // **💡 提示**: 这个计划可以根据团队情况和项目优先级进行调整。建议从阶段一开始，循序渐进地实施。
 //
 // 您希望我详细说明哪个阶段的具体实施步骤？`,
-//         timestamp: new Date(Date.now() - 60000),
+//         startTime: new Date(Date.now() - 60000),
 //         nodeId: 'complex-markdown-msg'
 //       },
 //
@@ -715,7 +715,7 @@ const md = new MarkdownIt({
 // - 优化建议: 已生成
 //
 // 系统运行正常，随时准备为您提供更多帮助。`,
-//         timestamp: new Date(Date.now() - 40000),
+//         startTime: new Date(Date.now() - 40000),
 //         nodeId: 'system-status-msg'
 //       }
 //     ]
@@ -742,7 +742,7 @@ const md = new MarkdownIt({
       <div v-if="progress" class="global-progress">
         <div class="gp-icon" aria-hidden></div>
         <div class="gp-text">{{ progress.text }}</div>
-        <div class="gp-time">{{ formatTime(progress.timestamp) }}</div>
+        <div class="gp-time">{{ formatTime(progress.startTime) }}</div>
       </div>
 
       <!-- 消息列表 -->

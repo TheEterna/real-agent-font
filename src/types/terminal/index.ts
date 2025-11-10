@@ -62,7 +62,7 @@ export interface TerminalMessage {
   id: string
   type: 'input' | 'output' | 'error' | 'system' | 'command'
   content: string
-  timestamp: Date
+  startTime: Date
   sessionId?: string
   nodeId?: string
   metadata?: Record<string, any>

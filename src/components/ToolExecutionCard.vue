@@ -12,7 +12,7 @@ interface ToolExecutionData {
   result?: any
   executionTime?: number
   error?: string
-  timestamp?: Date
+  startTime?: Date
 }
 
 interface Props {
@@ -117,8 +117,8 @@ const toggleResult = () => {
         </span>
 
         <!-- 时间戳 -->
-        <span v-if="data.timestamp" class="timestamp">
-          {{ new Date(data.timestamp).toLocaleTimeString('zh-CN') }}
+        <span v-if="data.startTime" class="startTime">
+          {{ new Date(data.startTime).toLocaleTimeString('zh-CN') }}
         </span>
       </div>
     </div>

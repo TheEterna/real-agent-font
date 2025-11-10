@@ -79,8 +79,8 @@ const activeKey = ref('summary')
 
 const title = computed(() => t('tools.result.title'))
 
-function isResponseResult(resp: unknown): resp is { code: unknown; message: unknown; timestamp: unknown; data?: unknown }{
-  return !!resp && typeof resp === 'object' && 'code' in (resp as any) && 'message' in (resp as any) && 'timestamp' in (resp as any)
+function isResponseResult(resp: unknown): resp is { code: unknown; message: unknown; startTime: unknown; data?: unknown }{
+  return !!resp && typeof resp === 'object' && 'code' in (resp as any) && 'message' in (resp as any) && 'startTime' in (resp as any)
 }
 
 function normalize(raw: unknown): NormalizedResult{

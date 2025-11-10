@@ -8,7 +8,7 @@ export default {
   examples: ['/time'],
   async execute(args: string, context?: any): Promise<string> {
     const now = new Date()
-    const timestamp = now.getTime()
+    const startTime = now.getTime()
     const iso = now.toISOString()
     const local = now.toLocaleString('zh-CN', {
       timeZone: 'Asia/Shanghai',
@@ -25,8 +25,8 @@ export default {
 
 📅 本地时间: ${local}
 🌍 UTC时间: ${iso}
-⏱️  时间戳: ${timestamp}
-🕐 Unix时间: ${Math.floor(timestamp / 1000)}
+⏱️  时间戳: ${startTime}
+🕐 Unix时间: ${Math.floor(startTime / 1000)}
 
 时区: 中国标准时间 (CST, UTC+8)`
   }
