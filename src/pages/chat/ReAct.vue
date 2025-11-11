@@ -10,6 +10,7 @@ import {notification} from 'ant-design-vue'
 import {SendOutlined, PaperClipOutlined, FileTextOutlined} from '@ant-design/icons-vue'
 import {Attachment} from '@/types/attachment'
 import {TemplateItem} from '@/types/template'
+import { generateTestPlan, generateSimplePlan } from '@/utils/planTestData'
 // Markdown 渲染相关
 // @ts-ignore
 import MarkdownIt from 'markdown-it'
@@ -353,6 +354,29 @@ const getStatusIcon = (status: string): string => {
     'idle': ''
   }
   return iconMap[status as keyof typeof iconMap] || ''
+}
+
+// 开发模式测试功能
+const isDevelopment = import.meta.env.DEV
+
+const testInitPlan = () => {
+  const plan = generateTestPlan()
+  chat.setSessionPlan(sessionId.value, plan)
+  chat.setPlanWidgetMode('ball')
+  notification.success({
+    message: '测试计划已创建',
+    description: '已生成测试计划数据，状态球已显示'
+  })
+}
+
+const testSimplePlan = () => {
+  const plan = generateSimplePlan()
+  chat.setSessionPlan(sessionId.value, plan)
+  chat.setPlanWidgetMode('ball')
+  notification.success({
+    message: '简单计划已创建',
+    description: '已生成简单测试计划数据，状态球已显示'
+  })
 }
 
 
@@ -786,6 +810,37 @@ const md = new MarkdownIt({
             </a-menu>
           </template>
         </a-dropdown>
+        <!-- 计划侧边栏切换按钮 -->
+        <a-button
+          size="middle"
+          class="toolbar-btn plan-toggle-btn"
+          :type="chat.planVisible.value ? 'primary' : 'default'"
+          @click="chat.togglePlanVisibility"
+          :disabled="!chat.getCurrentPlan()"
+        >
+          <template #icon>📋</template>
+          {{ chat.planVisible.value ? '隐藏计划' : '显示计划' }}
+        </a-button>
+        <!-- 开发模式测试按钮 -->
+        <template v-if="isDevelopment">
+          <a-divider type="vertical" />
+          <a-button
+            size="small"
+            type="dashed"
+            @click="testInitPlan"
+            class="dev-test-btn"
+          >
+            🧪 测试计划
+          </a-button>
+          <a-button
+            size="small"
+            type="dashed"
+            @click="testSimplePlan"
+            class="dev-test-btn"
+          >
+            📝 简单计划
+          </a-button>
+        </template>
       </div>
 
       <div
@@ -841,6 +896,7 @@ const md = new MarkdownIt({
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -852,6 +908,19 @@ const md = new MarkdownIt({
   padding: 16px;
   flex: 1;
   background: linear-gradient(180deg, #f7f9fc, #f5f5f5);
+  position: relative;
+  transition: margin-right 0.3s ease;
+}
+
+/* 当计划侧边栏显示时，调整主内容区域 */
+.chat-container:has(+ .plan-sidebar) {
+  margin-right: 380px;
+}
+
+@media (max-width: 768px) {
+  .chat-container:has(+ .plan-sidebar) {
+    margin-right: 0;
+  }
 }
 
 .chat-header {
@@ -982,7 +1051,30 @@ const md = new MarkdownIt({
 
 /* Input area */
 .chat-input { padding: 0.75rem 1rem; min-width: 1080px; margin: 0 auto; border-top: 1px solid #eceff3; backdrop-filter: blur(4px); }
-.input-toolbar { max-width: 960px; margin: 0.25rem auto 0.5rem; display: flex; align-items: center; gap: 8px; }
+.input-toolbar {
+  max-width: 960px;
+  margin: 0.25rem auto 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-toggle-btn {
+  margin-left: auto; /* 将计划按钮推到右侧 */
+}
+
+.dev-test-btn {
+  font-size: 11px;
+  height: 28px;
+  border-color: #faad14;
+  color: #faad14;
+}
+
+.dev-test-btn:hover {
+  border-color: #ffc53d;
+  color: #ffc53d;
+  background: rgba(255, 197, 61, 0.1);
+}
 .input-surface { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; box-shadow: 0 2px 12px rgba(15,23,42,0.06); transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease; }
 .input-surface--hover { border-color: #8cb8ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.08), 0 2px 12px rgba(22,119,255,0.12); }
 .input-surface.input-surface--light { border-color: #1677ff; box-shadow: 0 0 0 3px rgba(22,119,255,0.12), 0 4px 16px rgba(22,119,255,0.15); }

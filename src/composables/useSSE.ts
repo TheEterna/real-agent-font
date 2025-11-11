@@ -1,10 +1,11 @@
 import {ref, nextTick} from 'vue'
-import {UIMessage, EventType, BaseEventItem} from '../types/events'
+import {UIMessage, EventType, BaseEventItem, InitPlanEventData, UpdatePlanEventData, AdvancePlanEventData, PlanData} from '../types/events'
 import {MessageType} from '@/types/events'
 import {MessageTypeMap} from '../constants/ui'
 import {ConnectionStatus, TaskStatus, ProgressInfo} from '@/types/status'
 import {TypeFlags} from 'typescript'
 import {NotificationType} from '@/types/notification'
+import { useChatStore } from '@/stores/chatStore'
 
 // === 新增接口定义 ===
 
@@ -317,16 +318,62 @@ export function useSSE(options: SSEOptions = {}) {
             updateMessage(event)
         },
         onInitPlan: (event: BaseEventItem) => {
-            // 初始化计划：累积消息到独立节点
+            // 初始化计划：处理计划创建
             updateMessage(event)
+
+            // 处理计划数据，集成到ChatStore
+            if (event.data && event.sessionId) {
+                const chatStore = useChatStore()
+                try {
+                    const planData = event.data as InitPlanEventData
+                    if (planData.plan) {
+                        chatStore.setSessionPlan(event.sessionId, planData.plan)
+                        chatStore.setPlanVisibility(true) // 自动显示计划侧边栏
+                        console.log('Plan initialized for session:', event.sessionId, planData.plan)
+                    }
+                } catch (error) {
+                    console.error('Failed to process INIT_PLAN event:', error)
+                }
+            }
         },
         onUpdatePlan: (event: BaseEventItem) => {
-            // 更新计划：累积消息到独立节点
+            // 更新计划：处理计划修改
             updateMessage(event)
+
+            // 更新ChatStore中的计划数据
+            if (event.data && event.sessionId) {
+                const chatStore = useChatStore()
+                try {
+                    const updateData = event.data as UpdatePlanEventData
+                    if (updateData.updates) {
+                        chatStore.updateSessionPlan(event.sessionId, updateData.updates)
+                        console.log('Plan updated for session:', event.sessionId, updateData.updates)
+                    }
+                } catch (error) {
+                    console.error('Failed to process UPDATE_PLAN event:', error)
+                }
+            }
         },
         onAdvancePlan: (event: BaseEventItem) => {
-            // 推进计划：累积消息到独立节点
+            // 推进计划：处理阶段推进
             updateMessage(event)
+
+            // 处理阶段推进逻辑
+            if (event.data && event.sessionId) {
+                const chatStore = useChatStore()
+                try {
+                    const advanceData = event.data as AdvancePlanEventData
+                    chatStore.advancePlanPhase(
+                        event.sessionId,
+                        advanceData.fromPhaseId,
+                        advanceData.toPhaseId
+                    )
+                    console.log('Plan advanced for session:', event.sessionId,
+                        'from:', advanceData.fromPhaseId, 'to:', advanceData.toPhaseId)
+                } catch (error) {
+                    console.error('Failed to process ADVANCE_PLAN event:', error)
+                }
+            }
         }
     }
 

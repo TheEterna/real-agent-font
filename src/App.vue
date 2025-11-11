@@ -68,12 +68,12 @@
               <span v-show="!effectiveCollapsed"> {{ t('menu.config') }}</span>
             </router-link>
           </a-tooltip>
-          <a-tooltip :title="t('menu.logs')" placement="right">
-            <router-link :class="['app-icon', { 'app-icon--collapsed': effectiveCollapsed }]" to="/logs">
-              <FileTextOutlined />
-              <span v-show="!effectiveCollapsed"> {{ t('menu.logs') }}</span>
-            </router-link>
-          </a-tooltip>
+<!--          <a-tooltip :title="t('menu.logs')" placement="right">-->
+<!--            <router-link :class="['app-icon', { 'app-icon&#45;&#45;collapsed': effectiveCollapsed }]" to="/logs">-->
+<!--              <FileTextOutlined />-->
+<!--              <span v-show="!effectiveCollapsed"> {{ t('menu.logs') }}</span>-->
+<!--            </router-link>-->
+<!--          </a-tooltip>-->
           <a-tooltip :title="t('menu.playground')" placement="right">
             <router-link :class="['app-icon', { 'app-icon--collapsed': effectiveCollapsed }]" to="/playground">
               <ExperimentOutlined />
@@ -107,9 +107,9 @@
         <a-tooltip :title="t('menu.config')" placement="top">
           <router-link class="mini-icon" to="/config"><SettingOutlined /></router-link>
         </a-tooltip>
-        <a-tooltip :title="t('menu.logs')" placement="top">
-          <router-link class="mini-icon" to="/logs"><FileTextOutlined /></router-link>
-        </a-tooltip>
+<!--        <a-tooltip :title="t('menu.logs')" placement="top">-->
+<!--          <router-link class="mini-icon" to="/logs"><FileTextOutlined /></router-link>-->
+<!--        </a-tooltip>-->
         <a-tooltip :title="t('menu.playground')" placement="top">
           <router-link class="mini-icon" to="/playground"><ExperimentOutlined /></router-link>
         </a-tooltip>
@@ -124,7 +124,6 @@
         <router-view />
       </a-layout-content>
     </a-layout>
-
   </a-layout>
 
   <div v-else style="min-height: 100vh; max-height: 100vh;height: 100vh;">

@@ -5,11 +5,11 @@ export interface ResponseResult<T=any>{
   code: number
   message: string
   data: T
-  startTime: number
+    timestamp: number
 }
 
 function isResponseResult(resp: any): resp is ResponseResult<any> {
-  return resp && typeof resp === 'object' && 'code' in resp && 'message' in resp && 'startTime' in resp
+  return resp && typeof resp === 'object' && 'code' in resp && 'message' in resp && 'timestamp' in resp
 }
 
 // 工具相关类型（仅前端使用）

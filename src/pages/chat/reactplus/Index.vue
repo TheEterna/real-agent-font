@@ -4,12 +4,9 @@ import {InputMode, useModeSwitch} from '@/composables/useModeSwitch'
 import {UIMessage, MessageType, EventType} from '@/types/events'
 import {AgentType} from '@/types/session'
 import {useChatStore} from '@/stores/chatStore'
-import StatusIndicator from '@/components/StatusIndicator.vue'
 import MessageItem from '@/components/MessageItem.vue'
 import ThinkingMessage from '@/components/messages/ThinkingMessage.vue'
 import ToolApprovalMessage from '@/components/messages/ToolApprovalMessage.vue'
-import InkModeButton from '@/components/InkModeButton.vue'
-import InkTransition from '@/components/InkTransition.vue'
 import {NeonModeButton, GeekModeButton} from '@/components/button'
 import {useSSE} from '@/composables/useSSE'
 import {notification} from 'ant-design-vue'
@@ -58,6 +55,9 @@ import {MessageStyle} from '@/types/messageConfig'
 import {ProgressInfo} from "@/types/status";
 import {useRoute, useRouter} from "vue-router";
 import ToolMessage from "@/components/messages/ToolMessage.vue";
+import {generateSimplePlan, generateTestPlan} from "@/utils/planTestData";
+import PlanWidget from '@/components/PlanWidget.vue'
+const isDevelopment = import.meta.env.DEV
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
@@ -388,10 +388,7 @@ const sendMessage = async () => {
       eventType: 'ERROR',
       sender: 'System',
       message: '发送失败: ' + (error as Error).message,
-      startTime: new Date(),
-      meta: {
-        originalMessage: currentMessage  // 保存原始消息用于重试
-      }
+      startTime: new Date()
     })
     // 出错时手动设置任务状态
     taskStatus.value.set('error')
@@ -951,6 +948,27 @@ const setupAttachmentAdvancedAnimations = () => {
 }
 
 
+const testInitPlan = () => {
+  const plan = generateTestPlan()
+  chat.setSessionPlan(sessionId.value, plan)
+  chat.setPlanWidgetMode('ball')
+  notification.success({
+    message: '测试计划已创建',
+    description: '已生成测试计划数据，状态球已显示'
+  })
+}
+
+const testSimplePlan = () => {
+  const plan = generateSimplePlan()
+  chat.setSessionPlan(sessionId.value, plan)
+  chat.setPlanWidgetMode('ball')
+  notification.success({
+    message: '简单计划已创建',
+    description: '已生成简单测试计划数据，状态球已显示'
+  })
+}
+
+
 // 组件挂载
 onMounted(() => {
   // 加载当前会话已存在的消息
@@ -1039,7 +1057,7 @@ onMounted(() => {
         },
         message: "地理编码工具调用", // 备选工具名称
         meta: {
-          arguments: JSON.stringify({
+          toolSchema: JSON.stringify({
             address: "北京市朝阳区建国路88号",
             city: "北京市",
             output_format: "json",
@@ -1501,6 +1519,8 @@ onUnmounted(() => {
 
 <template>
   <div ref="appContainer" :class="['react-plus-app', currentThemeClass]">
+    <!-- Plan 状态侧边栏 - 仅在 reactPlus 页面显示 -->
+    <PlanWidget />
     <!-- 🖥️ 极客模式：终端界面 -->
     <template v-if="isGeekMode">
 
@@ -1635,6 +1655,37 @@ onUnmounted(() => {
                 variant="multimodal"
                 @click="() => switchMode('multimodal')"
             />
+
+            <a-button
+                size="middle"
+                class="toolbar-btn plan-toggle-btn"
+                :type="chat.planVisible.value ? 'primary' : 'default'"
+                @click="chat.togglePlanVisibility"
+                :disabled="!chat.getCurrentPlan()"
+            >
+              <template #icon>📋</template>
+              {{ chat.planVisible.value ? '隐藏计划' : '显示计划' }}
+            </a-button>
+            <!-- 开发模式测试按钮 -->
+            <template v-if="isDevelopment">
+              <a-divider type="vertical" />
+              <a-button
+                  size="small"
+                  type="dashed"
+                  @click="testInitPlan"
+                  class="dev-test-btn"
+              >
+                🧪 测试计划
+              </a-button>
+              <a-button
+                  size="small"
+                  type="dashed"
+                  @click="testSimplePlan"
+                  class="dev-test-btn"
+              >
+                📝 简单计划
+              </a-button>
+            </template>
           </div>
 
 
@@ -1689,6 +1740,7 @@ onUnmounted(() => {
           accept=".txt,.md,.markdown,.java,.kt,.scala,.py,.go,.js,.mjs,.cjs,.ts,.tsx,.json,.yml,.yaml,.xml,.html,.css,.scss,.less,.vue,.svelte,.c,.cpp,.h,.hpp,.cs,.rs,.php,.rb,.swift,.m,.mm,.sql,.sh,.bat,.ps1,.ini,.conf,.log,.pdf,image/*"
           @change="onFileChange"
       />
+
     </template>
 
   </div>

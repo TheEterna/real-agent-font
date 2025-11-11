@@ -207,6 +207,7 @@ onMounted(async () => {
   try {
     loadingList.value = true
     items.value = await listTools()
+    console.log('items', items.value)
   } catch (e) {
     console.warn(e)
   } finally {
@@ -444,17 +445,6 @@ const currentServers = computed<string[]>(() => {
 })
 
 
-
-
-onMounted(() => {
-  // Observe container resizes
-
-  // initial
-})
-
-onUnmounted(() => {
-
-})
 
 </script>
 

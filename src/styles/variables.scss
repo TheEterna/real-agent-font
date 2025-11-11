@@ -12,6 +12,7 @@ $muted-color: #666;
 // Primary color (can be tuned per brand)
 $primary-color: #6b9a98;
 
+$primary-color-0: #f2f2f2;
 $primary-color-50: #f0f7f7;
 $primary-color-75: #e4f1f1;
 $primary-color-100: #d8ebea;
@@ -23,6 +24,19 @@ $primary-color-600: #5a8482;
 $primary-color-700: #4a6d6c;
 $primary-color-800: #3a5655;
 $primary-color-900: #2a3f3f;
+
+$secondary-color-50: #e0fafa;   // 极浅青蓝色 (类似水绿色调)
+$secondary-color-75: #bfedf2;   // 稍浅青蓝色
+$secondary-color-100: #99e6e6;  // 浅青蓝色
+$secondary-color-200: #66dbda;  // 较浅青蓝色
+$secondary-color-300: #33cfd2;  // 适中青蓝色 (核心辅助色)
+$secondary-color-400: #00bac4;  // 偏深青蓝色
+$secondary-color-500: #009aa7;  // 青蓝色核心 (可作为图标、强调色)
+$secondary-color-600: #007d89;  // 较深青蓝色
+$secondary-color-700: #00606b;  // 深青蓝色
+$secondary-color-800: #00454d;  // 极深青蓝色
+$secondary-color-900: #002d32;  // 最深青蓝色
+
 
 // Section fixed heights (can be tuned per layout)
 $section-height-mcp: 360px;
@@ -81,12 +95,73 @@ $jelly-rose: #f4cdd9;
 $jelly-rose-deep: #f0a6b7;
 
 
-// Scrollbar (optional)
+// Plan Management Colors (基于现有色彩体系)
+$plan-status-todo: $primary-color-100;
+$plan-status-running: $jelly-sky-deep;
+$plan-status-completed: $jelly-green-deep;
+$plan-status-paused: $jelly-orange-deep;
+$plan-status-failed: $jelly-rose-deep;
+
+// Plan UI Colors
+$plan-bg-primary: rgba(255, 255, 255, 0.95);
+$plan-bg-secondary: rgba(248, 250, 252, 0.95);
+$plan-bg-active: rgba(240, 248, 255, 0.95);
+$plan-bg-hover: rgba(246, 249, 255, 0.8);
+
+// Plan Border Colors
+$plan-border-light: rgba(0, 0, 0, 0.06);
+$plan-border-normal: rgba(0, 0, 0, 0.1);
+$plan-border-active: rgba(22, 119, 255, 0.3);
+
+// Plan Shadow
+$plan-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$plan-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.1);
+$plan-shadow-lg: 0 6px 30px rgba(0, 0, 0, 0.15);
+
+// Plan Status Background (使用透明度)
+$plan-status-todo-bg: rgba($primary-color-100, 0.3);
+$plan-status-running-bg: rgba($jelly-green-light, 0.5);
+$plan-status-completed-bg: rgba($jelly-green-light, 0.3);
+$plan-status-paused-bg: rgba($jelly-orange-light, 0.5);
+$plan-status-failed-bg: rgba($jelly-rose-light, 0.5);
+
+// Scrollbar (防挤压优化)
 @mixin pretty-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #c5cbd3 transparent;
-  &::-webkit-scrollbar { width: 8px; height: 8px; }
-  &::-webkit-scrollbar-thumb { background: #c5cbd3; border-radius: 6px; }
-  &::-webkit-scrollbar-track { background: transparent; }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c5cbd3;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* 悬停时显示更明显的滚动条 */
+  &:hover::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+  }
+}
+
+// Plan Card Mixin
+@mixin plan-card-base {
+  background: linear-gradient(135deg, $plan-bg-primary 0%, $plan-bg-secondary 100%);
+  border-radius: 12px;
+  border: 1px solid $plan-border-light;
+  padding: $space-lg;
+  transition: all 0.3s ease;
+}
+
+// Plan Status Mixin
+@mixin plan-status-style($color, $bg-color) {
+  border-left: 4px solid $color;
+  background: linear-gradient(135deg, $bg-color 0%, rgba($bg-color, 0.5) 100%);
 }
 

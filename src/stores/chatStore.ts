@@ -1,11 +1,12 @@
 import { ref } from 'vue'
+import { defineStore } from 'pinia'
 import { AgentType } from '@/types/session'
 import type { UIMessage } from '@/types/events'
 import type { Session } from '@/types/session'
+import { PlanData, PlanStatus, PlanPhase, PlanPhaseStatus } from '@/types/events'
+import { nanoid } from 'nanoid'
 
-export function useChatStore() {
-  return store
-}
+// 使用 Pinia 包装：保持对外 API 不变
 
 // Create 5 fixed test sessions
 const fixedSessions: Session[] = [
@@ -25,6 +26,26 @@ fixedSessions.forEach(session => {
   initialMessages[session.id] = []
 })
 const messagesBySession = ref<Record<string, UIMessage[]>>(initialMessages)
+
+// Plan状态管理
+const plansBySession = ref<Record<string, PlanData | null>>({})
+const planVisible = ref<boolean>(false)
+
+// Plan小部件状态管理
+export type PlanWidgetMode = 'hidden' | 'ball' | 'mini' | 'sidebar'
+
+interface PlanWidgetState {
+  mode: PlanWidgetMode
+  position: { x: number; y: number }
+  size: { width: number; height: number }
+}
+
+// Plan小部件状态（由 Pinia 持久化插件自动管理）
+const planWidgetState = ref<PlanWidgetState>({
+  mode: 'hidden',
+  position: { x: 100, y: 100 },
+  size: { width: 380, height: 600 }
+})
 
 const switchConversation = (id: string) => {
   if (sessionId.value === id) return
@@ -58,6 +79,9 @@ const store = {
   selectedTag,
   sessions,
   messagesBySession,
+  plansBySession,
+  planVisible,
+  planWidgetState,
   switchConversation,
   newConversation,
   selectTag,
@@ -69,6 +93,127 @@ const store = {
       sessions.value[idx] = { ...sessions.value[idx], updatedAt: new Date() }
     }
   },
+
+  // Plan 管理方法
+  getCurrentPlan(): PlanData | null {
+    return plansBySession.value[sessionId.value] || null
+  },
+
+  getSessionPlan(id: string): PlanData | null {
+    return plansBySession.value[id] || null
+  },
+
+  setSessionPlan(id: string, plan: PlanData) {
+    plansBySession.value[id] = {
+      ...plan,
+      phases: plan.phases.map((phase, index) => ({
+        ...phase,
+        id: phase.id || nanoid(8),
+        index: index,
+        status: phase.status || PlanPhaseStatus.TODO
+      })),
+      status: plan.status || PlanStatus.PLANNING,
+      createdAt: plan.createdAt || new Date(),
+      updatedAt: new Date()
+    }
+    store.touchSession(id)
+  },
+
+  updateSessionPlan(id: string, updates: Partial<PlanData>) {
+    const existingPlan = plansBySession.value[id]
+    if (!existingPlan) return
+
+    plansBySession.value[id] = {
+      ...existingPlan,
+      ...updates,
+      phases: updates.phases ?
+        updates.phases.map((phase, index) => ({
+          ...phase,
+          id: phase.id || nanoid(8),
+          index: index,
+          status: phase.status || PlanPhaseStatus.TODO
+        })) : existingPlan.phases,
+      updatedAt: new Date()
+    }
+    this.touchSession(id)
+  },
+
+  advancePlanPhase(id: string, fromPhaseId?: string, toPhaseId?: string) {
+    const plan = plansBySession.value[id]
+    if (!plan) return
+
+    const phases = plan.phases.map(phase => {
+      if (fromPhaseId && phase.id === fromPhaseId) {
+        return { ...phase, status: PlanPhaseStatus.COMPLETED }
+      }
+      if (toPhaseId && phase.id === toPhaseId) {
+        return { ...phase, status: PlanPhaseStatus.RUNNING }
+      }
+      return phase
+    })
+
+    store.updateSessionPlan(id, {
+      phases,
+      currentPhaseId: toPhaseId,
+      status: PlanStatus.EXECUTING
+    })
+  },
+
+  updatePhase(id: string, phaseId: string, updates: Partial<PlanPhase>) {
+    const plan = plansBySession.value[id]
+    if (!plan) return
+
+    const phases = plan.phases.map(phase =>
+      phase.id === phaseId ? { ...phase, ...updates } : phase
+    )
+
+    store.updateSessionPlan(id, { phases })
+  },
+
+  clearSessionPlan(id: string) {
+    delete plansBySession.value[id]
+  },
+
+  togglePlanVisibility() {
+    planVisible.value = !planVisible.value
+  },
+
+  setPlanVisibility(visible: boolean) {
+    planVisible.value = visible
+  },
+
+  // Plan小部件状态管理方法
+  getPlanWidgetMode(): PlanWidgetMode {
+    return planWidgetState.value.mode
+  },
+
+  setPlanWidgetMode(mode: PlanWidgetMode) {
+    planWidgetState.value.mode = mode
+  },
+
+  getPlanWidgetPosition(): { x: number; y: number } {
+    return { ...planWidgetState.value.position }
+  },
+
+  setPlanWidgetPosition(position: { x: number; y: number }) {
+    planWidgetState.value.position = position
+  },
+
+  getPlanWidgetSize(): { width: number; height: number } {
+    return { ...planWidgetState.value.size }
+  },
+
+  setPlanWidgetSize(size: { width: number; height: number }) {
+    planWidgetState.value.size = size
+  },
+
+  updatePlanWidgetState(updates: Partial<PlanWidgetState>) {
+    planWidgetState.value = {
+      ...planWidgetState.value,
+      ...updates
+    }
+  },
+
   // New methods for Agent-Session binding
   getCurrentSession(): Session | undefined {
     return sessions.value.find(s => s.id === sessionId.value)
@@ -78,19 +223,34 @@ const store = {
   },
   findOrCreateSessionForAgent(agentType: AgentType): string {
     // Try to find an existing session with this agent type
-    const existingSessions = this.getSessionsByAgent(agentType)
+    const existingSessions = store.getSessionsByAgent(agentType)
     if (existingSessions.length > 0) {
       // Switch to the most recently updated session
       const mostRecentSession = existingSessions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0]
-      this.switchConversation(mostRecentSession.id)
+      store.switchConversation(mostRecentSession.id)
       return mostRecentSession.id
     } else {
       // Create new session for this agent
-      this.newConversation(agentType)
+      store.newConversation(agentType)
       return sessionId.value
     }
   }
 }
+
+// 导出 Pinia 版本的 useChatStore（保持原 API 不变）
+export const useChatStore = defineStore('chat', () => store, {
+  // @ts-expect-error pinia-plugin-persist 类型定义与当前 Pinia 版本存在兼容性问题
+  persist: {
+    enabled: true,
+    strategies: [
+      {
+        key: 'chat-store',
+        storage: localStorage,
+        paths: ['planWidgetState']
+      }
+    ]
+  }
+})
 
 /**
  * Append a message into a session and touch its updated time.

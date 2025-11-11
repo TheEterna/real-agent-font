@@ -66,6 +66,56 @@ body {
 
 
 
+/* 主色调类 - 与 Tailwind secondary-* 类对应 */
+.bg-secondary-50 { background-color: $secondary-color-50; }
+.bg-secondary-75 { background-color: $secondary-color-75; }
+.bg-secondary-100 { background-color: $secondary-color-100; }
+.bg-secondary-200 { background-color: $secondary-color-200; }
+.bg-secondary-300 { background-color: $secondary-color-300; }
+.bg-secondary-400 { background-color: $secondary-color-400; }
+.bg-secondary-500 { background-color: $secondary-color-500; }
+.bg-secondary-600 { background-color: $secondary-color-600; }
+.bg-secondary-700 { background-color: $secondary-color-700; }
+.bg-secondary-800 { background-color: $secondary-color-800; }
+.bg-secondary-900 { background-color: $secondary-color-900; }
+.hover\:bg-secondary-50:hover { background-color: $secondary-color-50; }
+.hover\:bg-secondary-75:hover { background-color: $secondary-color-75; }
+.hover\:bg-secondary-100:hover { background-color: $secondary-color-100; }
+.hover\:bg-secondary-200:hover { background-color: $secondary-color-200; }
+.hover\:bg-secondary-300:hover { background-color: $secondary-color-300; }
+.hover\:bg-secondary-400:hover { background-color: $secondary-color-400; }
+.hover\:bg-secondary-500:hover { background-color: $secondary-color-500; }
+.hover\:bg-secondary-600:hover { background-color: $secondary-color-600; }
+.hover\:bg-secondary-700:hover { background-color: $secondary-color-700; }
+.hover\:bg-secondary-800:hover { background-color: $secondary-color-800; }
+.hover\:bg-secondary-900:hover { background-color: $secondary-color-900; }
+
+.text-secondary-50 { color: $secondary-color-50; }
+.text-secondary-75 { color: $secondary-color-75; }
+.text-secondary-100 { color: $secondary-color-100; }
+.text-secondary-200 { color: $secondary-color-200; }
+.text-secondary-300 { color: $secondary-color-300; }
+.text-secondary-400 { color: $secondary-color-400; }
+.text-secondary-500 { color: $secondary-color-500; }
+.text-secondary-600 { color: $secondary-color-600; }
+.text-secondary-700 { color: $secondary-color-700; }
+.text-secondary-800 { color: $secondary-color-800; }
+.text-secondary-900 { color: $secondary-color-900; }
+
+.border-secondary-50 { border-color: $secondary-color-50; }
+.border-secondary-75 { border-color: $secondary-color-75; }
+.border-secondary-100 { border-color: $secondary-color-100; }
+.border-secondary-200 { border-color: $secondary-color-200; }
+.border-secondary-300 { border-color: $secondary-color-300; }
+.border-secondary-400 { border-color: $secondary-color-400; }
+.border-secondary-500 { border-color: $secondary-color-500; }
+.border-secondary-600 { border-color: $secondary-color-600; }
+.border-secondary-700 { border-color: $secondary-color-700; }
+.border-secondary-800 { border-color: $secondary-color-800; }
+.border-secondary-900 { border-color: $secondary-color-900; }
+
+
+
 
 button {
   cursor: pointer;

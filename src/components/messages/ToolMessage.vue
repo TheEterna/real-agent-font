@@ -2,6 +2,9 @@
 import { ref, computed } from 'vue'
 import { Tooltip } from 'ant-design-vue'
 import { UIMessage } from '@/types/events.js'
+import {
+  DownOutlined
+} from '@ant-design/icons-vue'
 
 const props = defineProps<{
   message: UIMessage
@@ -206,9 +209,7 @@ function extractValuesToString(data: unknown): string {
           class="ml-auto w-4 h-4 transition-transform duration-200 text-primary-400"
           :class="{ 'rotate-180': showResponse }"
         >
-          <svg viewBox="0 0 16 16" fill="currentColor" class="w-full h-full">
-            <path d="M4.293 5.293a1 1 0 011.414 0L8 7.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
-          </svg>
+          <DownOutlined />
         </div>
       </div>
     </a-tooltip>

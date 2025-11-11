@@ -82,7 +82,6 @@ const onTransitionEnded = () => {
 }
 
 const onTransitionError = (error: string) => {
-  console.error('🎬 青花瓷过渡失败:', error)
   showVideoTransition.value = false
   isTransitioning.value = false
 }
@@ -97,7 +96,7 @@ watch(() => chat.sessionId.value, (newSessionId) => {
   }
 })
 
-// 🔥 URL 同步逻辑：监听 URL 变化，切换会话
+
 watch(() => route.query.sessionId as string | undefined, (urlSessionId) => {
   if (urlSessionId && urlSessionId !== chat.sessionId.value) {
     // URL 中的 sessionId 存在且与当前不同，切换会话
