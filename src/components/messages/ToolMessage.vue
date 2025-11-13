@@ -3,8 +3,15 @@ import { ref, computed } from 'vue'
 import { Tooltip } from 'ant-design-vue'
 import { UIMessage } from '@/types/events.js'
 import {
-  DownOutlined
+  CaretUpOutlined,
+  EnvironmentOutlined,
+  AimOutlined,
+  SearchOutlined,
+  CloudOutlined,
+  GlobalOutlined,
+  ToolOutlined,
 } from '@ant-design/icons-vue'
+import { getRandomGlassColor } from '@/utils/colorUtils'
 
 const props = defineProps<{
   message: UIMessage
@@ -107,18 +114,39 @@ const formatArgumentsForTooltip = computed(() => {
   }
 })
 
-// 工具图标映射
-const getToolIcon = (name: string): string => {
-  const iconMap: Record<string, string> = {
-    'map_geocode': '📍',
-    'map_directions': '🗺️',
-    'map_search': '🔍',
-    'map_weather': '🌤️',
-    'map_ip_location': '🌐',
-    'default': '🛠️'
+// 工具图标映射（Ant Design Icons）
+const getToolIcon = (name: string) => {
+  const iconMap: Record<string, any> = {
+    'map_geocode': EnvironmentOutlined,
+    'map_directions': AimOutlined,
+    'map_search': SearchOutlined,
+    'map_weather': CloudOutlined,
+    'map_ip_location': GlobalOutlined,
+    'default': ToolOutlined,
   }
   return iconMap[name] || iconMap.default
 }
+
+// 随机图标背景色
+const iconBg = ref<string>(getRandomGlassColor())
+
+// 提取并规范化耗时 (ms)
+const elapsedMs = computed<number | null>(() => {
+  try {
+    const meta = (props.message.meta as any) ?? {}
+    console.log('meta:', meta)
+    const v = meta.elapsedMs
+    console.log('elapsedMs:', v)
+    if (typeof v === 'number' && Number.isFinite(v)) return Math.round(v)
+    if (typeof v === 'string') {
+      const n = Number(v)
+      return Number.isFinite(n) ? Math.round(n) : null
+    }
+    return null
+  } catch {
+    return null
+  }
+})
 
 // 格式化响应数据
 const formatResponseData = computed(() => {
@@ -194,23 +222,28 @@ function extractValuesToString(data: unknown): string {
         </div>
       </template>
 
-      <div
+    <div
         @click="toggleResponse"
-        class="tool-card transition-all duration-200 ease-in-out active:scale-[0.99] hover:shadow-lg rounded-4xl px-2.5 py-2 flex items-end gap-1 self-start"
+        class="tool-card group transition-all duration-200 ease-in-out active:scale-[0.99] hover:shadow-lg rounded-4xl px-2.5 py-2 flex items-center gap-1 self-start"
       >
-        <span class="text-xl">{{ getToolIcon(toolName) }}</span>
-        <span class="text-md text-primary-600 font-bold leading-6">{{ toolName }}</span>
+        <span class="tool-icon" :style="{ backgroundColor: iconBg }">
+          <component :is="getToolIcon(toolName as any)" />
+        </span>
+        <span class="text-md text-primary-600 font-bold leading-6.5">{{ toolName }}</span>
         <span class="text-xs text-primary-400 font-thin ml-1 leading-5 w-70 overflow-hidden line-clamp-1">
           {{ extractValuesToString(argumentsData) }}
         </span>
 
+        <!-- Hover-only elapsed time on the right -->
+        <span v-if="elapsedMs !== null" class="ml-auto text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+          {{ elapsedMs }} ms
+        </span>
+
         <!-- 展开指示器 -->
-        <div
-          class="ml-auto w-4 h-4 transition-transform duration-200 text-primary-400"
-          :class="{ 'rotate-180': showResponse }"
-        >
-          <DownOutlined />
-        </div>
+       
+        <CaretUpOutlined class="self-center transition-transform text-primary-400 dark:text-primary-500 duration-200 text-primary-400"
+        :class="{ 'rotate-180': showResponse }"/>
+
       </div>
     </a-tooltip>
 
@@ -290,6 +323,16 @@ function extractValuesToString(data: unknown): string {
     background: transparent;
     padding: 0;
   }
+}
+
+/* 圆形随机色背景的工具图标容器 */
+.tool-icon{
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes slideDown {

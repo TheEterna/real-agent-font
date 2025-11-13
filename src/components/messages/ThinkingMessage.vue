@@ -52,14 +52,9 @@ const toggleExpand = () => {
         {{ showSpinner ? '思考中...' : '思考过程' }}
       </span>
 
-      <div class="flex items-center text-primary-400 dark:text-primary-500 ">
-        <div
-          class="w-5 h-5 transition-transform duration-200"
-          :class="{ 'rotate-180': isExpanded }"
-        >
-          <CaretUpOutlined class="text-lg"/>
-        </div>
-      </div>
+
+      <CaretUpOutlined class=" flex items-center text-primary-400 dark:text-primary-500 transition-transform duration-200"
+                       :class="{ 'rotate-180': isExpanded }" />
 
     </button>
 

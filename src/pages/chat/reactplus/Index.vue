@@ -57,6 +57,7 @@ import {useRoute, useRouter} from "vue-router";
 import ToolMessage from "@/components/messages/ToolMessage.vue";
 import {generateSimplePlan, generateTestPlan} from "@/utils/planTestData";
 import PlanWidget from '@/components/PlanWidget.vue'
+import CommonMessage from "@/components/messages/CommonMessage.vue";
 const isDevelopment = import.meta.env.DEV
 
 // 共享状态（会话/Agent 选择）
@@ -1026,7 +1027,7 @@ onMounted(() => {
       // 5. 工具调用消息
       {
         type: MessageType.Tool,
-        sender: 'File System Tool',
+        sender: 'map_geocode',
         data: {
           name: "map_geocode", // 工具名称，对应图标映射中的键
           id: "tool_call_123456789", // 工具调用ID
@@ -1065,7 +1066,8 @@ onMounted(() => {
             output_format: "json",
             timeout: 5000,
             language: "zh-CN"
-          }
+          },
+          elapsedMs: 1000
         },
         startTime: new Date(Date.now() - 200000),
         nodeId: 'tool-msg-1'
@@ -1597,7 +1599,7 @@ onUnmounted(() => {
                 class="message-item"
             />
             <!-- 普通消息 -->
-            <MessageItem v-else :message="message" class="message-item"/>
+            <CommonMessage v-else :message="message" class="message-item"/>
           </div>
 
           <!-- 加载状态 -->

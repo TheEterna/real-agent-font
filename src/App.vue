@@ -53,59 +53,87 @@
 
           <div :class="['sider-bottom', { 'sider-bottom--collapsed': effectiveCollapsed }]" v-show="!effectiveCollapsed">
             <a-tooltip :title="t('menu.chat')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/chat">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.chat }"><MessageOutlined /></span>
-                  <span class="nav-label">{{ t('menu.chat') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/chat" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 rounded-4xl transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.chat }"><MessageOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.chat') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
             <a-tooltip :title="t('menu.dashboard')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/dashboard">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.dashboard }"><DashboardOutlined /></span>
-                  <span class="nav-label">{{ t('menu.dashboard') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/dashboard" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 rounded-4xl transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.dashboard }"><DashboardOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.dashboard') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
             <a-tooltip :title="t('menu.tools')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/tools">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.tools }"><ToolOutlined /></span>
-                  <span class="nav-label">{{ t('menu.tools') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/tools" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 rounded-4xl transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.tools }"><ToolOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.tools') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
             <a-tooltip :title="t('menu.agents')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/agents">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.agents }"><RobotOutlined /></span>
-                  <span class="nav-label">{{ t('menu.agents') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/agents" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 rounded-4xl transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.agents }"><RobotOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.agents') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
             <a-tooltip :title="t('menu.workflows')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/workflows">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.workflows }"><ApartmentOutlined /></span>
-                  <span class="nav-label">{{ t('menu.workflows') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/workflows" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 rounded-4xl transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.workflows }"><ApartmentOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.workflows') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
             <a-tooltip :title="t('menu.config')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/config">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.config }"><SettingOutlined /></span>
-                  <span class="nav-label">{{ t('menu.config') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/config" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 rounded-4xl transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.config }"><SettingOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.config') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
             <a-tooltip :title="t('menu.playground')" placement="right">
-              <router-link class="nav-item px-3 py-2 rounded-4xl" to="/playground">
-                <div class="nav-item__inner">
-                  <span class="icon-circle" :style="{ backgroundColor: iconBg.playground }"><ExperimentOutlined /></span>
-                  <span class="nav-label">{{ t('menu.playground') }}</span>
-                </div>
+              <router-link class="nav-item rounded-4xl" to="/playground" v-slot="{ isActive, href, navigate }">
+                <a :href="href" @click="navigate"
+                   :class="[
+                     'flex items-center gap-2 px-3 py-2 transition-colors',
+                     isActive ? 'bg-primary-100' : 'bg-primary-75/35 hover:bg-primary-900/10'
+                   ]">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full" :style="{ backgroundColor: iconBg.playground }"><ExperimentOutlined /></span>
+                  <span class="font-semibold text-slate-700">{{ t('menu.playground') }}</span>
+                </a>
               </router-link>
             </a-tooltip>
           </div>
@@ -241,8 +269,6 @@ const iconBg = {
 .sider-bottom--collapsed{display:flex;gap:8px;padding:6px;border:1px solid #eef2f7;background:#fff;border-radius:16px;justify-content:center;align-items:center}
 
 .nav-item{
-  color: #334155;
-  transition: background-color .2s ease;
   background: rgba(v.$primary-color-75, .35);
 }
 .nav-item:hover{ background: rgba(v.$primary-color-900, 0.08); }
