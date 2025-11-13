@@ -90,6 +90,7 @@ const store = {
   touchSession(id: string) {
     const idx = sessions.value.findIndex(s => s.id === id)
     if (idx >= 0) {
+      
       sessions.value[idx] = { ...sessions.value[idx], updatedAt: new Date() }
     }
   },
@@ -235,21 +236,13 @@ const store = {
       return sessionId.value
     }
   }
+
+
 }
 
 // 导出 Pinia 版本的 useChatStore（保持原 API 不变）
 export const useChatStore = defineStore('chat', () => store, {
-  // @ts-expect-error pinia-plugin-persist 类型定义与当前 Pinia 版本存在兼容性问题
-  persist: {
-    enabled: true,
-    strategies: [
-      {
-        key: 'chat-store',
-        storage: localStorage,
-        paths: ['planWidgetState']
-      }
-    ]
-  }
+  persist: true
 })
 
 /**

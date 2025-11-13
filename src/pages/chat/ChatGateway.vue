@@ -87,7 +87,7 @@ const onTransitionError = (error: string) => {
 }
 
 // 🔥 URL 同步逻辑：会话切换时更新 URL
-watch(() => chat.sessionId.value, (newSessionId) => {
+watch(() => chat.sessionId, (newSessionId) => {
   // 更新 URL query 参数（不触发页面刷新）
   if (route.query.sessionId !== newSessionId) {
     router.replace({ 
@@ -98,30 +98,30 @@ watch(() => chat.sessionId.value, (newSessionId) => {
 
 
 watch(() => route.query.sessionId as string | undefined, (urlSessionId) => {
-  if (urlSessionId && urlSessionId !== chat.sessionId.value) {
+  if (urlSessionId && urlSessionId !== chat.sessionId) {
     // URL 中的 sessionId 存在且与当前不同，切换会话
-    const sessionExists = chat.sessions.value.find(s => s.id === urlSessionId)
+    const sessionExists = chat.sessions.find(s => s.id === urlSessionId)
     if (sessionExists) {
       console.log('🔗 从 URL 恢复会话:', urlSessionId)
       chat.switchConversation(urlSessionId)
     } else {
       console.warn('⚠️ URL 中的 sessionId 不存在:', urlSessionId)
       // URL 中的会话不存在，使用默认会话并更新 URL
-      const defaultSessionId = chat.sessions.value[0]?.id
+      const defaultSessionId = chat.sessions[0]?.id
       if (defaultSessionId) {
         chat.switchConversation(defaultSessionId)
       }
     }
-  } else if (!urlSessionId && chat.sessionId.value) {
+  } else if (!urlSessionId && chat.sessionId) {
     // URL 中没有 sessionId，但 store 中有当前会话，同步到 URL
     router.replace({ 
-      query: { ...route.query, sessionId: chat.sessionId.value } 
+      query: { ...route.query, sessionId: chat.sessionId } 
     })
   }
 }, { immediate: true })
 
 // 监听session变化，处理组件切换和过渡动画
-watch(() => chat.sessionId.value, async (newSessionId, oldSessionId) => {
+watch(() => chat.sessionId, async (newSessionId, oldSessionId) => {
   console.log('🔄 会话切换检测:', { newSessionId, oldSessionId })
 
   if (oldSessionId && newSessionId !== oldSessionId) {
@@ -180,7 +180,7 @@ onMounted(() => {
       <component
         v-if="currentComponent"
         :is="currentComponent"
-        :key="chat.sessionId.value"
+        :key="chat.sessionId"
         class="agent-view"
       />
       <div v-else class="empty-state">

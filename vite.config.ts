@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import {resolve} from 'node:path'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
+import theme from './theme.json'
 
 export default defineConfig({
     plugins: [

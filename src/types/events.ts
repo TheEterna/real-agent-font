@@ -138,7 +138,7 @@ export interface UIMessage {
 
   events?: BaseEventItem[],
   meta?: {
-      toolSchema?: ToolSpec; // 可选链，允许 meta 或 toolSchema 不存在
+      toolSchema?: ToolSpec | any; // 可选链，允许 meta 或 toolSchema 不存在
   };
 
   // hierarchy support for tool calls (父子关系支持)

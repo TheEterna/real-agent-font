@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import MarkdownViewer from '@/components/MarkdownViewer.vue'
+import { CaretUpOutlined } from '@ant-design/icons-vue';
 
 import {
   CheckCircleTwoTone,
@@ -56,9 +57,7 @@ const toggleExpand = () => {
           class="w-5 h-5 transition-transform duration-200"
           :class="{ 'rotate-180': isExpanded }"
         >
-          <svg viewBox="0 0 16 16" fill="currentColor" class="w-full h-full">
-            <path d="M4.293 5.293a1 1 0 011.414 0L8 7.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
-          </svg>
+          <CaretUpOutlined class="text-lg"/>
         </div>
       </div>
 

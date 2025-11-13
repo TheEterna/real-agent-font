@@ -95,6 +95,11 @@ $jelly-rose: #f4cdd9;
 $jelly-rose-deep: #f0a6b7;
 
 
+$jelly-red-lightest: #fff0f2;    // 浅底色，仍柔和但带明显红色调
+$jelly-red-light: #ffccd5;      // 浅红色，比之前更透亮鲜艳
+$jelly-red: #ff9eaf;            // 标准红色，鲜艳不刺眼，核心错误色
+$jelly-red-deep: #ff6b8e;       // 深红色，醒目突出，用于重要错误强调
+
 // Plan Management Colors (基于现有色彩体系)
 $plan-status-todo: $primary-color-100;
 $plan-status-running: $jelly-sky-deep;

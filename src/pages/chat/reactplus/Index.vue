@@ -61,6 +61,8 @@ const isDevelopment = import.meta.env.DEV
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
+
+console.log('Current mode:', chat)
 const inputMessage = ref('')
 const attachments = ref<Attachment[]>([])
 const router = useRouter()
@@ -380,7 +382,7 @@ const sendMessage = async () => {
   scrollToBottom()
 
   try {
-    await executeReActPlus(currentMessage, sessionId.value)
+    await executeReActPlus(currentMessage, sessionId)
   } catch (error) {
     console.error('发送消息失败:', error)
     messages.value.push({
@@ -400,7 +402,7 @@ const sendMessage = async () => {
 
 
 // 会话切换：保存旧会话消息并加载新会话消息
-watch(() => chat.sessionId.value, (newId, oldId) => {
+watch(() => chat.sessionId, (newId, oldId) => {
   if (oldId) {
     chat.setSessionMessages(oldId, messages.value)
   }
@@ -414,8 +416,8 @@ watch(() => chat.sessionId.value, (newId, oldId) => {
 
 // 消息变化时，更新当前会话的消息，并触碰更新时间
 watch(messages, (val, oldVal) => {
-  chat.setSessionMessages(sessionId.value, val)
-  chat.touchSession(sessionId.value)
+  chat.setSessionMessages(sessionId, val)
+  chat.touchSession(sessionId)
 
   // 🐉 GSAP: 为新添加的消息应用入场动画
   if (val.length > oldVal.length) {
@@ -950,7 +952,7 @@ const setupAttachmentAdvancedAnimations = () => {
 
 const testInitPlan = () => {
   const plan = generateTestPlan()
-  chat.setSessionPlan(sessionId.value, plan)
+  chat.setSessionPlan(sessionId, plan)
   chat.setPlanWidgetMode('ball')
   notification.success({
     message: '测试计划已创建',
@@ -960,7 +962,7 @@ const testInitPlan = () => {
 
 const testSimplePlan = () => {
   const plan = generateSimplePlan()
-  chat.setSessionPlan(sessionId.value, plan)
+  chat.setSessionPlan(sessionId, plan)
   chat.setPlanWidgetMode('ball')
   notification.success({
     message: '简单计划已创建',
@@ -972,7 +974,7 @@ const testSimplePlan = () => {
 // 组件挂载
 onMounted(() => {
   // 加载当前会话已存在的消息
-  const existing = chat.getSessionMessages(sessionId.value)
+  const existing = chat.getSessionMessages(sessionId)
   if (existing && existing.length > 0) {
     messages.value = [...existing]
   } else {
@@ -1057,13 +1059,13 @@ onMounted(() => {
         },
         message: "地理编码工具调用", // 备选工具名称
         meta: {
-          toolSchema: JSON.stringify({
+          toolSchema: {
             address: "北京市朝阳区建国路88号",
             city: "北京市",
             output_format: "json",
             timeout: 5000,
             language: "zh-CN"
-          })
+          }
         },
         startTime: new Date(Date.now() - 200000),
         nodeId: 'tool-msg-1'
@@ -1659,12 +1661,12 @@ onUnmounted(() => {
             <a-button
                 size="middle"
                 class="toolbar-btn plan-toggle-btn"
-                :type="chat.planVisible.value ? 'primary' : 'default'"
+                :type="chat.planVisible ? 'primary' : 'default'"
                 @click="chat.togglePlanVisibility"
                 :disabled="!chat.getCurrentPlan()"
             >
               <template #icon>📋</template>
-              {{ chat.planVisible.value ? '隐藏计划' : '显示计划' }}
+              {{ chat.planVisible ? '隐藏计划' : '显示计划' }}
             </a-button>
             <!-- 开发模式测试按钮 -->
             <template v-if="isDevelopment">

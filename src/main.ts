@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-// @ts-expect-error pinia-plugin-persist 类型定义存在问题
-import piniaPluginPersist from 'pinia-plugin-persist'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
 import '@/styles/index.scss'
@@ -15,7 +14,7 @@ setTwoToneColor('#b8ddd9');
 getTwoToneColor();
 
 const pinia = createPinia()
-pinia.use(piniaPluginPersist)
+pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
 app.use(pinia)
