@@ -13,8 +13,10 @@ import {notification} from 'ant-design-vue'
 import ErrorMessage from '@/components/messages/ErrorMessage.vue'
 import {
   SendOutlined,
+  LoadingOutlined,
   PaperClipOutlined,
   FileTextOutlined,
+  CodeOutlined,
   RobotOutlined,
   ThunderboltOutlined,
   BulbOutlined,
@@ -58,7 +60,7 @@ import ToolMessage from "@/components/messages/ToolMessage.vue";
 import {generateSimplePlan, generateTestPlan} from "@/utils/planTestData";
 import PlanWidget from '@/components/PlanWidget.vue'
 import CommonMessage from "@/components/messages/CommonMessage.vue";
-const isDevelopment = import.meta.env.DEV
+const isDevelopment = (import.meta as any).env?.DEV ?? false
 
 // 共享状态（会话/Agent 选择）
 const chat = useChatStore()
@@ -156,12 +158,23 @@ const pushFilesWithValidation = (files: File[]) => {
 
 // 滚动相关
 const scrollToBottom = () => {
-  if (!chatContent.value) return
-  chatContent.value.scrollTo({top: chatContent.value.scrollHeight, behavior: 'smooth'})
+  if (chatContent.value) {
+    chatContent.value.scrollTo({ top: chatContent.value.scrollHeight, behavior: 'smooth' })
+    return
+  }
+  // 兜底：如果未绑定到可滚动容器，则滚动窗口
+  const doc = document.scrollingElement || document.documentElement
+  window.scrollTo({ top: doc.scrollHeight, behavior: 'smooth' })
 }
 
 const updateScrollButtonVisibility = () => {
-  if (!chatContent.value) return
+  if (!chatContent.value) {
+    // 兜底：检查窗口滚动
+    const threshold = 80
+    const distance = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight)
+    showScrollButton.value = distance > threshold
+    return
+  }
   const el = chatContent.value
   const threshold = 80
   const distance = el.scrollHeight - (el.scrollTop + el.clientHeight)
@@ -627,109 +640,12 @@ const animateMessageEntry = (element: HTMLElement) => {
         y: 0,
         scale: 1,
         duration: 0.5,
-        ease: "back.out(1.2)",  // 青龙腾飞效果
-        clearProps: "all"  // 动画完成后清除内联样式
+        ease: "back.out(1.2)",
+        clearProps: "all"
       }
   )
 }
 
-// ========== 4. 消息 Hover - 青瓷釉光扫过（使用委托模式优化） ==========
-const setupMessageHoverEffects = () => {
-  // 使用事件委托，避免为每个消息单独绑定事件
-  const chatContent = document.querySelector('.chat-content')
-  if (!chatContent) return
-
-  chatContent.addEventListener('mouseenter', (e) => {
-    const message = (e.target as HTMLElement).closest('.message')
-    if (!message) return
-
-    // 清理旧动画
-    gsap.killTweensOf(message)
-
-    // 消息轻微上浮
-    gsap.to(message, {
-      x: 4,
-      duration: 0.3,
-      ease: "power2.out"
-    })
-
-    // 发送者下划线展开
-    const sender = message.querySelector('.sender')
-    if (sender) {
-      gsap.killTweensOf(sender)
-      gsap.to(sender, {
-        '--underline-width': '100%',
-        duration: 0.3,
-        ease: "power2.out"
-      })
-    }
-  }, true) // 使用捕获阶段
-
-  chatContent.addEventListener('mouseleave', (e) => {
-    const message = (e.target as HTMLElement).closest('.message')
-    if (!message) return
-
-    gsap.killTweensOf(message)
-
-    gsap.to(message, {
-      x: 0,
-      duration: 0.3,
-      ease: "power2.out"
-    })
-
-    const sender = message.querySelector('.sender')
-    if (sender) {
-      gsap.killTweensOf(sender)
-      gsap.to(sender, {
-        '--underline-width': '0%',
-        duration: 0.3,
-        ease: "power2.out"
-      })
-    }
-  }, true)
-}
-
-// ========== 8. 滚动到底部按钮 - 简化版 ==========
-const setupScrollButtonAnimation = () => {
-  const scrollButton = document.querySelector('.scroll-to-bottom button')
-
-  if (!scrollButton) return
-
-  // 简化的呼吸效果
-  const breathAnimation = gsap.to(scrollButton, {
-    scale: 1.02,
-    duration: 2,
-    ease: "sine.inOut",
-    repeat: -1,
-    yoyo: true,
-    paused: true // 初始暂停，hover 时再启动
-  })
-
-  // 简化的 Hover 效果
-  scrollButton.addEventListener('mouseenter', () => {
-    breathAnimation.pause()
-    gsap.killTweensOf(scrollButton)
-    gsap.to(scrollButton, {
-      scale: 1.05,
-      y: -2,
-      duration: 0.3,
-      ease: "power2.out"
-    })
-  })
-
-  scrollButton.addEventListener('mouseleave', () => {
-    gsap.killTweensOf(scrollButton)
-    gsap.to(scrollButton, {
-      scale: 1.02,
-      y: 0,
-      duration: 0.3,
-      ease: "power2.out",
-      onComplete: () => {
-        breathAnimation.resume()
-      }
-    })
-  })
-}
 
 // ========== 10. 加载点动画 - 简化版 ==========
 const setupLoadingDotsAnimation = () => {
@@ -1481,8 +1397,6 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
     // 1. 页面初始化 + 进度指示器
     initGSAPAnimations()
 
-    // 2. 消息 hover 效果
-    setupMessageHoverEffects()
 
     // 3. 输入相关动画（合并基础和高级动画）
     setupInputContainerAdvancedAnimations()
@@ -1495,20 +1409,21 @@ const MessageItem = defineAsyncComponent(() => import('@/components/MessageItem.
     setupToolbarAdvancedAnimations()
     setupAttachmentAdvancedAnimations()
 
-    // 6. 滚动按钮动画
-    setupScrollButtonAnimation()
 
     // 7. 加载点动画
     setupLoadingDotsAnimation()
 
     // 监听滚动，控制下滑按钮显隐
     chatContent.value?.addEventListener('scroll', updateScrollButtonVisibility)
+    // 同时监听窗口滚动作为兜底
+    window.addEventListener('scroll', updateScrollButtonVisibility)
     updateScrollButtonVisibility()
   })
 })
 
 onUnmounted(() => {
   chatContent.value?.removeEventListener('scroll', updateScrollButtonVisibility)
+  window.removeEventListener('scroll', updateScrollButtonVisibility)
 
   // 清理所有 GSAP 动画，避免内存泄漏
   if (gsapContext) {
@@ -1557,10 +1472,10 @@ onUnmounted(() => {
     <!-- 正常界面 -->
     <template v-else>
       <!-- 主要内容区域 -->
-      <div class="main-content">
+      <div class="main-content flex flex-col h-full min-h-0">
 
         <!-- 对话区域 -->
-        <div class="chat-container" ref="chatContent">
+        <div class="chat-container flex-1 min-h-0 overflow-y-auto scroll-smooth" ref="chatContent">
           <div
               v-for="(message, index) in messages"
               :key="index"
@@ -1574,10 +1489,13 @@ onUnmounted(() => {
                 :sender="message.sender"
                 :startTime="message.startTime"
                 :is-thinking="!message.endTime"
-                class="message-item"
+                class="message-item mb-2.5"
             />
             <!-- 工具调用消息 -->
-            <ToolMessage v-else-if="message.type === MessageType.Tool" :message="message"></ToolMessage>
+            <ToolMessage v-else-if="message.type === MessageType.Tool"
+            :message="message"
+            class="message-item mb-2.5"
+            ></ToolMessage>
 
             <!-- 工具审批消息 -->
             <ToolApprovalMessage
@@ -1588,7 +1506,7 @@ onUnmounted(() => {
                 @rejected="handleToolRejected(message.nodeId!, $event)"
                 @error="handleToolError(message.nodeId!, $event)"
                 @terminateRequested="handleToolTerminateRequested(message.nodeId!, $event)"
-                class="message-item"
+                class="message-item mb-2.5"
             />
             <!-- 错误消息 - 使用专用组件 -->
             <ErrorMessage
@@ -1596,7 +1514,7 @@ onUnmounted(() => {
                 :message="message"
                 :session-id="sessionId"
                 @copied="handleErrorCopied"
-                class="message-item"
+                class="message-item mb-2.5"
             />
             <!-- 普通消息 -->
             <CommonMessage v-else :message="message" class="message-item"/>
@@ -1622,117 +1540,120 @@ onUnmounted(() => {
           </div>
         </Transition>
       </div>
-      <div class="sticky bottom-1.5 z-30 w-[1000px] mx-auto">
 
         <div
-            class="input-container overflow-hidden "
+            class=" w-[830px] sticky bottom-1.5 z-30 px-2 md:px-0  mx-auto
+            input-container overflow-hidden rounded-2xl border border-primary-50 backdrop-blur-xl
+            shadow-lg transition-colors"
             @dragover.prevent
             @drop="onDropFiles"
         >
 
-          <!-- 模式选择器 -->
-          <div class="mode-selector">
-            <!-- 📎 附件预览 -->
-            <div v-if="attachments.length" class="attachments-preview">
-              <div v-for="attachment in attachments" :key="attachment.name" class="attachment-chip">
-                <FileTextOutlined class="attachment-icon"/>
-                <span class="attachment-name">{{ attachment.name }}</span>
-                <span class="attachment-size">{{ bytes(attachment.size) }}KB</span>
+          <!-- 📎 附件预览区域 - 仅在有附件时显示 -->
+
+          <div v-if="attachments.length" class="mode-selector flex items-center gap-3 px-5 py-3 flex gap-2 px-4 py-2">
+            <div class="flex items-center gap-2">
+              <div v-for="attachment in attachments" :key="attachment.name" 
+                   class="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-blue-200 rounded-md text-xs shadow-sm">
+                <FileTextOutlined class="text-blue-500 text-xs"/>
+                <span class="text-blue-700 font-medium truncate max-w-[100px]">{{ attachment.name }}</span>
+                <span class="text-blue-400">{{ bytes(attachment.size) }}KB</span>
                 <button
-                    size="small"
                     @click="removeAttachment(attachment.name)"
-                    class="remove-btn"
-                >×
-                </button>
+                    class="text-blue-400 hover:text-red-500 ml-1 font-bold text-sm leading-none"
+                >×</button>
               </div>
             </div>
-            <GeekModeButton
-                :active="currentMode === 'geek'"
-                :icon="RobotOutlined"
-                label="极客模式"
-                @click="() => switchMode('geek')"
-            />
-            <NeonModeButton
-                :active="currentMode === 'multimodal'"
-                :icon="ThunderboltOutlined"
-                label="多模态模式"
-                variant="multimodal"
-                @click="() => switchMode('multimodal')"
-            />
-
-            <a-button
-                size="middle"
-                class="toolbar-btn plan-toggle-btn"
-                :type="chat.planVisible ? 'primary' : 'default'"
-                @click="chat.togglePlanVisibility"
-                :disabled="!chat.getCurrentPlan()"
-            >
-              <template #icon>📋</template>
-              {{ chat.planVisible ? '隐藏计划' : '显示计划' }}
-            </a-button>
-            <!-- 开发模式测试按钮 -->
-            <template v-if="isDevelopment">
-              <a-divider type="vertical" />
-              <a-button
-                  size="small"
-                  type="dashed"
-                  @click="testInitPlan"
-                  class="dev-test-btn"
-              >
-                🧪 测试计划
-              </a-button>
-              <a-button
-                  size="small"
-                  type="dashed"
-                  @click="testSimplePlan"
-                  class="dev-test-btn"
-              >
-                📝 简单计划
-              </a-button>
-            </template>
           </div>
 
 
           <!-- 输入区域（textarea + 发送按钮 + 工具栏） -->
-          <div class="input-area">
+          <div class="input-area relative flex flex-col justify-between px-4 pb-2 bg-transparent w-full">
             <a-textarea
                 v-model:value="inputMessage"
                 :maxlength="4000"
-                :auto-size="{ minRows: 1, maxRows: 8 }"
+                :auto-size="{ minRows: 1, maxRows: 2 }"
                 placeholder="请输入您的问题..."
                 :disabled="isLoading"
                 :bordered="false"
+                class="w-full text-slate-800 text-sm leading-6 font-normal bg-transparent outline-none focus:outline-none"
                 @pressEnter="onPressEnter"
                 @paste="onPaste"
             />
-            <a-button
+            <button
                 :disabled="!canSend"
-                :loading="isLoading"
                 @click="sendMessage"
-                class="send-button"
+                class="send-button absolute right-4 top-1/2 w-10 h-10 -translate-y-1/2 rounded-[50%] font-semibold"
             >
-              <SendOutlined v-if="!isLoading"/>
-              <span>{{ isLoading ? '处理中...' : '发送' }}</span>
-            </a-button>
+                  <SendOutlined class="m-auto text-lg" v-if="!isLoading"/>
+                  <LoadingOutlined class="m-auto text-lg" v-else />
+            </button>
 
-            <!-- 🛠️ 工具按钮组 -->
-            <div class="input-toolbar">
+            <!-- 工具按钮组 -->
+            <div class="input-toolbar mt-1 flex items-center gap-1 text-slate-500 text-sm">
               <a-button type="text" size="large" @click="handleUploadClick" :icon="h(PaperClipOutlined)"/>
-              <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(BulbOutlined)"/>
+              <input ref="fileInput" type="file" class="hidden" multiple @change="onFileChange" />
+              <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(CodeOutlined)" />
+              
+              <!-- 模式切换与功能设置下拉菜单 -->
               <a-dropdown placement="topLeft" trigger="click">
-                <a-button type="text" size="large" :icon="h(ThunderboltOutlined)"/>
+                <a-button type="text" size="large" :icon="h(SettingOutlined)" class="hover:text-primary-500"/>
                 <template #overlay>
-                  <a-menu @click="({ key }) => insertTemplate((templates.find(t=>t.label=== key ) as any).text)">
-                    <a-menu-item v-for="t in templates" :key="t.label">
-                      {{ t.label }}
-                    </a-menu-item>
+                  <a-menu class="min-w-[200px]">
+                    <!-- 模式切换组 -->
+                    <a-menu-item-group title="模式切换">
+                      <a-menu-item 
+                        key="geek" 
+                        @click="() => switchMode('geek')"
+                        :class="{ 'ant-menu-item-selected': currentMode === 'geek' }"
+                      >
+                        <template #icon><RobotOutlined /></template>
+                        极客模式
+                      </a-menu-item>
+                      <a-menu-item 
+                        key="multimodal" 
+                        @click="() => switchMode('multimodal')"
+                        :class="{ 'ant-menu-item-selected': currentMode === 'multimodal' }"
+                      >
+                        <template #icon><ThunderboltOutlined /></template>
+                        多模态模式
+                      </a-menu-item>
+                    </a-menu-item-group>
+                    
+                    <a-menu-divider />
+                    
+                    <!-- 计划功能 -->
+                    <a-menu-item-group title="计划功能">
+                      <a-menu-item 
+                        key="plan-toggle" 
+                        @click="chat.togglePlanVisibility"
+                        :disabled="!chat.getCurrentPlan()"
+                      >
+                        <template #icon>📋</template>
+                        {{ chat.planVisible ? '隐藏计划' : '显示计划' }}
+                      </a-menu-item>
+                    </a-menu-item-group>
+                    
+                    <!-- 开发模式测试功能 -->
+                    <template v-if="isDevelopment">
+                      <a-menu-divider />
+                      <a-menu-item-group title="开发测试">
+                        <a-menu-item key="test-plan" @click="testInitPlan">
+                          <template #icon>🧪</template>
+                          测试计划
+                        </a-menu-item>
+                        <a-menu-item key="simple-plan" @click="testSimplePlan">
+                          <template #icon>📝</template>
+                          简单计划
+                        </a-menu-item>
+                      </a-menu-item-group>
+                    </template>
                   </a-menu>
                 </template>
               </a-dropdown>
             </div>
           </div>
         </div>
-      </div>
 
 
       <!-- 隐藏文件输入 -->
@@ -1752,4 +1673,5 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use './Index.scss' as *;
+
 </style>

@@ -172,9 +172,9 @@
         </div>
       </div>
 
-      <a-layout class="bg-primary-50">
+      <a-layout class="bg-primary-0">
         <a-layout-content style="position: relative; overflow: auto; display: flex;">
-          <router-view />
+          <router-view class="bg-white"/>
         </a-layout-content>
       </a-layout>
     </a-layout>
