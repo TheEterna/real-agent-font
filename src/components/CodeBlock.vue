@@ -4,7 +4,8 @@ import { computed } from 'vue'
 interface Props {
   code: string
   language?: string
-  showLineNumbers?: boolean
+  showLineNumbers?: boolean\
+
 }
 
 const props = withDefaults(defineProps<Props>(), {

@@ -412,36 +412,37 @@ $message-warning-text: #A08038;
     flex-direction: column;
     overflow-y: auto;
     padding: $space-2xl $space-lg;
-    scroll-behavior: smooth;
+
+    @include pretty-scrollbar();
     /* 半透明青瓷背景 */
     backdrop-filter: blur(20px);
 
     /* Custom scrollbar - 青瓷色 */
-    scrollbar-width: thin;
-    scrollbar-color: $brand-primary transparent;
-
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg,
-              $brand-primary,
-              $brand-hover
-      );
-      border-radius: $radius-full;
-      transition: all $transition-fast;
-      box-shadow: 0 0 6px $brand-glow;
-
-      &:hover {
-        background: $brand-hover;
-        box-shadow: 0 0 12px $brand-glow;
-      }
-    }
+    //scrollbar-width: thin;
+    //scrollbar-color: $brand-primary transparent;
+    //
+    //&::-webkit-scrollbar {
+    //  width: 8px;
+    //}
+    //
+    //&::-webkit-scrollbar-track {
+    //  background: transparent;
+    //}
+    //
+    //&::-webkit-scrollbar-thumb {
+    //  background: linear-gradient(180deg,
+    //          $brand-primary,
+    //          $brand-hover
+    //  );
+    //  border-radius: $radius-full;
+    //  transition: all $transition-fast;
+    //  box-shadow: 0 0 6px $brand-glow;
+    //
+    //  &:hover {
+    //    background: $brand-hover;
+    //    box-shadow: 0 0 12px $brand-glow;
+    //  }
+    //}
   }
 
   .message-wrapper {

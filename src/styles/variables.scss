@@ -133,14 +133,14 @@ $plan-status-failed-bg: rgba($jelly-rose-light, 0.5);
 // Scrollbar (防挤压优化)
 @mixin pretty-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #c5cbd3 transparent;
+  scrollbar-color: $primary-color-200 transparent;
 
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #c5cbd3;
+    background: rgba($primary-color-200, 0.8);
     border-radius: 6px;
     border: 1px solid transparent;
     background-clip: padding-box;
@@ -151,7 +151,36 @@ $plan-status-failed-bg: rgba($jelly-rose-light, 0.5);
 
   /* 悬停时显示更明显的滚动条 */
   &:hover::-webkit-scrollbar-thumb {
-    background: #94a3b8;
+    background: rgba($primary-color-200, 0.8);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+
+  & * {
+    /* 重置 Firefox */
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+
+    /* 重置 WebKit (Chrome, Safari) */
+    &::-webkit-scrollbar {
+      width: initial; /* 或 auto */
+      height: initial; /* 或 auto */
+    }
+    &::-webkit-scrollbar-thumb {
+      background: initial; /* 或 auto */
+      border-radius: initial;
+      border: initial;
+      background-clip: initial;
+    }
+    &::-webkit-scrollbar-track {
+      background: initial; /* 或 auto */
+    }
+
+    /* 重置子元素的 :hover 状态 */
+    &:hover::-webkit-scrollbar-thumb {
+      background: initial;
+    }
   }
 }
 

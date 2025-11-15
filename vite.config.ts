@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue'
 import {resolve} from 'node:path'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
-import theme from './theme.json'
 
 export default defineConfig({
     plugins: [
@@ -14,7 +13,8 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': resolve(__dirname, './src')
+            '@': resolve(__dirname, './src'),
+            '@repo/shadcn-vue/lib/utils': resolve(__dirname, './src/lib/utils.ts')
         }
     },
     server: {

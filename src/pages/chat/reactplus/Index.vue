@@ -60,6 +60,7 @@ import ToolMessage from "@/components/messages/ToolMessage.vue";
 import {generateSimplePlan, generateTestPlan} from "@/utils/planTestData";
 import PlanWidget from '@/components/PlanWidget.vue'
 import CommonMessage from "@/components/messages/CommonMessage.vue";
+
 const isDevelopment = (import.meta as any).env?.DEV ?? false
 
 // 共享状态（会话/Agent 选择）
@@ -159,12 +160,12 @@ const pushFilesWithValidation = (files: File[]) => {
 // 滚动相关
 const scrollToBottom = () => {
   if (chatContent.value) {
-    chatContent.value.scrollTo({ top: chatContent.value.scrollHeight, behavior: 'smooth' })
+    chatContent.value.scrollTo({top: chatContent.value.scrollHeight, behavior: 'smooth'})
     return
   }
   // 兜底：如果未绑定到可滚动容器，则滚动窗口
   const doc = document.scrollingElement || document.documentElement
-  window.scrollTo({ top: doc.scrollHeight, behavior: 'smooth' })
+  window.scrollTo({top: doc.scrollHeight, behavior: 'smooth'})
 }
 
 const updateScrollButtonVisibility = () => {
@@ -990,7 +991,6 @@ onMounted(() => {
       },
 
 
-
       // 7. 工具审批消息
       {
         type: MessageType.ToolApproval,
@@ -1048,8 +1048,8 @@ onMounted(() => {
                     dataValidation: {
                       required: ['username', 'email'],
                       constraints: {
-                        username: { minLength: 3, maxLength: 50 },
-                        email: { format: 'email' }
+                        username: {minLength: 3, maxLength: 50},
+                        email: {format: 'email'}
                       }
                     }
                   },
@@ -1062,7 +1062,7 @@ onMounted(() => {
                     dataValidation: {
                       required: ['order_id', 'user_id', 'total_amount'],
                       constraints: {
-                        total_amount: { type: 'decimal', min: 0 }
+                        total_amount: {type: 'decimal', min: 0}
                       }
                     }
                   }
@@ -1115,19 +1115,19 @@ onMounted(() => {
                       type: 'object',
                       description: '源数据库连接配置',
                       properties: {
-                        host: { type: 'string', description: '数据库主机地址' },
-                        port: { type: 'number', description: '端口号' },
-                        database: { type: 'string', description: '数据库名称' },
-                        username: { type: 'string', description: '用户名' },
-                        password: { type: 'string', description: '密码' },
+                        host: {type: 'string', description: '数据库主机地址'},
+                        port: {type: 'number', description: '端口号'},
+                        database: {type: 'string', description: '数据库名称'},
+                        username: {type: 'string', description: '用户名'},
+                        password: {type: 'string', description: '密码'},
                         connectionOptions: {
                           type: 'object',
                           description: '连接选项',
                           properties: {
-                            ssl: { type: 'boolean' },
-                            timeout: { type: 'number' },
-                            maxConnections: { type: 'number' },
-                            charset: { type: 'string' }
+                            ssl: {type: 'boolean'},
+                            timeout: {type: 'number'},
+                            maxConnections: {type: 'number'},
+                            charset: {type: 'string'}
                           }
                         }
                       },
@@ -1137,12 +1137,12 @@ onMounted(() => {
                       type: 'object',
                       description: '目标数据库连接配置',
                       properties: {
-                        host: { type: 'string' },
-                        port: { type: 'number' },
-                        database: { type: 'string' },
-                        username: { type: 'string' },
-                        password: { type: 'string' },
-                        connectionOptions: { type: 'object' }
+                        host: {type: 'string'},
+                        port: {type: 'number'},
+                        database: {type: 'string'},
+                        username: {type: 'string'},
+                        password: {type: 'string'},
+                        connectionOptions: {type: 'object'}
                       },
                       required: ['host', 'port', 'database', 'username', 'password']
                     },
@@ -1150,15 +1150,15 @@ onMounted(() => {
                       type: 'object',
                       description: '迁移策略配置',
                       properties: {
-                        batchSize: { type: 'number', description: '批处理大小' },
-                        parallelTasks: { type: 'number', description: '并行任务数' },
+                        batchSize: {type: 'number', description: '批处理大小'},
+                        parallelTasks: {type: 'number', description: '并行任务数'},
                         retryPolicy: {
                           type: 'object',
                           description: '重试策略',
                           properties: {
-                            maxRetries: { type: 'number' },
-                            retryDelay: { type: 'number' },
-                            backoffMultiplier: { type: 'number' }
+                            maxRetries: {type: 'number'},
+                            retryDelay: {type: 'number'},
+                            backoffMultiplier: {type: 'number'}
                           }
                         },
                         dataTransformation: {
@@ -1167,8 +1167,8 @@ onMounted(() => {
                           additionalProperties: {
                             type: 'object',
                             properties: {
-                              fieldMapping: { type: 'object' },
-                              dataValidation: { type: 'object' }
+                              fieldMapping: {type: 'object'},
+                              dataValidation: {type: 'object'}
                             }
                           }
                         }
@@ -1178,10 +1178,10 @@ onMounted(() => {
                       type: 'object',
                       description: '备份选项',
                       properties: {
-                        createBackup: { type: 'boolean' },
-                        backupLocation: { type: 'string' },
-                        compressionLevel: { type: 'number' },
-                        retentionPeriod: { type: 'string' }
+                        createBackup: {type: 'boolean'},
+                        backupLocation: {type: 'string'},
+                        compressionLevel: {type: 'number'},
+                        retentionPeriod: {type: 'string'}
                       }
                     }
                   },
@@ -1191,9 +1191,9 @@ onMounted(() => {
                   type: 'object',
                   description: '执行选项',
                   properties: {
-                    dryRun: { type: 'boolean', description: '是否为试运行' },
-                    stopOnError: { type: 'boolean', description: '遇到错误时是否停止' },
-                    generateReport: { type: 'boolean', description: '是否生成报告' },
+                    dryRun: {type: 'boolean', description: '是否为试运行'},
+                    stopOnError: {type: 'boolean', description: '遇到错误时是否停止'},
+                    generateReport: {type: 'boolean', description: '是否生成报告'},
                     notificationSettings: {
                       type: 'object',
                       description: '通知设置',
@@ -1201,18 +1201,18 @@ onMounted(() => {
                         email: {
                           type: 'object',
                           properties: {
-                            recipients: { type: 'array', items: { type: 'string' } },
-                            onSuccess: { type: 'boolean' },
-                            onFailure: { type: 'boolean' },
-                            onProgress: { type: 'boolean' }
+                            recipients: {type: 'array', items: {type: 'string'}},
+                            onSuccess: {type: 'boolean'},
+                            onFailure: {type: 'boolean'},
+                            onProgress: {type: 'boolean'}
                           }
                         },
                         webhook: {
                           type: 'object',
                           properties: {
-                            url: { type: 'string' },
-                            method: { type: 'string' },
-                            headers: { type: 'object' }
+                            url: {type: 'string'},
+                            method: {type: 'string'},
+                            headers: {type: 'object'}
                           }
                         }
                       }
@@ -1439,7 +1439,7 @@ onUnmounted(() => {
 <template>
   <div ref="appContainer" :class="['react-plus-app', currentThemeClass]">
     <!-- Plan 状态侧边栏 - 仅在 reactPlus 页面显示 -->
-    <PlanWidget />
+    <PlanWidget/>
     <!-- 🖥️ 极客模式：终端界面 -->
     <template v-if="isGeekMode">
 
@@ -1493,8 +1493,8 @@ onUnmounted(() => {
             />
             <!-- 工具调用消息 -->
             <ToolMessage v-else-if="message.type === MessageType.Tool"
-            :message="message"
-            class="message-item mb-2.5"
+                         :message="message"
+                         class="message-item mb-2.5"
             ></ToolMessage>
 
             <!-- 工具审批消息 -->
@@ -1541,119 +1541,124 @@ onUnmounted(() => {
         </Transition>
       </div>
 
-        <div
-            class=" w-[830px] sticky bottom-1.5 z-30 px-2 md:px-0  mx-auto
+      <div
+          class=" w-[830px] sticky bottom-1.5 z-30 px-2 md:px-0  mx-auto
             input-container overflow-hidden rounded-2xl border border-primary-50 backdrop-blur-xl
             shadow-lg transition-colors"
-            @dragover.prevent
-            @drop="onDropFiles"
-        >
+          @dragover.prevent
+          @drop="onDropFiles"
+      >
 
-          <!-- 📎 附件预览区域 - 仅在有附件时显示 -->
+        <!-- 📎 附件预览区域 - 仅在有附件时显示 -->
 
-          <div v-if="attachments.length" class="mode-selector flex items-center gap-3 px-5 py-3 flex gap-2 px-4 py-2">
-            <div class="flex items-center gap-2">
-              <div v-for="attachment in attachments" :key="attachment.name" 
-                   class="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-blue-200 rounded-md text-xs shadow-sm">
-                <FileTextOutlined class="text-blue-500 text-xs"/>
-                <span class="text-blue-700 font-medium truncate max-w-[100px]">{{ attachment.name }}</span>
-                <span class="text-blue-400">{{ bytes(attachment.size) }}KB</span>
-                <button
-                    @click="removeAttachment(attachment.name)"
-                    class="text-blue-400 hover:text-red-500 ml-1 font-bold text-sm leading-none"
-                >×</button>
-              </div>
-            </div>
-          </div>
-
-
-          <!-- 输入区域（textarea + 发送按钮 + 工具栏） -->
-          <div class="input-area relative flex flex-col justify-between px-4 pb-2 bg-transparent w-full">
-            <a-textarea
-                v-model:value="inputMessage"
-                :maxlength="4000"
-                :auto-size="{ minRows: 1, maxRows: 2 }"
-                placeholder="请输入您的问题..."
-                :disabled="isLoading"
-                :bordered="false"
-                class="w-full text-slate-800 text-sm leading-6 font-normal bg-transparent outline-none focus:outline-none"
-                @pressEnter="onPressEnter"
-                @paste="onPaste"
-            />
-            <button
-                :disabled="!canSend"
-                @click="sendMessage"
-                class="send-button absolute right-4 top-1/2 w-10 h-10 -translate-y-1/2 rounded-[50%] font-semibold"
-            >
-                  <SendOutlined class="m-auto text-lg" v-if="!isLoading"/>
-                  <LoadingOutlined class="m-auto text-lg" v-else />
-            </button>
-
-            <!-- 工具按钮组 -->
-            <div class="input-toolbar mt-1 flex items-center gap-1 text-slate-500 text-sm">
-              <a-button type="text" size="large" @click="handleUploadClick" :icon="h(PaperClipOutlined)"/>
-              <input ref="fileInput" type="file" class="hidden" multiple @change="onFileChange" />
-              <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(CodeOutlined)" />
-              
-              <!-- 模式切换与功能设置下拉菜单 -->
-              <a-dropdown placement="topLeft" trigger="click">
-                <a-button type="text" size="large" :icon="h(SettingOutlined)" class="hover:text-primary-500"/>
-                <template #overlay>
-                  <a-menu class="min-w-[200px]">
-                    <!-- 模式切换组 -->
-                    <a-menu-item-group title="模式切换">
-                      <a-menu-item 
-                        key="geek" 
-                        @click="() => switchMode('geek')"
-                        :class="{ 'ant-menu-item-selected': currentMode === 'geek' }"
-                      >
-                        <template #icon><RobotOutlined /></template>
-                        极客模式
-                      </a-menu-item>
-                      <a-menu-item 
-                        key="multimodal" 
-                        @click="() => switchMode('multimodal')"
-                        :class="{ 'ant-menu-item-selected': currentMode === 'multimodal' }"
-                      >
-                        <template #icon><ThunderboltOutlined /></template>
-                        多模态模式
-                      </a-menu-item>
-                    </a-menu-item-group>
-                    
-                    <a-menu-divider />
-                    
-                    <!-- 计划功能 -->
-                    <a-menu-item-group title="计划功能">
-                      <a-menu-item 
-                        key="plan-toggle" 
-                        @click="chat.togglePlanVisibility"
-                        :disabled="!chat.getCurrentPlan()"
-                      >
-                        <template #icon>📋</template>
-                        {{ chat.planVisible ? '隐藏计划' : '显示计划' }}
-                      </a-menu-item>
-                    </a-menu-item-group>
-                    
-                    <!-- 开发模式测试功能 -->
-                    <template v-if="isDevelopment">
-                      <a-menu-divider />
-                      <a-menu-item-group title="开发测试">
-                        <a-menu-item key="test-plan" @click="testInitPlan">
-                          <template #icon>🧪</template>
-                          测试计划
-                        </a-menu-item>
-                        <a-menu-item key="simple-plan" @click="testSimplePlan">
-                          <template #icon>📝</template>
-                          简单计划
-                        </a-menu-item>
-                      </a-menu-item-group>
-                    </template>
-                  </a-menu>
-                </template>
-              </a-dropdown>
+        <div v-if="attachments.length" class="mode-selector flex items-center gap-3 px-5 py-3 flex gap-2 px-4 py-2">
+          <div class="flex items-center gap-2">
+            <div v-for="attachment in attachments" :key="attachment.name"
+                 class="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-blue-200 rounded-md text-xs shadow-sm">
+              <FileTextOutlined class="text-blue-500 text-xs"/>
+              <span class="text-blue-700 font-medium truncate max-w-[100px]">{{ attachment.name }}</span>
+              <span class="text-blue-400">{{ bytes(attachment.size) }}KB</span>
+              <button
+                  @click="removeAttachment(attachment.name)"
+                  class="text-blue-400 hover:text-red-500 ml-1 font-bold text-sm leading-none"
+              >×
+              </button>
             </div>
           </div>
         </div>
+
+
+        <!-- 输入区域（textarea + 发送按钮 + 工具栏） -->
+        <div class="input-area relative flex flex-col justify-between px-4 pb-2 bg-transparent w-full">
+          <a-textarea
+              v-model:value="inputMessage"
+              :maxlength="4000"
+              :auto-size="{ minRows: 1, maxRows: 2 }"
+              placeholder="请输入您的问题..."
+              :disabled="isLoading"
+              :bordered="false"
+              class="w-full text-slate-800 text-sm leading-6 font-normal bg-transparent outline-none focus:outline-none"
+              @pressEnter="onPressEnter"
+              @paste="onPaste"
+          />
+          <button
+              :disabled="!canSend"
+              @click="sendMessage"
+              class="send-button absolute right-4 top-1/2 w-10 h-10 -translate-y-1/2 rounded-[50%] font-semibold"
+          >
+            <SendOutlined class="m-auto text-lg" v-if="!isLoading"/>
+            <LoadingOutlined class="m-auto text-lg" v-else/>
+          </button>
+
+          <!-- 工具按钮组 -->
+          <div class="input-toolbar mt-1 flex items-center gap-1 text-slate-500 text-sm">
+            <a-button type="text" size="large" @click="handleUploadClick" :icon="h(PaperClipOutlined)"/>
+            <input ref="fileInput" type="file" class="hidden" multiple @change="onFileChange"/>
+            <a-button type="text" size="large" @click="insertCodeBlock" :icon="h(CodeOutlined)"/>
+
+            <!-- 模式切换与功能设置下拉菜单 -->
+            <a-dropdown placement="topLeft" trigger="click">
+              <a-button type="text" size="large" :icon="h(SettingOutlined)" class="hover:text-primary-500"/>
+              <template #overlay>
+                <a-menu class="min-w-[200px]">
+                  <!-- 模式切换组 -->
+                  <a-menu-item-group title="模式切换">
+                    <a-menu-item
+                        key="geek"
+                        @click="() => switchMode('geek')"
+                        :class="{ 'ant-menu-item-selected': currentMode === 'geek' }"
+                    >
+                      <template #icon>
+                        <RobotOutlined/>
+                      </template>
+                      极客模式
+                    </a-menu-item>
+                    <a-menu-item
+                        key="multimodal"
+                        @click="() => switchMode('multimodal')"
+                        :class="{ 'ant-menu-item-selected': currentMode === 'multimodal' }"
+                    >
+                      <template #icon>
+                        <ThunderboltOutlined/>
+                      </template>
+                      多模态模式
+                    </a-menu-item>
+                  </a-menu-item-group>
+
+                  <a-menu-divider/>
+
+                  <!-- 计划功能 -->
+                  <a-menu-item-group title="计划功能">
+                    <a-menu-item
+                        key="plan-toggle"
+                        @click="chat.togglePlanVisibility"
+                        :disabled="!chat.getCurrentPlan()"
+                    >
+                      <template #icon>📋</template>
+                      {{ chat.planVisible ? '隐藏计划' : '显示计划' }}
+                    </a-menu-item>
+                  </a-menu-item-group>
+
+                  <!-- 开发模式测试功能 -->
+                  <template v-if="isDevelopment">
+                    <a-menu-divider/>
+                    <a-menu-item-group title="开发测试">
+                      <a-menu-item key="test-plan" @click="testInitPlan">
+                        <template #icon>🧪</template>
+                        测试计划
+                      </a-menu-item>
+                      <a-menu-item key="simple-plan" @click="testSimplePlan">
+                        <template #icon>📝</template>
+                        简单计划
+                      </a-menu-item>
+                    </a-menu-item-group>
+                  </template>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </div>
+        </div>
+      </div>
 
 
       <!-- 隐藏文件输入 -->

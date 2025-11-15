@@ -12,7 +12,8 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@repo/shadcn-vue/lib/utils": ["src/lib/utils.ts"]
     }
   },
   "include": [

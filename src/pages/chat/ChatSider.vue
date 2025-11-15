@@ -12,7 +12,7 @@ const router = useRouter()
 const route = useRoute()
 
 // 响应式的当前会话ID
-const currentSessionId = computed(() => chat.sessionId.value)
+const currentSessionId = computed(() => chat.sessionId)
 
 // Agent选择弹窗显示状态
 const showAgentSelector = ref(false)
@@ -131,7 +131,7 @@ onMounted(() => {
       <div class="sl-title">会话</div>
       <div class="sl-conv-list">
         <div
-          v-for="c in chat.sessions.value"
+          v-for="c in chat.sessions"
           :key="c.id"
           class="sl-conv-item"
           :class="{ active: isActive(c.id) }"
