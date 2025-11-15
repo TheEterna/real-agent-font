@@ -28,28 +28,10 @@ import {
 } from '@ant-design/icons-vue'
 import {Attachment} from '@/types/attachment'
 import {TemplateItem} from '@/types/template'
-// Markdown 渲染相关
-// @ts-ignore
-import MarkdownIt from 'markdown-it'
-// @ts-ignore
-import hljs from 'highlight.js'
-// @ts-ignore
-import * as emoji from 'markdown-it-emoji'
-// @ts-ignore
-import * as taskLists from 'markdown-it-task-lists'
-// @ts-ignore
-import * as container from 'markdown-it-container'
-// @ts-ignore
-import * as anchor from 'markdown-it-anchor'
-// @ts-ignore
-import * as mkatex from 'markdown-it-katex'
-// @ts-ignore
-import DOMPurify from 'dompurify'
+
 // GSAP动画库
 import {gsap} from 'gsap'
 // 样式引入
-import 'highlight.js/styles/atom-one-light.css'
-import 'katex/dist/katex.min.css'
 import {NotificationType} from '@/types/notification'
 import {useMessageConfig} from '@/composables/useMessageConfig'
 import Terminal from '@/components/terminal/Terminal.vue'
@@ -544,30 +526,6 @@ const resolvePlugin = (p: any) => {
   return cand
 }
 
-const md = new MarkdownIt({
-  html: false,
-  linkify: true,
-  typographer: true,
-  highlight(code: string, lang?: string): string {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        const out = hljs.highlight(code, {language: lang}).value
-        return `<pre class="hljs"><code>${out}</code></pre>`
-      } catch {
-      }
-    }
-    const escaped = md.utils.escapeHtml(code)
-    return `<pre class="hljs"><code>${escaped}</code></pre>`
-  }
-})
-    .use(resolvePlugin(emoji))
-    .use(resolvePlugin(taskLists), {label: true, labelAfter: true})
-    .use(resolvePlugin(container), 'info')
-    .use(resolvePlugin(container), 'warning')
-    .use(resolvePlugin(container), 'success')
-    .use(resolvePlugin(anchor))
-    .use(resolvePlugin(mkatex))
-
 // 🐉 GSAP 动画系统 - 性能优化版
 //  使用 GSAP Context 统一管理所有动画，确保正确清理
 let gsapContext: gsap.Context | null = null
@@ -906,13 +864,15 @@ onMounted(() => {
 
 我是新一代增强版 ReAct 助手，具备以下能力：
 
-✨ **智能工具审批** - 执行工具前会请求您的确认
-🧠 **深度推理** - 多层次思考和分析
-🔧 **工具链协作** - 智能选择和组合使用工具
-📊 **结果验证** - 自动验证和优化执行结果
+✨ **智能工具审批** - 执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认执行工具前会请求您的确认
+🧠 **深度推理** - 多层次思考和分析 \n🔧 **工具链协作** - 智能选择和组合使用工具\n📊 **结果验证** - 自动验证和优化执行结果
 🎯 **目标导向** - 始终聚焦于解决您的核心问题
 
-现在，请告诉我您希望我帮您解决什么问题？`,
+现在，请告诉我您希望我帮您解决什么问题？
+
+Extra remark plugins. Supports (plugin) or [plugin, options]. If you supply remark-math yourself, the built‑in one (which disables single‑dollar inline math) is skipped.
+
+`,
         startTime: new Date(Date.now() - 300000),
         nodeId: 'welcome-msg'
       },
@@ -921,7 +881,6 @@ onMounted(() => {
       {
         type: MessageType.User,
         sender: '用户',
-        message: '请帮我分析一下当前项目的代码结构，并给出优化建议',
         startTime: new Date(Date.now() - 250000),
         nodeId: 'user-msg-1'
       },
@@ -1290,6 +1249,34 @@ onMounted(() => {
         nodeId: 'user-msg-2'
       },
 
+      // 11. 用户回复
+      {
+        type: MessageType.Assistant,
+        sender: 'bot',
+        message: '# Hello\n' +
+            '\n' +
+            '这是一个测试页面。左侧编辑输入，右侧实时预览渲染结果。\n' +
+            '\n' +
+            '示例包含：\n' +
+            '\n' +
+            '  - **加粗**、*斜体*、`inline code`\n' +
+            '- 代码块：\n' +
+            '\n' +
+            '```js\n' +
+            'console.log(\'hello\')\n' +
+            '```\n' +
+            '\n' +
+            '数学：$$E=mc^2$$\n' +
+            'Mermaid 示例：\n' +
+            '\n' +
+            '```mermaid\n' +
+            'graph TD\n' +
+            '  A-->B\n' +
+            '```\n',
+        startTime: new Date(Date.now() - 80000),
+        nodeId: 'user-msg-2'
+      },
+
       // 12. 复杂的 Markdown 消息（代码块、表格、列表）
       {
         type: MessageType.Assistant,
@@ -1311,7 +1298,7 @@ echo "module.exports = { extends: ['@vue/typescript/recommended'] }" > .eslintrc
 \`\`\`
 
 ### 2. TypeScript 配置优化
-\`\`\`json
+\`\`\`js
 {
   "compilerOptions": {
     "strict": true,

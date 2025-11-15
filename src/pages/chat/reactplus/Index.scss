@@ -55,8 +55,6 @@ $space-4xl: 5rem;
 $space-5xl: 6rem;
 
 /* 字体 */
-$font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
-$font-mono: 'SF Mono', 'JetBrains Mono', Consolas, 'Liberation Mono', monospace;
 $font-size-xs: 0.75rem;
 $font-size-sm: 0.875rem;
 $font-size-base: 1rem;
@@ -265,7 +263,6 @@ $message-warning-text: #A08038;
 /* $$$$$$$$$$$$$ TOP STATUS BAR $$$$$$$$$$$$$ */
 .react-plus-app {
   position: relative;
-  font-family: $font-sans;
   color: $text-primary;
   display: flex;
   flex-direction: column;
@@ -525,10 +522,6 @@ $message-warning-text: #A08038;
     }
   }
 
-  /* 消息头部优化 */
-  :deep(.message-header) {
-    font-family: $font-sans;
-  }
 
   :deep(.sender) {
     position: relative;
@@ -955,7 +948,6 @@ $message-warning-text: #A08038;
       color: $text-primary !important;
       font-size: $font-size-base !important;
       line-height: $line-height-relaxed !important;
-      font-family: $font-sans !important;
       font-weight: 500 !important;
 
       /* 移除所有默认样式，让焦点效果完全由父容器控制 */

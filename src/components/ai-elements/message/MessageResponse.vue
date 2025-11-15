@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
-import { StreamMarkdown } from 'streamdown-vue'
 import { computed, useSlots } from 'vue'
+import MarkdownRender from 'vue-renderer-markdown'
+import 'vue-renderer-markdown/index.css'
 
 interface Props {
   content?: string
@@ -25,14 +26,14 @@ const md = computed(() => (slotContent.value ?? props.content ?? '') as string)
 </script>
 
 <template>
-  <StreamMarkdown
-    :content="md"
-    :class="
-      cn(
-        'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
-        props.class,
-      )
-    "
+  <MarkdownRender
+      :class="
+        cn(
+          'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+          props.class,
+        )
+      "
+      :content="md"
     v-bind="$attrs"
   />
 </template>

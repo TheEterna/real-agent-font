@@ -13,7 +13,7 @@ const props = defineProps<Props>()
   <div
     :class="
       cn(
-        'is-user:dark flex w-fit flex-col gap-2 overflow-hidden text-sm',
+        'is-user:dark flex w-fit flex-col gap-2 overflow-hidden',
         'group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground',
         'group-[.is-assistant]:text-foreground message-content',
         props.class,
@@ -24,8 +24,10 @@ const props = defineProps<Props>()
     <slot />
   </div>
 </template>
-<style scoped>
+<style lang="scss" scoped>
 .message-content {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 16px;
+
 }
 </style>

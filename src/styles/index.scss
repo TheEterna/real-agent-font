@@ -121,7 +121,20 @@ button {
   cursor: pointer;
 }
 
+html {
+  /* 设置一个平滑、现代的字体栈 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display",
+  "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  /* 默认行高，提供更好的可读性 */
+  line-height: 1.5;
 
+  /* 开启反锯齿，使字体更平滑 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* 防止 iOS 在横屏时自动缩放字体 */
+  -webkit-text-size-adjust: 100%;
+}
 .ripple-button {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
